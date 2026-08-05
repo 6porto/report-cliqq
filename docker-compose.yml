@@ -1,0 +1,55 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: rollout-cliqq-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3333
+      DATABASE_URL: file:/dados/rollout.db
+      CORS_ORIGIN: ${CORS_ORIGIN:-*}
+      SEED_ON_START: ${SEED_ON_START:-true}
+      TZ: ${TZ:-America/Sao_Paulo}
+    volumes:
+      - dados:/dados
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:3333/api/relatorio/resumo']
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  web:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    image: rollout-cliqq-web
+    restart: unless-stopped
+    ports:
+      - '${PORTA_WEB:-8080}:80'
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  caddy:
+    image: caddy:2-alpine
+    profiles: ['tls']
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    environment:
+      DOMINIO: ${DOMINIO}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web
+
+volumes:
+  dados:
+  caddy_data:
+  caddy_config:

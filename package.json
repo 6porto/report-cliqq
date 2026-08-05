@@ -1,0 +1,29 @@
+{
+  "name": "rollout-cliqq",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Report de rollout do CliQQ para 600 filiais",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev": "concurrently -n backend,frontend -c blue,magenta \"npm:dev:backend\" \"npm:dev:frontend\"",
+    "dev:backend": "npm run dev --workspace backend",
+    "dev:frontend": "npm run dev --workspace frontend",
+    "build": "npm run build --workspace backend && npm run build --workspace frontend",
+    "setup": "npm install && npm run db:reset",
+    "db:reset": "npm run db:reset --workspace backend",
+    "test": "npm run test --workspace backend",
+    "docker:build": "docker compose build",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

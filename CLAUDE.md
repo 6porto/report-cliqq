@@ -1,0 +1,30 @@
+# rollout-cliqq
+
+Report do rollout do CliQQ para 600 filiais.
+
+## Stack e comandos
+
+- Monorepo npm workspaces: `backend` (NestJS 11 + Prisma + SQLite), `frontend` (React 19 + Vite + TanStack Query + Recharts).
+- `npm run dev` — sobe backend (:3333) e frontend (:5173, proxy `/api`).
+- `npm run db:seed --workspace backend` — carrega/atualiza as 587 lojas reais de `backend/prisma/dados/lojas.tsv` (upsert por código; preserva status e datas).
+- `npm run db:reset --workspace backend` — recria o banco do zero e apaga o andamento; só quando pedido.
+- `npm run test --workspace backend` — Jest.
+- Após mudar `prisma/schema.prisma`: `npm run db:migrate --workspace backend`.
+
+## Convenções
+
+- Nomes de código e comentários em PT-BR.
+- Backend: um módulo Nest por contexto (`filiais`, `rollout`, `relatorio`); regra em service, DTO com class-validator, Prisma isolado em `PrismaService`.
+- Toda mudança de status passa por `RolloutService.atualizarStatus` — ela grava `EventoRollout` e ajusta `dataInicio`/`dataConclusao`. O `AtualizarFilialDto` omite `status` de propósito, então o CRUD rejeita a tentativa com 400.
+- Edição completa da loja fica em `frontend/src/componentes/FormularioLoja.tsx`: salva o cadastro via `PATCH /filiais/:id` e, se o status mudou, dispara o endpoint de rollout em seguida.
+- Status válidos ficam em `backend/src/comum/status-rollout.ts` e espelhados em `frontend/src/api/tipos.ts`.
+- `cidade`, `uf` e `regional` são opcionais (45 lojas vieram com `#N/D`); relatórios agrupam esses casos como "Não informado".
+- Fonte do cadastro é o TSV em `backend/prisma/dados/lojas.tsv` — alterar lá e rodar o seed, não editar linha a linha no banco.
+- Regra das ondas fica em `backend/src/comum/ondas.ts` (Onda 1: 40+ op/dia, Onda 2: 20–39, Onda 3: < 20) e é aplicada no seed apenas para lojas sem onda; a lista espelhada no front está em `frontend/src/dominio/ondas.ts`.
+
+## Gráficos
+
+- Cores vêm de CSS custom properties em `frontend/src/estilos/global.css` (light + dark) e do mapa em `frontend/src/tema/cores.ts`.
+- Ordem da pilha de status é fixa (`ORDEM_PILHA_STATUS`: concluído → em operação → em adaptação → em treinamento → não iniciado → bloqueado): garante separação para daltônicos; não reordenar sem revalidar a paleta.
+- `STATUS_EM_IMPLANTACAO` agrupa os três estados intermediários — usar essa constante em vez de comparar status um a um.
+- Status sempre com ícone + rótulo, nunca só cor. Um eixo por gráfico — nunca eixo duplo.

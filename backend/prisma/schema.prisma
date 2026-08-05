@@ -1,0 +1,55 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Filial {
+  id                   Int     @id @default(autoincrement())
+  codigo               String  @unique
+  cidade               String?
+  uf                   String?
+  regional             String?
+  onda                 String?
+  mediaOperacoes90Dias Int     @default(0)
+
+  status        String    @default("NAO_INICIADO")
+  dataPrevista  DateTime?
+  dataInicio    DateTime?
+  dataConclusao DateTime?
+  observacao    String?
+  criadoEm      DateTime  @default(now())
+  atualizadoEm  DateTime  @updatedAt
+
+  eventos EventoRollout[]
+
+  @@index([status])
+  @@index([uf])
+  @@index([regional])
+  @@index([onda])
+}
+
+model EventoRollout {
+  id             Int      @id @default(autoincrement())
+  filialId       Int
+  statusAnterior String?
+  statusNovo     String
+  observacao     String?
+  autor          String?
+  registradoEm   DateTime @default(now())
+
+  filial Filial @relation(fields: [filialId], references: [id], onDelete: Cascade)
+
+  @@index([filialId])
+  @@index([registradoEm])
+}
+
+model MetaRollout {
+  id                  Int      @id @default(autoincrement())
+  data                DateTime @unique
+  quantidadeAcumulada Int
+  descricao           String?
+}

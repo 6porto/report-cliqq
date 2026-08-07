@@ -20,6 +20,7 @@ Report do rollout do CliQQ para 600 filiais.
 - Status válidos ficam em `backend/src/comum/status-rollout.ts` e espelhados em `frontend/src/api/tipos.ts`.
 - `cidade`, `uf` e `regional` são opcionais (45 lojas vieram com `#N/D`); relatórios agrupam esses casos como "Não informado".
 - Fonte do cadastro é o TSV em `backend/prisma/dados/lojas.tsv` — alterar lá e rodar o seed, não editar linha a linha no banco.
+- Priorização: as demandas são fixas em `backend/src/priorizacao/demandas.ts` (passarão a vir das issues do GitLab); só as respostas vão para o banco, uma por demanda (`RespostaPriorizacao`, upsert por `demandaId` — vale sempre a última). A escala das 5 perguntas fica em `backend/src/comum/priorizacao.ts` e é espelhada em `frontend/src/dominio/priorizacao.ts`.
 - Regra das ondas fica em `backend/src/comum/ondas.ts` (Onda 1: 40+ op/dia, Onda 2: 20–39, Onda 3: < 20) e é aplicada no seed apenas para lojas sem onda; a lista espelhada no front está em `frontend/src/dominio/ondas.ts`.
 
 ## Gráficos
@@ -28,3 +29,4 @@ Report do rollout do CliQQ para 600 filiais.
 - Ordem da pilha de status é fixa (`ORDEM_PILHA_STATUS`: concluído → em operação → em adaptação → em treinamento → não iniciado → bloqueado): garante separação para daltônicos; não reordenar sem revalidar a paleta.
 - `STATUS_EM_IMPLANTACAO` agrupa os três estados intermediários — usar essa constante em vez de comparar status um a um.
 - Status sempre com ícone + rótulo, nunca só cor. Um eixo por gráfico — nunca eixo duplo.
+- Na matriz de priorização o eixo X é o tempo de desenvolvimento (crescente para a direita) e o Y é a soma das 4 primeiras perguntas: prioridade alta = alto e à esquerda. O afastamento de pontos coincidentes acontece só no eixo X, que é categórico, para o Y nunca mentir sobre a pontuação.

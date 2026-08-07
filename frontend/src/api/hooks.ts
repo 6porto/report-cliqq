@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, montarQuery } from './cliente';
 import type {
   CoberturaOnda,
+  DemandaPriorizada,
   DistribuicaoHoraria,
   Evolucao,
   Filial,
@@ -10,6 +11,7 @@ import type {
   GrupoRollout,
   PaginaFiliais,
   Projecao,
+  RespostaPriorizacao,
   Resumo,
   StatusRollout,
 } from './tipos';
@@ -123,6 +125,27 @@ export function useRemoverFilial() {
     mutationFn: (id: number) => api.delete<Filial>(`/filiais/${id}`),
     onSuccess: () => {
       clienteQuery.invalidateQueries();
+    },
+  });
+}
+
+export function usePriorizacao() {
+  return useQuery({
+    queryKey: ['priorizacao'],
+    queryFn: () => api.get<DemandaPriorizada[]>('/priorizacao'),
+  });
+}
+
+export function useSalvarResposta() {
+  const clienteQuery = useQueryClient();
+
+  return useMutation({
+    mutationFn: (variaveis: { demandaId: number; resposta: Partial<RespostaPriorizacao> }) =>
+      api.put<DemandaPriorizada>(`/priorizacao/${variaveis.demandaId}`, variaveis.resposta),
+    onSuccess: (demanda) => {
+      clienteQuery.setQueryData<DemandaPriorizada[]>(['priorizacao'], (atual) =>
+        atual?.map((item) => (item.id === demanda.id ? demanda : item)),
+      );
     },
   });
 }

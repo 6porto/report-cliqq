@@ -53,3 +53,15 @@ model MetaRollout {
   quantidadeAcumulada Int
   descricao           String?
 }
+
+model RespostaPriorizacao {
+  id           Int      @id @default(autoincrement())
+  demandaId    Int      @unique
+  beneficiados Int?
+  tipoDeGanho  Int?
+  frequencia   Int?
+  riscoDeAdiar Int?
+  esforco      Int?
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+}

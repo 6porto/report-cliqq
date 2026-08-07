@@ -111,6 +111,27 @@ export interface Projecao {
   pontos: PontoProjecao[];
 }
 
+export interface RespostaPriorizacao {
+  beneficiados: number | null;
+  tipoDeGanho: number | null;
+  frequencia: number | null;
+  riscoDeAdiar: number | null;
+  esforco: number | null;
+}
+
+export interface DemandaPriorizada {
+  id: number;
+  descricao: string;
+  resposta: RespostaPriorizacao | null;
+  completa: boolean;
+  pontuacaoValor: number | null;
+  pontuacaoEsforco: number | null;
+  score: number | null;
+  dias: number | null;
+  posicaoEsforco: number | null;
+  rotuloEsforco: string | null;
+}
+
 export const CAMPOS_ORDENAVEIS = [
   'codigo',
   'cidade',

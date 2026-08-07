@@ -603,6 +603,28 @@ textarea {
   gap: 12px;
 }
 
+.filtro-estados {
+  border: 0;
+  margin: 0 0 12px;
+  padding: 0;
+}
+
+.filtro-estados legend {
+  padding: 0;
+  color: var(--tinta-secundaria);
+  font-size: 12px;
+}
+
+.filtro-estados .opcoes {
+  align-items: center;
+  margin-top: 6px;
+}
+
+.filtro-estados .opcao {
+  padding: 5px 10px;
+  font-size: 13px;
+}
+
 .pergunta {
   border: 0;
   border-top: 1px solid var(--grade);

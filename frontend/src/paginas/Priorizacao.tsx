@@ -27,7 +27,7 @@ export function Priorizacao() {
   const [somentePendentes, setSomentePendentes] = useState(false);
   const [demandaAberta, setDemandaAberta] = useState<number | null>(null);
   const [filtroTipo, setFiltroTipo] = useState('');
-  const [filtroEstado, setFiltroEstado] = useState('');
+  const [estadosOcultos, setEstadosOcultos] = useState<string[]>([]);
   const [ordenacao, setOrdenacao] = useState<OrdenacaoRanking | null>(null);
 
   const demandas = priorizacao.data ?? [];
@@ -37,16 +37,30 @@ export function Priorizacao() {
   const diasEstimados = completas.reduce((soma, demanda) => soma + (demanda.dias ?? 0), 0);
 
   const tipos = [...new Set(demandas.map((demanda) => demanda.tipo))].sort();
-  const estados = [...new Set(demandas.map((demanda) => demanda.estado ?? ''))]
-    .filter(Boolean)
-    .sort();
+  const estados = [...new Set(demandas.map((demanda) => demanda.estado ?? ''))].sort();
 
-  const listadas = demandas.filter(
+  const antesDoEstado = demandas.filter(
     (demanda) =>
-      (!somentePendentes || !demanda.completa) &&
-      (!filtroTipo || demanda.tipo === filtroTipo) &&
-      (!filtroEstado || demanda.estado === filtroEstado),
+      (!somentePendentes || !demanda.completa) && (!filtroTipo || demanda.tipo === filtroTipo),
   );
+
+  const contagemPorEstado = new Map<string, number>();
+
+  for (const demanda of antesDoEstado) {
+    const estado = demanda.estado ?? '';
+    contagemPorEstado.set(estado, (contagemPorEstado.get(estado) ?? 0) + 1);
+  }
+
+  const listadas = antesDoEstado.filter(
+    (demanda) => !estadosOcultos.includes(demanda.estado ?? ''),
+  );
+
+  const alternarEstado = (estado: string) =>
+    setEstadosOcultos((ocultos) =>
+      ocultos.includes(estado)
+        ? ocultos.filter((nome) => nome !== estado)
+        : [...ocultos, estado],
+    );
 
   const posicoes = posicoesDoRanking(demandas);
   const aberta = demandas.find((demanda) => demanda.id === demandaAberta) ?? null;
@@ -155,22 +169,39 @@ export function Priorizacao() {
                   </option>
                 ))}
               </select>
-              <select
-                value={filtroEstado}
-                onChange={(evento) => setFiltroEstado(evento.target.value)}
-                aria-label="Filtrar por estado"
-              >
-                <option value="">Todos os estados</option>
-                {estados.map((estado) => (
-                  <option key={estado} value={estado}>
-                    {estado}
-                  </option>
-                ))}
-              </select>
               <span className="aviso-sincronizacao">
                 {listadas.length} de {demandas.length}
               </span>
             </div>
+          ) : null}
+
+          {demandas.length > 0 ? (
+            <fieldset className="filtro-estados">
+              <legend>Estados exibidos</legend>
+              <div className="opcoes">
+                {estados.map((estado) => {
+                  const visivel = !estadosOcultos.includes(estado);
+
+                  return (
+                    <button
+                      key={estado}
+                      type="button"
+                      className={visivel ? 'opcao opcao-marcada' : 'opcao'}
+                      aria-pressed={visivel}
+                      onClick={() => alternarEstado(estado)}
+                    >
+                      <span>{estado || 'sem estado'}</span>
+                      <span className="opcao-pontos">{contagemPorEstado.get(estado) ?? 0}</span>
+                    </button>
+                  );
+                })}
+                {estadosOcultos.length > 0 ? (
+                  <button type="button" className="ligacao" onClick={() => setEstadosOcultos([])}>
+                    mostrar todos
+                  </button>
+                ) : null}
+              </div>
+            </fieldset>
           ) : null}
 
           {priorizacao.isLoading ? <p className="carregando">Carregando…</p> : null}

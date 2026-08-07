@@ -25,6 +25,26 @@ export const api = {
   delete: <T>(caminho: string) => requisitar<T>(caminho, { method: 'DELETE' }),
 };
 
+/** O erro carrega o corpo cru da resposta; o que interessa é a mensagem que o Nest devolveu. */
+export function mensagemDoErro(erro: unknown) {
+  const texto = erro instanceof Error ? erro.message : String(erro);
+  const inicio = texto.indexOf('{');
+
+  if (inicio >= 0) {
+    try {
+      const corpo = JSON.parse(texto.slice(inicio)) as { message?: unknown };
+
+      if (typeof corpo.message === 'string') {
+        return corpo.message;
+      }
+    } catch {
+      return texto;
+    }
+  }
+
+  return texto;
+}
+
 export function montarQuery<T extends object>(parametros: T) {
   const busca = new URLSearchParams();
 

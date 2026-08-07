@@ -4,6 +4,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { FiliaisModule } from './filiais/filiais.module';
 import { RolloutModule } from './rollout/rollout.module';
 import { RelatorioModule } from './relatorio/relatorio.module';
+import { PriorizacaoModule } from './priorizacao/priorizacao.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { RelatorioModule } from './relatorio/relatorio.module';
     FiliaisModule,
     RolloutModule,
     RelatorioModule,
+    PriorizacaoModule,
   ],
 })
 export class AppModule {}

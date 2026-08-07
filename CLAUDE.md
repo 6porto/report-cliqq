@@ -20,6 +20,11 @@ Report do rollout do CliQQ para 600 filiais.
 - Status válidos ficam em `backend/src/comum/status-rollout.ts` e espelhados em `frontend/src/api/tipos.ts`.
 - `cidade`, `uf` e `regional` são opcionais (45 lojas vieram com `#N/D`); relatórios agrupam esses casos como "Não informado".
 - Fonte do cadastro é o TSV em `backend/prisma/dados/lojas.tsv` — alterar lá e rodar o seed, não editar linha a linha no banco.
+- Priorização: as demandas são as issues abertas de `mercantil/mercantil` com `system::cliqq-centralizado` e `type::crm` ou `type::melhoria`. O botão "Atualizar do GitLab" chama `POST /priorizacao/sincronizar`, que faz uma busca por tipo (a API só faz AND de labels), une por `iid` e grava em `Demanda`. Filtro e mapeamento ficam em `backend/src/comum/issues-gitlab.ts`; o cliente HTTP em `backend/src/gitlab/`.
+- Issue que sai do filtro vira `Demanda.ativa = false` e some da tela — a `RespostaPriorizacao` **nunca** é apagada, então ela reaparece intacta se a issue voltar. `GET /priorizacao` só devolve as ativas.
+- A sincronização exige `GITLAB_TOKEN` (escopo `read_api`) e `GITLAB_URL` no `.env`; sem token o endpoint responde 503 com a mensagem que a tela exibe.
+- A escala das 5 perguntas fica em `backend/src/comum/priorizacao.ts` e é espelhada em `frontend/src/dominio/priorizacao.ts`. Uma resposta por demanda (upsert por `demandaId` — vale sempre a última).
+- As 4 perguntas de valor pontuam 5/10/20; o esforço tem 7 níveis próprios (20 a 2, de "1 dia" a "mais de 2 meses"), com `dias` em dias úteis. Mexer na pontuação do esforço exige migração de dados das respostas já gravadas — ver `20260807214429_reescala_esforco`.
 - Regra das ondas fica em `backend/src/comum/ondas.ts` (Onda 1: 40+ op/dia, Onda 2: 20–39, Onda 3: < 20) e é aplicada no seed apenas para lojas sem onda; a lista espelhada no front está em `frontend/src/dominio/ondas.ts`.
 
 ## Gráficos
@@ -28,3 +33,4 @@ Report do rollout do CliQQ para 600 filiais.
 - Ordem da pilha de status é fixa (`ORDEM_PILHA_STATUS`: concluído → em operação → em adaptação → em treinamento → não iniciado → bloqueado): garante separação para daltônicos; não reordenar sem revalidar a paleta.
 - `STATUS_EM_IMPLANTACAO` agrupa os três estados intermediários — usar essa constante em vez de comparar status um a um.
 - Status sempre com ícone + rótulo, nunca só cor. Um eixo por gráfico — nunca eixo duplo.
+- Na matriz de priorização o eixo X é o tempo de desenvolvimento (crescente para a direita) e o Y é a soma das 4 primeiras perguntas: prioridade alta = alto e à esquerda. O afastamento de pontos coincidentes acontece só no eixo X, que é categórico, para o Y nunca mentir sobre a pontuação.

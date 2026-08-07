@@ -8,9 +8,10 @@ import {
 
 interface Props {
   demandas: DemandaPriorizada[];
+  aoAbrir: (demandaId: number) => void;
 }
 
-export function TabelaPriorizacao({ demandas }: Props) {
+export function TabelaPriorizacao({ demandas, aoAbrir }: Props) {
   const ordenadas = ordenarPorPrioridade(demandas);
 
   return (
@@ -47,13 +48,20 @@ export function TabelaPriorizacao({ demandas }: Props) {
                   : '—'}
               </td>
               <td>
-                {demanda.completa ? (
-                  <strong>{demanda.score}</strong>
-                ) : (
-                  <span className="selo selo-pendente">
-                    Pendente · {respondidas(demanda.resposta)}/{PERGUNTAS.length}
-                  </span>
-                )}
+                <button
+                  type="button"
+                  className="ligacao"
+                  onClick={() => aoAbrir(demanda.id)}
+                  title="Abrir as perguntas de priorização"
+                >
+                  {demanda.completa ? (
+                    <strong>{demanda.score}</strong>
+                  ) : (
+                    <span className="selo selo-pendente">
+                      Pendente · {respondidas(demanda.resposta)}/{PERGUNTAS.length}
+                    </span>
+                  )}
+                </button>
               </td>
             </tr>
           ))}

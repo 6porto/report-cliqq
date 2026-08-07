@@ -106,7 +106,18 @@ export function ordenarPorPrioridade(demandas: DemandaPriorizada[]) {
   });
 }
 
-/** A lista de formulários ataca primeiro a issue mais nova do backlog. */
-export function ordenarPelaMaisNova(demandas: DemandaPriorizada[]) {
-  return [...demandas].sort((uma, outra) => outra.id - uma.id);
+/** Anda pela ordem do ranking, dando a volta, até achar outra demanda incompleta. */
+export function proximaPendente(demandas: DemandaPriorizada[], idAtual: number) {
+  const ordenadas = ordenarPorPrioridade(demandas);
+  const atual = ordenadas.findIndex((demanda) => demanda.id === idAtual);
+
+  for (let passo = 1; passo <= ordenadas.length; passo += 1) {
+    const candidata = ordenadas[(atual + passo) % ordenadas.length];
+
+    if (candidata && !candidata.completa && candidata.id !== idAtual) {
+      return candidata.id;
+    }
+  }
+
+  return null;
 }

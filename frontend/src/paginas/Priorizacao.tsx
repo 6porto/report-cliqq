@@ -3,8 +3,8 @@ import { mensagemDoErro } from '../api/cliente';
 import { usePriorizacao, useSalvarResposta, useSincronizarPriorizacao } from '../api/hooks';
 import { CartaoGrafico } from '../componentes/CartaoGrafico';
 import { CartaoKpi } from '../componentes/CartaoKpi';
-import { FormularioDemanda } from '../componentes/FormularioDemanda';
 import { GraficoPriorizacao } from '../componentes/GraficoPriorizacao';
+import { ModalDemanda } from '../componentes/ModalDemanda';
 import { TabelaPriorizacao } from '../componentes/TabelaPriorizacao';
 import {
   CORTE_GANHO_RAPIDO,
@@ -12,21 +12,24 @@ import {
   PONTUACAO_VALOR_MAXIMA,
   PONTUACAO_VALOR_MINIMA,
   ehGanhoRapido,
-  ordenarPelaMaisNova,
+  proximaPendente,
 } from '../dominio/priorizacao';
 
 export function Priorizacao() {
   const priorizacao = usePriorizacao();
   const salvar = useSalvarResposta();
   const sincronizar = useSincronizarPriorizacao();
-  const [somentePendentes, setSomentePendentes] = useState(true);
+  const [somentePendentes, setSomentePendentes] = useState(false);
+  const [demandaAberta, setDemandaAberta] = useState<number | null>(null);
 
   const demandas = priorizacao.data ?? [];
   const completas = demandas.filter((demanda) => demanda.completa);
   const pendentes = demandas.filter((demanda) => !demanda.completa);
   const ganhosRapidos = completas.filter(ehGanhoRapido).length;
   const diasEstimados = completas.reduce((soma, demanda) => soma + (demanda.dias ?? 0), 0);
-  const listadas = ordenarPelaMaisNova(somentePendentes ? pendentes : demandas);
+  const listadas = somentePendentes ? pendentes : demandas;
+  const aberta = demandas.find((demanda) => demanda.id === demandaAberta) ?? null;
+  const proxima = aberta ? proximaPendente(demandas, aberta.id) : null;
   const resumo = sincronizar.data;
 
   return (
@@ -55,6 +58,7 @@ export function Priorizacao() {
       </div>
 
       {sincronizar.isError ? <p className="erro">{mensagemDoErro(sincronizar.error)}</p> : null}
+      {salvar.isError ? <p className="erro">{mensagemDoErro(salvar.error)}</p> : null}
 
       <div className="grade-kpi">
         <CartaoKpi
@@ -97,7 +101,17 @@ export function Priorizacao() {
         <CartaoGrafico
           largo
           titulo="Ranking"
-          subtitulo="Score = soma das 5 perguntas (20 a 100). Demandas sem todas as respostas ficam no fim e fora do gráfico."
+          subtitulo="Score = soma das 5 perguntas (20 a 100). Clique no score para abrir as perguntas. Demandas sem todas as respostas ficam no fim e fora do gráfico."
+          acoes={
+            <button
+              type="button"
+              className="aba"
+              aria-pressed={somentePendentes}
+              onClick={() => setSomentePendentes((ligado) => !ligado)}
+            >
+              {somentePendentes ? `Só pendentes (${pendentes.length})` : `Todas (${demandas.length})`}
+            </button>
+          }
         >
           {priorizacao.isLoading ? <p className="carregando">Carregando…</p> : null}
           {!priorizacao.isLoading && demandas.length === 0 ? (
@@ -105,44 +119,24 @@ export function Priorizacao() {
               Nenhuma demanda carregada. Clique em “Atualizar do GitLab” para buscar as issues.
             </p>
           ) : null}
-          {demandas.length > 0 ? <TabelaPriorizacao demandas={demandas} /> : null}
+          {listadas.length > 0 ? (
+            <TabelaPriorizacao demandas={listadas} aoAbrir={setDemandaAberta} />
+          ) : null}
         </CartaoGrafico>
       </div>
 
-      <section className="lista-demandas">
-        <div className="cabecalho-lista">
-          <div>
-            <h2>Backlog</h2>
-            <p className="subtitulo">
-              Responda as {PERGUNTAS.length} perguntas de cada demanda. A resposta é salva na hora e
-              pode ser trocada a qualquer momento — vale sempre a última.
-            </p>
-          </div>
-          <button
-            type="button"
-            className="aba"
-            aria-pressed={somentePendentes}
-            onClick={() => setSomentePendentes((ligado) => !ligado)}
-          >
-            {somentePendentes
-              ? `Só pendentes (${pendentes.length})`
-              : `Todas (${demandas.length})`}
-          </button>
-        </div>
-
-        {salvar.isError ? <p className="erro">{mensagemDoErro(salvar.error)}</p> : null}
-
-        {listadas.map((demanda) => (
-          <FormularioDemanda
-            key={demanda.id}
-            demanda={demanda}
-            salvando={salvar.isPending && salvar.variables?.demandaId === demanda.id}
-            aoResponder={(campo, pontos) =>
-              salvar.mutate({ demandaId: demanda.id, resposta: { [campo]: pontos } })
-            }
-          />
-        ))}
-      </section>
+      {aberta ? (
+        <ModalDemanda
+          demanda={aberta}
+          salvando={salvar.isPending && salvar.variables?.demandaId === aberta.id}
+          temProximaPendente={proxima !== null}
+          aoResponder={(campo, pontos) =>
+            salvar.mutate({ demandaId: aberta.id, resposta: { [campo]: pontos } })
+          }
+          aoIrParaProximaPendente={() => setDemandaAberta(proxima)}
+          aoFechar={() => setDemandaAberta(null)}
+        />
+      ) : null}
     </>
   );
 }

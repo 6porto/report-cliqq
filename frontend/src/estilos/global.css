@@ -522,35 +522,28 @@ textarea {
   font-variant-numeric: tabular-nums;
 }
 
-.lista-demandas {
-  margin-top: 16px;
-  display: grid;
-  gap: 12px;
-}
-
-.lista-demandas h2 {
-  font-size: 14px;
-  margin: 0;
-}
-
-.cabecalho-lista {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.cabecalho-lista .subtitulo {
-  margin: 4px 0 0;
-  color: var(--tinta-secundaria);
-  font-size: 12px;
-}
-
-.cabecalho-lista .aba[aria-pressed='true'] {
+.cartao > header .aba[aria-pressed='true'] {
   color: var(--tinta-primaria);
   border-color: var(--linha-base);
   font-weight: 600;
+}
+
+.ligacao {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: var(--serie-1);
+  cursor: pointer;
+  text-align: left;
+}
+
+.ligacao:hover {
+  text-decoration: underline;
+}
+
+.ligacao strong {
+  color: var(--serie-1);
 }
 
 .demanda-cabecalho {
@@ -558,7 +551,11 @@ textarea {
   flex-wrap: wrap;
   align-items: baseline;
   gap: 8px;
-  margin-bottom: 12px;
+}
+
+.modal .demanda-descricao {
+  margin: 0 0 4px;
+  font-size: 15px;
 }
 
 .demanda-id {

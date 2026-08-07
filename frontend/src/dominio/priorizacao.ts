@@ -106,6 +106,96 @@ export function ordenarPorPrioridade(demandas: DemandaPriorizada[]) {
   });
 }
 
+export const COLUNAS_ORDENAVEIS = [
+  'id',
+  'titulo',
+  'tipo',
+  'estado',
+  'pontuacaoValor',
+  'posicaoEsforco',
+  'score',
+] as const;
+
+export type ColunaOrdenavel = (typeof COLUNAS_ORDENAVEIS)[number];
+
+export interface OrdenacaoRanking {
+  coluna: ColunaOrdenavel;
+  direcao: 'asc' | 'desc';
+}
+
+/** Primeiro clique já mostra o que interessa: nota alta primeiro, esforço curto primeiro. */
+export const DIRECAO_INICIAL: Record<ColunaOrdenavel, 'asc' | 'desc'> = {
+  id: 'desc',
+  titulo: 'asc',
+  tipo: 'asc',
+  estado: 'asc',
+  pontuacaoValor: 'desc',
+  posicaoEsforco: 'asc',
+  score: 'desc',
+};
+
+function valorDaColuna(demanda: DemandaPriorizada, coluna: ColunaOrdenavel) {
+  switch (coluna) {
+    case 'id':
+      return demanda.id;
+    case 'titulo':
+      return demanda.titulo;
+    case 'tipo':
+      return ROTULO_TIPO[demanda.tipo] ?? demanda.tipo;
+    case 'estado':
+      return demanda.estado;
+    case 'pontuacaoValor':
+      return demanda.pontuacaoValor;
+    case 'posicaoEsforco':
+      return demanda.posicaoEsforco;
+    case 'score':
+      return demanda.score;
+  }
+}
+
+/** Sem ordenação escolhida vale a ordem do ranking. Demanda sem resposta cai sempre no fim. */
+export function ordenarRanking(
+  demandas: DemandaPriorizada[],
+  ordenacao: OrdenacaoRanking | null,
+) {
+  if (!ordenacao) {
+    return ordenarPorPrioridade(demandas);
+  }
+
+  const sinal = ordenacao.direcao === 'asc' ? 1 : -1;
+
+  return [...demandas].sort((uma, outra) => {
+    const daUma = valorDaColuna(uma, ordenacao.coluna);
+    const daOutra = valorDaColuna(outra, ordenacao.coluna);
+
+    if (daUma === null || daOutra === null) {
+      if (daUma === daOutra) {
+        return outra.id - uma.id;
+      }
+
+      return daUma === null ? 1 : -1;
+    }
+
+    const diferenca =
+      typeof daUma === 'string' && typeof daOutra === 'string'
+        ? daUma.localeCompare(String(daOutra), 'pt-BR')
+        : Number(daUma) - Number(daOutra);
+
+    return diferenca !== 0 ? diferenca * sinal : outra.id - uma.id;
+  });
+}
+
+/** A posição do ranking não muda com filtro nem com ordenação da tabela. */
+export function posicoesDoRanking(demandas: DemandaPriorizada[]) {
+  const posicoes = new Map<number, number>();
+
+  ordenarPorPrioridade(demandas)
+    .filter((demanda) => demanda.completa)
+    .forEach((demanda, indice) => posicoes.set(demanda.id, indice + 1));
+
+  return posicoes;
+}
+
 /** Anda pela ordem do ranking, dando a volta, até achar outra demanda incompleta. */
 export function proximaPendente(demandas: DemandaPriorizada[], idAtual: number) {
   const ordenadas = ordenarPorPrioridade(demandas);

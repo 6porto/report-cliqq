@@ -8,11 +8,16 @@ import { ModalDemanda } from '../componentes/ModalDemanda';
 import { TabelaPriorizacao } from '../componentes/TabelaPriorizacao';
 import {
   CORTE_GANHO_RAPIDO,
+  DIRECAO_INICIAL,
   PERGUNTAS,
   PONTUACAO_VALOR_MAXIMA,
   PONTUACAO_VALOR_MINIMA,
+  ROTULO_TIPO,
   ehGanhoRapido,
+  posicoesDoRanking,
   proximaPendente,
+  type ColunaOrdenavel,
+  type OrdenacaoRanking,
 } from '../dominio/priorizacao';
 
 export function Priorizacao() {
@@ -21,16 +26,39 @@ export function Priorizacao() {
   const sincronizar = useSincronizarPriorizacao();
   const [somentePendentes, setSomentePendentes] = useState(false);
   const [demandaAberta, setDemandaAberta] = useState<number | null>(null);
+  const [filtroTipo, setFiltroTipo] = useState('');
+  const [filtroEstado, setFiltroEstado] = useState('');
+  const [ordenacao, setOrdenacao] = useState<OrdenacaoRanking | null>(null);
 
   const demandas = priorizacao.data ?? [];
   const completas = demandas.filter((demanda) => demanda.completa);
   const pendentes = demandas.filter((demanda) => !demanda.completa);
   const ganhosRapidos = completas.filter(ehGanhoRapido).length;
   const diasEstimados = completas.reduce((soma, demanda) => soma + (demanda.dias ?? 0), 0);
-  const listadas = somentePendentes ? pendentes : demandas;
+
+  const tipos = [...new Set(demandas.map((demanda) => demanda.tipo))].sort();
+  const estados = [...new Set(demandas.map((demanda) => demanda.estado ?? ''))]
+    .filter(Boolean)
+    .sort();
+
+  const listadas = demandas.filter(
+    (demanda) =>
+      (!somentePendentes || !demanda.completa) &&
+      (!filtroTipo || demanda.tipo === filtroTipo) &&
+      (!filtroEstado || demanda.estado === filtroEstado),
+  );
+
+  const posicoes = posicoesDoRanking(demandas);
   const aberta = demandas.find((demanda) => demanda.id === demandaAberta) ?? null;
   const proxima = aberta ? proximaPendente(demandas, aberta.id) : null;
   const resumo = sincronizar.data;
+
+  const alternarOrdenacao = (coluna: ColunaOrdenavel) =>
+    setOrdenacao((atual) =>
+      atual?.coluna === coluna
+        ? { coluna, direcao: atual.direcao === 'asc' ? 'desc' : 'asc' }
+        : { coluna, direcao: DIRECAO_INICIAL[coluna] },
+    );
 
   return (
     <>
@@ -113,14 +141,56 @@ export function Priorizacao() {
             </button>
           }
         >
+          {demandas.length > 0 ? (
+            <div className="filtros">
+              <select
+                value={filtroTipo}
+                onChange={(evento) => setFiltroTipo(evento.target.value)}
+                aria-label="Filtrar por tipo"
+              >
+                <option value="">Todos os tipos</option>
+                {tipos.map((tipo) => (
+                  <option key={tipo} value={tipo}>
+                    {ROTULO_TIPO[tipo] ?? tipo}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={filtroEstado}
+                onChange={(evento) => setFiltroEstado(evento.target.value)}
+                aria-label="Filtrar por estado"
+              >
+                <option value="">Todos os estados</option>
+                {estados.map((estado) => (
+                  <option key={estado} value={estado}>
+                    {estado}
+                  </option>
+                ))}
+              </select>
+              <span className="aviso-sincronizacao">
+                {listadas.length} de {demandas.length}
+              </span>
+            </div>
+          ) : null}
+
           {priorizacao.isLoading ? <p className="carregando">Carregando…</p> : null}
           {!priorizacao.isLoading && demandas.length === 0 ? (
             <p className="carregando">
               Nenhuma demanda carregada. Clique em “Atualizar do GitLab” para buscar as issues.
             </p>
           ) : null}
+          {demandas.length > 0 && listadas.length === 0 ? (
+            <p className="carregando">Nenhuma demanda com esse filtro.</p>
+          ) : null}
           {listadas.length > 0 ? (
-            <TabelaPriorizacao demandas={listadas} aoAbrir={setDemandaAberta} />
+            <TabelaPriorizacao
+              demandas={listadas}
+              posicoes={posicoes}
+              ordenacao={ordenacao}
+              aoOrdenar={alternarOrdenacao}
+              aoVoltarParaORanking={() => setOrdenacao(null)}
+              aoAbrir={setDemandaAberta}
+            />
           ) : null}
         </CartaoGrafico>
       </div>

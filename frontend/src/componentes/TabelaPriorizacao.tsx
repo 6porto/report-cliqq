@@ -2,37 +2,85 @@ import type { DemandaPriorizada } from '../api/tipos';
 import {
   PERGUNTAS,
   ROTULO_TIPO,
-  ordenarPorPrioridade,
+  ordenarRanking,
   respondidas,
+  type ColunaOrdenavel,
+  type OrdenacaoRanking,
 } from '../dominio/priorizacao';
 
 interface Props {
   demandas: DemandaPriorizada[];
+  posicoes: Map<number, number>;
+  ordenacao: OrdenacaoRanking | null;
+  aoOrdenar: (coluna: ColunaOrdenavel) => void;
+  aoVoltarParaORanking: () => void;
   aoAbrir: (demandaId: number) => void;
 }
 
-export function TabelaPriorizacao({ demandas, aoAbrir }: Props) {
-  const ordenadas = ordenarPorPrioridade(demandas);
+const COLUNAS: { coluna: ColunaOrdenavel; rotulo: string }[] = [
+  { coluna: 'id', rotulo: 'Issue' },
+  { coluna: 'titulo', rotulo: 'Título' },
+  { coluna: 'tipo', rotulo: 'Tipo' },
+  { coluna: 'estado', rotulo: 'Estado' },
+  { coluna: 'pontuacaoValor', rotulo: 'Valor' },
+  { coluna: 'posicaoEsforco', rotulo: 'Esforço' },
+  { coluna: 'score', rotulo: 'Score' },
+];
+
+export function TabelaPriorizacao({
+  demandas,
+  posicoes,
+  ordenacao,
+  aoOrdenar,
+  aoVoltarParaORanking,
+  aoAbrir,
+}: Props) {
+  const ordenadas = ordenarRanking(demandas, ordenacao);
 
   return (
     <div className="tabela-envolucro">
       <table>
         <thead>
           <tr>
-            <th>#</th>
-            <th>Issue</th>
-            <th>Título</th>
-            <th>Tipo</th>
-            <th>Estado</th>
-            <th>Valor</th>
-            <th>Esforço</th>
-            <th>Score</th>
+            <th aria-sort={ordenacao ? 'none' : 'descending'}>
+              <button
+                type="button"
+                className={ordenacao ? 'ordenar' : 'ordenar ordenar-ativa'}
+                onClick={aoVoltarParaORanking}
+                title="Voltar à ordem do ranking"
+              >
+                #<span aria-hidden>{ordenacao ? '↕' : '▼'}</span>
+              </button>
+            </th>
+            {COLUNAS.map((coluna) => {
+              const ativa = ordenacao?.coluna === coluna.coluna;
+
+              return (
+                <th
+                  key={coluna.coluna}
+                  aria-sort={
+                    ativa ? (ordenacao.direcao === 'asc' ? 'ascending' : 'descending') : 'none'
+                  }
+                >
+                  <button
+                    type="button"
+                    className={ativa ? 'ordenar ordenar-ativa' : 'ordenar'}
+                    onClick={() => aoOrdenar(coluna.coluna)}
+                  >
+                    {coluna.rotulo}
+                    <span aria-hidden>
+                      {ativa ? (ordenacao.direcao === 'asc' ? '▲' : '▼') : '↕'}
+                    </span>
+                  </button>
+                </th>
+              );
+            })}
           </tr>
         </thead>
         <tbody>
-          {ordenadas.map((demanda, indice) => (
+          {ordenadas.map((demanda) => (
             <tr key={demanda.id}>
-              <td>{demanda.completa ? indice + 1 : '—'}</td>
+              <td>{posicoes.get(demanda.id) ?? '—'}</td>
               <td>
                 <a href={demanda.url} target="_blank" rel="noreferrer">
                   #{demanda.id}

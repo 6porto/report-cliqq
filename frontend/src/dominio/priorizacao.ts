@@ -83,6 +83,11 @@ export function respondidas(resposta: RespostaPriorizacao | null) {
   return PERGUNTAS.filter((pergunta) => resposta[pergunta.chave] !== null).length;
 }
 
+export const ROTULO_TIPO: Record<string, string> = {
+  crm: 'CRM',
+  melhoria: 'Melhoria',
+};
+
 export function ordenarPorPrioridade(demandas: DemandaPriorizada[]) {
   return [...demandas].sort((uma, outra) => {
     if (uma.completa !== outra.completa) {
@@ -97,6 +102,11 @@ export function ordenarPorPrioridade(demandas: DemandaPriorizada[]) {
       }
     }
 
-    return uma.id - outra.id;
+    return outra.id - uma.id;
   });
+}
+
+/** A lista de formulários ataca primeiro a issue mais nova do backlog. */
+export function ordenarPelaMaisNova(demandas: DemandaPriorizada[]) {
+  return [...demandas].sort((uma, outra) => outra.id - uma.id);
 }

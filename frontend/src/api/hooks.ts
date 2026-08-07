@@ -13,6 +13,7 @@ import type {
   Projecao,
   RespostaPriorizacao,
   Resumo,
+  ResumoSincronizacao,
   StatusRollout,
 } from './tipos';
 
@@ -146,6 +147,17 @@ export function useSalvarResposta() {
       clienteQuery.setQueryData<DemandaPriorizada[]>(['priorizacao'], (atual) =>
         atual?.map((item) => (item.id === demanda.id ? demanda : item)),
       );
+    },
+  });
+}
+
+export function useSincronizarPriorizacao() {
+  const clienteQuery = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => api.post<ResumoSincronizacao>('/priorizacao/sincronizar', {}),
+    onSuccess: () => {
+      clienteQuery.invalidateQueries({ queryKey: ['priorizacao'] });
     },
   });
 }

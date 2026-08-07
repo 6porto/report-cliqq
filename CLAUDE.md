@@ -20,7 +20,10 @@ Report do rollout do CliQQ para 600 filiais.
 - Status válidos ficam em `backend/src/comum/status-rollout.ts` e espelhados em `frontend/src/api/tipos.ts`.
 - `cidade`, `uf` e `regional` são opcionais (45 lojas vieram com `#N/D`); relatórios agrupam esses casos como "Não informado".
 - Fonte do cadastro é o TSV em `backend/prisma/dados/lojas.tsv` — alterar lá e rodar o seed, não editar linha a linha no banco.
-- Priorização: as demandas são fixas em `backend/src/priorizacao/demandas.ts` (passarão a vir das issues do GitLab); só as respostas vão para o banco, uma por demanda (`RespostaPriorizacao`, upsert por `demandaId` — vale sempre a última). A escala das 5 perguntas fica em `backend/src/comum/priorizacao.ts` e é espelhada em `frontend/src/dominio/priorizacao.ts`.
+- Priorização: as demandas são as issues abertas de `mercantil/mercantil` com `system::cliqq-centralizado` e `type::crm` ou `type::melhoria`. O botão "Atualizar do GitLab" chama `POST /priorizacao/sincronizar`, que faz uma busca por tipo (a API só faz AND de labels), une por `iid` e grava em `Demanda`. Filtro e mapeamento ficam em `backend/src/comum/issues-gitlab.ts`; o cliente HTTP em `backend/src/gitlab/`.
+- Issue que sai do filtro vira `Demanda.ativa = false` e some da tela — a `RespostaPriorizacao` **nunca** é apagada, então ela reaparece intacta se a issue voltar. `GET /priorizacao` só devolve as ativas.
+- A sincronização exige `GITLAB_TOKEN` (escopo `read_api`) e `GITLAB_URL` no `.env`; sem token o endpoint responde 503 com a mensagem que a tela exibe.
+- A escala das 5 perguntas fica em `backend/src/comum/priorizacao.ts` e é espelhada em `frontend/src/dominio/priorizacao.ts`. Uma resposta por demanda (upsert por `demandaId` — vale sempre a última).
 - Regra das ondas fica em `backend/src/comum/ondas.ts` (Onda 1: 40+ op/dia, Onda 2: 20–39, Onda 3: < 20) e é aplicada no seed apenas para lojas sem onda; a lista espelhada no front está em `frontend/src/dominio/ondas.ts`.
 
 ## Gráficos

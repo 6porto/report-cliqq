@@ -492,6 +492,36 @@ textarea {
   margin-top: 16px;
 }
 
+.barra-sincronizacao {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin-bottom: 16px;
+}
+
+.barra-sincronizacao .subtitulo {
+  margin: 0;
+  color: var(--tinta-secundaria);
+  font-size: 12px;
+}
+
+.barra-sincronizacao code {
+  font-size: 11px;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: 5px;
+  padding: 1px 5px;
+}
+
+.aviso-sincronizacao {
+  margin-left: 12px;
+  font-size: 12px;
+  color: var(--tinta-secundaria);
+  font-variant-numeric: tabular-nums;
+}
+
 .lista-demandas {
   margin-top: 16px;
   display: grid;
@@ -503,10 +533,24 @@ textarea {
   margin: 0;
 }
 
-.lista-demandas > .subtitulo {
-  margin: -8px 0 0;
+.cabecalho-lista {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cabecalho-lista .subtitulo {
+  margin: 4px 0 0;
   color: var(--tinta-secundaria);
   font-size: 12px;
+}
+
+.cabecalho-lista .aba[aria-pressed='true'] {
+  color: var(--tinta-primaria);
+  border-color: var(--linha-base);
+  font-weight: 600;
 }
 
 .demanda-cabecalho {
@@ -520,7 +564,12 @@ textarea {
 .demanda-id {
   font-variant-numeric: tabular-nums;
   font-weight: 600;
-  color: var(--tinta-secundaria);
+  color: var(--serie-1);
+  text-decoration: none;
+}
+
+.demanda-id:hover {
+  text-decoration: underline;
 }
 
 .demanda-descricao {
@@ -544,6 +593,12 @@ textarea {
 
 .selo-pendente {
   color: var(--tinta-mutada);
+}
+
+.selo-tipo {
+  border-color: var(--linha-base);
+  color: var(--tinta-secundaria);
+  font-weight: 600;
 }
 
 .perguntas {
@@ -615,7 +670,7 @@ textarea {
   cursor: not-allowed;
 }
 
-.celula-descricao {
+.celula-titulo {
   white-space: normal;
   min-width: 320px;
 }

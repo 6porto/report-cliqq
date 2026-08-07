@@ -121,7 +121,10 @@ export interface RespostaPriorizacao {
 
 export interface DemandaPriorizada {
   id: number;
-  descricao: string;
+  titulo: string;
+  tipo: string;
+  estado: string | null;
+  url: string;
   resposta: RespostaPriorizacao | null;
   completa: boolean;
   pontuacaoValor: number | null;
@@ -130,6 +133,13 @@ export interface DemandaPriorizada {
   dias: number | null;
   posicaoEsforco: number | null;
   rotuloEsforco: string | null;
+}
+
+export interface ResumoSincronizacao {
+  novas: number;
+  atualizadas: number;
+  sairam: number;
+  total: number;
 }
 
 export const CAMPOS_ORDENAVEIS = [

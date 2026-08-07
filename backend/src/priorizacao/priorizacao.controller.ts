@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Put } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Post, Put } from '@nestjs/common';
 import { SalvarRespostaDto } from './dto/salvar-resposta.dto';
 import { PriorizacaoService } from './priorizacao.service';
 
@@ -9,6 +9,11 @@ export class PriorizacaoController {
   @Get()
   listar() {
     return this.priorizacaoService.listar();
+  }
+
+  @Post('sincronizar')
+  sincronizar() {
+    return this.priorizacaoService.sincronizar();
   }
 
   @Put(':demandaId')

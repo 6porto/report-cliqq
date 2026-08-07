@@ -1,5 +1,5 @@
 import type { DemandaPriorizada } from '../api/tipos';
-import { PERGUNTAS, respondidas, type CampoResposta } from '../dominio/priorizacao';
+import { PERGUNTAS, ROTULO_TIPO, respondidas, type CampoResposta } from '../dominio/priorizacao';
 
 interface Props {
   demanda: DemandaPriorizada;
@@ -13,8 +13,12 @@ export function FormularioDemanda({ demanda, salvando, aoResponder }: Props) {
   return (
     <article className="cartao demanda">
       <header className="demanda-cabecalho">
-        <span className="demanda-id">#{demanda.id}</span>
-        <p className="demanda-descricao">{demanda.descricao}</p>
+        <a className="demanda-id" href={demanda.url} target="_blank" rel="noreferrer">
+          #{demanda.id}
+        </a>
+        <p className="demanda-descricao">{demanda.titulo}</p>
+        <span className="selo selo-tipo">{ROTULO_TIPO[demanda.tipo] ?? demanda.tipo}</span>
+        {demanda.estado ? <span className="selo">{demanda.estado}</span> : null}
         {demanda.completa ? (
           <span className="selo selo-pronto">Score {demanda.score}</span>
         ) : (

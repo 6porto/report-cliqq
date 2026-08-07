@@ -1,5 +1,10 @@
 import type { DemandaPriorizada } from '../api/tipos';
-import { PERGUNTAS, ordenarPorPrioridade, respondidas } from '../dominio/priorizacao';
+import {
+  PERGUNTAS,
+  ROTULO_TIPO,
+  ordenarPorPrioridade,
+  respondidas,
+} from '../dominio/priorizacao';
 
 interface Props {
   demandas: DemandaPriorizada[];
@@ -14,8 +19,10 @@ export function TabelaPriorizacao({ demandas }: Props) {
         <thead>
           <tr>
             <th>#</th>
-            <th>ID</th>
-            <th>Descrição</th>
+            <th>Issue</th>
+            <th>Título</th>
+            <th>Tipo</th>
+            <th>Estado</th>
             <th>Valor</th>
             <th>Esforço</th>
             <th>Score</th>
@@ -25,8 +32,14 @@ export function TabelaPriorizacao({ demandas }: Props) {
           {ordenadas.map((demanda, indice) => (
             <tr key={demanda.id}>
               <td>{demanda.completa ? indice + 1 : '—'}</td>
-              <td>{demanda.id}</td>
-              <td className="celula-descricao">{demanda.descricao}</td>
+              <td>
+                <a href={demanda.url} target="_blank" rel="noreferrer">
+                  #{demanda.id}
+                </a>
+              </td>
+              <td className="celula-titulo">{demanda.titulo}</td>
+              <td>{ROTULO_TIPO[demanda.tipo] ?? demanda.tipo}</td>
+              <td>{demanda.estado ?? '—'}</td>
               <td>{demanda.pontuacaoValor ?? '—'}</td>
               <td>
                 {demanda.rotuloEsforco

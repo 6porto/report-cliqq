@@ -25,7 +25,7 @@ interface Ponto {
   x: number;
   y: number;
   id: number;
-  descricao: string;
+  titulo: string;
   score: number;
   rotuloEsforco: string;
   pontuacaoEsforco: number;
@@ -34,6 +34,7 @@ interface Ponto {
 const COR_PONTO = 'var(--serie-1)';
 const FOLGA_Y = 5;
 const AFASTAMENTO_X = 0.16;
+const LARGURA_MAXIMA_DO_GRUPO = 0.8;
 
 /**
  * Demandas com a mesma nota caem no mesmo pixel. O deslocamento acontece só no eixo X,
@@ -53,17 +54,19 @@ function espalhar(demandas: DemandaPriorizada[]): Ponto[] {
     }
   }
 
-  return [...grupos.values()].flatMap((grupo) =>
-    grupo.map((demanda, indice) => ({
-      x: (demanda.posicaoEsforco ?? 0) + (indice - (grupo.length - 1) / 2) * AFASTAMENTO_X,
+  return [...grupos.values()].flatMap((grupo) => {
+    const passo = Math.min(AFASTAMENTO_X, LARGURA_MAXIMA_DO_GRUPO / grupo.length);
+
+    return grupo.map((demanda, indice) => ({
+      x: (demanda.posicaoEsforco ?? 0) + (indice - (grupo.length - 1) / 2) * passo,
       y: demanda.pontuacaoValor ?? 0,
       id: demanda.id,
-      descricao: demanda.descricao,
+      titulo: demanda.titulo,
       score: demanda.score ?? 0,
       rotuloEsforco: demanda.rotuloEsforco ?? '',
       pontuacaoEsforco: demanda.pontuacaoEsforco ?? 0,
-    })),
-  );
+    }));
+  });
 }
 
 export function GraficoPriorizacao({ demandas }: Props) {
@@ -140,7 +143,7 @@ export function GraficoPriorizacao({ demandas }: Props) {
 
             return (
               <Dica
-                titulo={`#${ponto.id} · ${ponto.descricao}`}
+                titulo={`#${ponto.id} · ${ponto.titulo}`}
                 itens={[
                   { nome: 'Valor (4 perguntas)', valor: ponto.y, cor: COR_PONTO },
                   { nome: 'Esforço', valor: `${ponto.rotuloEsforco} (${ponto.pontuacaoEsforco})` },

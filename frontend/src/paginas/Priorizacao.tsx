@@ -116,7 +116,7 @@ export function Priorizacao() {
         <CartaoKpi
           rotulo="Ganhos rápidos"
           valor={ganhosRapidos}
-          apoio={`valor ≥ ${CORTE_GANHO_RAPIDO} e alguns dias de esforço`}
+          apoio={`valor ≥ ${CORTE_GANHO_RAPIDO} e até 2 dias de esforço`}
         />
         <CartaoKpi
           rotulo="Esforço priorizado"

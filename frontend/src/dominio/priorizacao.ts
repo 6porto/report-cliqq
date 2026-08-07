@@ -44,9 +44,13 @@ export const CRITERIO_DE_ESFORCO = {
   chave: 'esforco',
   pergunta: 'Qual o esforço estimado para o desenvolvimento?',
   opcoes: [
-    { pontos: 20, rotulo: 'Alguns dias' },
-    { pontos: 10, rotulo: '1 semana ou mais' },
-    { pontos: 5, rotulo: '1 mês ou mais' },
+    { pontos: 20, rotulo: '1 dia' },
+    { pontos: 17, rotulo: '2 dias' },
+    { pontos: 14, rotulo: '1 semana' },
+    { pontos: 11, rotulo: '2 semanas' },
+    { pontos: 8, rotulo: '1 mês' },
+    { pontos: 5, rotulo: '2 meses' },
+    { pontos: 2, rotulo: 'mais de 2 meses' },
   ],
 } as const;
 
@@ -61,7 +65,10 @@ export interface Pergunta {
 export const PERGUNTAS: Pergunta[] = [...CRITERIOS_DE_VALOR, CRITERIO_DE_ESFORCO];
 
 /** Eixo X do gráfico: tempo de desenvolvimento crescendo da esquerda para a direita. */
-export const POSICOES_DE_ESFORCO = ['Alguns dias', '1 semana ou mais', '1 mês ou mais'];
+export const POSICOES_DE_ESFORCO = CRITERIO_DE_ESFORCO.opcoes.map((opcao) => opcao.rotulo);
+
+/** Ganho rápido: valor alto e esforço de até 2 dias. */
+export const POSICAO_MAXIMA_DE_GANHO_RAPIDO = 1;
 
 export const PONTUACAO_VALOR_MINIMA = CRITERIOS_DE_VALOR.length * 5;
 export const PONTUACAO_VALOR_MAXIMA = CRITERIOS_DE_VALOR.length * 20;
@@ -71,7 +78,7 @@ export function ehGanhoRapido(demanda: DemandaPriorizada) {
   return (
     demanda.completa &&
     (demanda.pontuacaoValor ?? 0) >= CORTE_GANHO_RAPIDO &&
-    demanda.posicaoEsforco === 0
+    (demanda.posicaoEsforco ?? Infinity) <= POSICAO_MAXIMA_DE_GANHO_RAPIDO
   );
 }
 

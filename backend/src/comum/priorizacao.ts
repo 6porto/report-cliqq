@@ -1,6 +1,6 @@
-export const PONTOS_POSSIVEIS = [5, 10, 20] as const;
+export const PONTOS_DE_VALOR = [5, 10, 20] as const;
 
-export type Pontos = (typeof PONTOS_POSSIVEIS)[number];
+export type Pontos = (typeof PONTOS_DE_VALOR)[number];
 
 export const CRITERIOS_DE_VALOR = [
   {
@@ -46,11 +46,21 @@ export type CriterioDeValor = (typeof CRITERIOS_DE_VALOR)[number]['chave'];
 
 export const PERGUNTA_DE_ESFORCO = 'Qual o esforço estimado para o desenvolvimento?';
 
+/** `dias` são dias úteis (5 por semana, 22 por mês) e alimentam o KPI de esforço. */
 export const OPCOES_DE_ESFORCO = [
-  { pontos: 20, rotulo: 'Alguns dias', dias: 3, posicao: 0 },
-  { pontos: 10, rotulo: '1 semana ou mais', dias: 7, posicao: 1 },
-  { pontos: 5, rotulo: '1 mês ou mais', dias: 30, posicao: 2 },
+  { pontos: 20, rotulo: '1 dia', dias: 1, posicao: 0 },
+  { pontos: 17, rotulo: '2 dias', dias: 2, posicao: 1 },
+  { pontos: 14, rotulo: '1 semana', dias: 5, posicao: 2 },
+  { pontos: 11, rotulo: '2 semanas', dias: 10, posicao: 3 },
+  { pontos: 8, rotulo: '1 mês', dias: 22, posicao: 4 },
+  { pontos: 5, rotulo: '2 meses', dias: 44, posicao: 5 },
+  { pontos: 2, rotulo: 'mais de 2 meses', dias: 66, posicao: 6 },
 ] as const;
+
+export const PONTOS_DE_ESFORCO = OPCOES_DE_ESFORCO.map((opcao) => opcao.pontos);
+
+/** Ganho rápido: valor alto e esforço de até 2 dias. */
+export const POSICAO_MAXIMA_DE_GANHO_RAPIDO = 1;
 
 export const PONTUACAO_VALOR_MINIMA = CRITERIOS_DE_VALOR.length * 5;
 export const PONTUACAO_VALOR_MAXIMA = CRITERIOS_DE_VALOR.length * 20;

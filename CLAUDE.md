@@ -24,6 +24,7 @@ Report do rollout do CliQQ para 600 filiais.
 - Issue que sai do filtro vira `Demanda.ativa = false` e some da tela — a `RespostaPriorizacao` **nunca** é apagada, então ela reaparece intacta se a issue voltar. `GET /priorizacao` só devolve as ativas.
 - A sincronização exige `GITLAB_TOKEN` (escopo `read_api`) e `GITLAB_URL` no `.env`; sem token o endpoint responde 503 com a mensagem que a tela exibe.
 - A escala das 5 perguntas fica em `backend/src/comum/priorizacao.ts` e é espelhada em `frontend/src/dominio/priorizacao.ts`. Uma resposta por demanda (upsert por `demandaId` — vale sempre a última).
+- As 4 perguntas de valor pontuam 5/10/20; o esforço tem 7 níveis próprios (20 a 2, de "1 dia" a "mais de 2 meses"), com `dias` em dias úteis. Mexer na pontuação do esforço exige migração de dados das respostas já gravadas — ver `20260807214429_reescala_esforco`.
 - Regra das ondas fica em `backend/src/comum/ondas.ts` (Onda 1: 40+ op/dia, Onda 2: 20–39, Onda 3: < 20) e é aplicada no seed apenas para lojas sem onda; a lista espelhada no front está em `frontend/src/dominio/ondas.ts`.
 
 ## Gráficos

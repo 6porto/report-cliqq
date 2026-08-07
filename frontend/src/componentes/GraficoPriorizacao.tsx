@@ -101,7 +101,8 @@ export function GraficoPriorizacao({ demandas }: Props) {
           domain={[-0.5, POSICOES_DE_ESFORCO.length - 0.5]}
           ticks={POSICOES_DE_ESFORCO.map((_, indice) => indice)}
           tickFormatter={(valor: number) => POSICOES_DE_ESFORCO[valor] ?? ''}
-          tick={{ fill: 'var(--tinta-secundaria)', fontSize: 12 }}
+          interval={0}
+          tick={{ fill: 'var(--tinta-secundaria)', fontSize: 11 }}
           tickLine={false}
           axisLine={{ stroke: 'var(--linha-base)' }}
           label={{

@@ -30,9 +30,13 @@ describe('calcularPriorizacao', () => {
   });
 
   it.each([
-    [20, 0, 'Alguns dias', 3],
-    [10, 1, '1 semana ou mais', 7],
-    [5, 2, '1 mês ou mais', 30],
+    [20, 0, '1 dia', 1],
+    [17, 1, '2 dias', 2],
+    [14, 2, '1 semana', 5],
+    [11, 3, '2 semanas', 10],
+    [8, 4, '1 mês', 22],
+    [5, 5, '2 meses', 44],
+    [2, 6, 'mais de 2 meses', 66],
   ])(
     'esforço de %i pontos fica na posição %i do eixo (%s)',
     (pontos, posicao, rotulo, dias) => {
@@ -70,7 +74,7 @@ describe('calcularPriorizacao', () => {
   });
 
   it('ignora esforço fora da escala', () => {
-    const resultado = calcularPriorizacao(new RespostaBuilder().com('esforco', 7).build());
+    const resultado = calcularPriorizacao(new RespostaBuilder().com('esforco', 10).build());
 
     expect(resultado.completa).toBe(false);
   });

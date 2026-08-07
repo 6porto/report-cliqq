@@ -1,5 +1,6 @@
 import type { DemandaPriorizada } from '../api/tipos';
 import {
+  CRITERIO_DE_ESFORCO,
   PERGUNTAS,
   ROTULO_TIPO,
   ordenarRanking,
@@ -12,8 +13,10 @@ interface Props {
   demandas: DemandaPriorizada[];
   posicoes: Map<number, number>;
   ordenacao: OrdenacaoRanking | null;
+  salvandoId: number | null;
   aoOrdenar: (coluna: ColunaOrdenavel) => void;
   aoVoltarParaORanking: () => void;
+  aoAlterarEsforco: (demandaId: number, pontos: number) => void;
   aoAbrir: (demandaId: number) => void;
 }
 
@@ -31,8 +34,10 @@ export function TabelaPriorizacao({
   demandas,
   posicoes,
   ordenacao,
+  salvandoId,
   aoOrdenar,
   aoVoltarParaORanking,
+  aoAlterarEsforco,
   aoAbrir,
 }: Props) {
   const ordenadas = ordenarRanking(demandas, ordenacao);
@@ -90,10 +95,24 @@ export function TabelaPriorizacao({
               <td>{ROTULO_TIPO[demanda.tipo] ?? demanda.tipo}</td>
               <td>{demanda.estado ?? '—'}</td>
               <td>{demanda.pontuacaoValor ?? '—'}</td>
-              <td>
-                {demanda.rotuloEsforco
-                  ? `${demanda.rotuloEsforco} (${demanda.pontuacaoEsforco})`
-                  : '—'}
+              <td className="celula-esforco">
+                <select
+                  value={demanda.resposta?.esforco ?? ''}
+                  disabled={salvandoId === demanda.id}
+                  aria-label={`Esforço da demanda ${demanda.id}`}
+                  onChange={(evento) =>
+                    evento.target.value
+                      ? aoAlterarEsforco(demanda.id, Number(evento.target.value))
+                      : undefined
+                  }
+                >
+                  <option value="">—</option>
+                  {CRITERIO_DE_ESFORCO.opcoes.map((opcao) => (
+                    <option key={opcao.pontos} value={opcao.pontos}>
+                      {opcao.rotulo} ({opcao.pontos})
+                    </option>
+                  ))}
+                </select>
               </td>
               <td>
                 <button

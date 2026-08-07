@@ -693,3 +693,8 @@ textarea {
   white-space: normal;
   min-width: 320px;
 }
+
+.celula-esforco select {
+  padding: 4px 6px;
+  font-size: 12px;
+}

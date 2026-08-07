@@ -218,8 +218,12 @@ export function Priorizacao() {
               demandas={listadas}
               posicoes={posicoes}
               ordenacao={ordenacao}
+              salvandoId={salvar.isPending ? (salvar.variables?.demandaId ?? null) : null}
               aoOrdenar={alternarOrdenacao}
               aoVoltarParaORanking={() => setOrdenacao(null)}
+              aoAlterarEsforco={(demandaId, pontos) =>
+                salvar.mutate({ demandaId, resposta: { esforco: pontos } })
+              }
               aoAbrir={setDemandaAberta}
             />
           ) : null}

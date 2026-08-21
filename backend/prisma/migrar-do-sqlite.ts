@@ -1,3 +1,4 @@
+import './carregar-env';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';

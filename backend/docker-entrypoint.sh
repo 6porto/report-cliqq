@@ -16,6 +16,10 @@ if [ -z "${DATABASE_URL}" ]; then
   export DATABASE_URL
 fi
 
+# `docker compose exec` não herda o que o entrypoint exporta, então a URL fica
+# gravada aqui: é o que faz `db:seed` e `db:migrar-do-sqlite` funcionarem à mão.
+printf 'DATABASE_URL="%s"\n' "${DATABASE_URL}" > /app/backend/.env
+
 echo "Aplicando migrations no Postgres"
 
 tentativa=1

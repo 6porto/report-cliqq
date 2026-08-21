@@ -27,7 +27,8 @@ COPY --from=build /app/backend ./backend
 
 WORKDIR /app/backend
 RUN sed -i 's/\r$//' docker-entrypoint.sh \
-  && chmod +x docker-entrypoint.sh
+  && chmod +x docker-entrypoint.sh \
+  && chown node:node /app/backend
 
 USER node
 EXPOSE 3333

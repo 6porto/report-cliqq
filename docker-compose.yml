@@ -1,4 +1,22 @@
 services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-rollout}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}
+      POSTGRES_DB: ${POSTGRES_DB:-rollout}
+      TZ: ${TZ:-America/Sao_Paulo}
+    volumes:
+      - pgdados:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-rollout} -d ${POSTGRES_DB:-rollout}']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
   backend:
     build:
       context: .
@@ -8,12 +26,13 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3333
-      DATABASE_URL: file:/dados/rollout.db
+      DATABASE_URL: postgresql://${POSTGRES_USER:-rollout}:${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}@db:5432/${POSTGRES_DB:-rollout}?schema=public
       CORS_ORIGIN: ${CORS_ORIGIN:-*}
       SEED_ON_START: ${SEED_ON_START:-true}
       TZ: ${TZ:-America/Sao_Paulo}
-    volumes:
-      - dados:/dados
+    depends_on:
+      db:
+        condition: service_healthy
     healthcheck:
       test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:3333/api/relatorio/resumo']
       interval: 30s
@@ -50,6 +69,6 @@ services:
       - web
 
 volumes:
-  dados:
+  pgdados:
   caddy_data:
   caddy_config:

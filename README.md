@@ -10,21 +10,25 @@ atualiza o cadastro sem apagar o andamento já registrado.
 
 ## Stack
 
-- **backend/** — NestJS 11 + Prisma + SQLite (arquivo local `backend/prisma/dev.db`)
+- **backend/** — NestJS 11 + Prisma + PostgreSQL 16
 - **frontend/** — React 19 + Vite + TanStack Query + Recharts
 - Monorepo npm workspaces
 
-Trocar SQLite por PostgreSQL = alterar `provider` em `backend/prisma/schema.prisma`
-e a `DATABASE_URL`; nenhum service muda.
+O Postgres de desenvolvimento sobe em container (`docker-compose.dev.yml`); a
+aplicação continua rodando fora do Docker.
 
 ## Rodar
 
 ```bash
 npm install
-npm run db:migrate --workspace backend  # cria/atualiza o banco
-npm run db:seed --workspace backend     # carrega/atualiza as lojas do TSV (não apaga andamento)
-npm run dev                             # backend :3333 e frontend :5173
+cp backend/.env.example backend/.env     # DATABASE_URL aponta para o Postgres local
+npm run db:up                            # sobe o Postgres de desenvolvimento (:5433)
+npm run db:migrate --workspace backend   # cria/atualiza o banco
+npm run db:seed --workspace backend      # carrega/atualiza as lojas do TSV (não apaga andamento)
+npm run dev                              # backend :3333 e frontend :5173
 ```
+
+`npm run db:down` derruba o container do banco (o volume `pgdados_dev` fica).
 
 `npm run db:reset --workspace backend` recria o banco do zero — **apaga todo o
 andamento registrado**. Use só para começar de novo.

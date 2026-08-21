@@ -26,9 +26,17 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3333
-      DATABASE_URL: postgresql://${POSTGRES_USER:-rollout}:${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}@db:5432/${POSTGRES_DB:-rollout}?schema=public
+      # O entrypoint monta a DATABASE_URL escapando a senha; defina DATABASE_URL
+      # só para apontar num Postgres externo.
+      DATABASE_URL: ${DATABASE_URL:-}
+      POSTGRES_HOST: db
+      POSTGRES_USER: ${POSTGRES_USER:-rollout}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}
+      POSTGRES_DB: ${POSTGRES_DB:-rollout}
       CORS_ORIGIN: ${CORS_ORIGIN:-*}
       SEED_ON_START: ${SEED_ON_START:-true}
+      GITLAB_URL: ${GITLAB_URL:-}
+      GITLAB_TOKEN: ${GITLAB_TOKEN:-}
       TZ: ${TZ:-America/Sao_Paulo}
     depends_on:
       db:

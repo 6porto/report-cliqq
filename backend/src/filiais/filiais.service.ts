@@ -108,8 +108,8 @@ export class FiliaisService {
       ...(filtro.busca
         ? {
             OR: [
-              { codigo: { contains: filtro.busca } },
-              { cidade: { contains: filtro.busca } },
+              { codigo: { contains: filtro.busca, mode: 'insensitive' } },
+              { cidade: { contains: filtro.busca, mode: 'insensitive' } },
             ],
           }
         : {}),

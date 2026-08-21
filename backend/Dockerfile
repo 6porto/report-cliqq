@@ -19,8 +19,7 @@ FROM node:22-alpine AS runner
 RUN apk add --no-cache openssl
 WORKDIR /app
 ENV NODE_ENV=production \
-    PORT=3333 \
-    DATABASE_URL=file:/dados/rollout.db
+    PORT=3333
 
 COPY --from=build /app/package.json ./package.json
 COPY --from=build /app/node_modules ./node_modules
@@ -28,9 +27,7 @@ COPY --from=build /app/backend ./backend
 
 WORKDIR /app/backend
 RUN sed -i 's/\r$//' docker-entrypoint.sh \
-  && chmod +x docker-entrypoint.sh \
-  && mkdir -p /dados \
-  && chown -R node:node /dados
+  && chmod +x docker-entrypoint.sh
 
 USER node
 EXPOSE 3333

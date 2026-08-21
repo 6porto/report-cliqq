@@ -1,0 +1,25 @@
+# Postgres só para desenvolvimento local: `npm run db:up`.
+# A aplicação continua rodando fora do Docker com `npm run dev`.
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: rollout-cliqq-db-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: rollout
+      POSTGRES_PASSWORD: rollout
+      POSTGRES_DB: rollout
+      TZ: America/Sao_Paulo
+    # 5433 no host para não brigar com um Postgres instalado direto na máquina.
+    ports:
+      - '${PORTA_PG_DEV:-5433}:5432'
+    volumes:
+      - pgdados_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U rollout -d rollout']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdados_dev:

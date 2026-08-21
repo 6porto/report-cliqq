@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, montarQuery } from './cliente';
 import type {
   CoberturaOnda,
+  DatasPorStatus,
   DemandaPriorizada,
   DistribuicaoHoraria,
   Evolucao,
@@ -14,6 +15,7 @@ import type {
   RespostaPriorizacao,
   Resumo,
   ResumoSincronizacao,
+  StatusPorDia,
   StatusRollout,
 } from './tipos';
 
@@ -28,6 +30,13 @@ export function useEvolucao(granularidade: 'semana' | 'mes' = 'semana') {
   return useQuery({
     queryKey: ['evolucao', granularidade],
     queryFn: () => api.get<Evolucao>(`/relatorio/evolucao?granularidade=${granularidade}`),
+  });
+}
+
+export function useStatusPorDia() {
+  return useQuery({
+    queryKey: ['status-por-dia'],
+    queryFn: () => api.get<StatusPorDia>('/relatorio/status-por-dia'),
   });
 }
 
@@ -158,6 +167,26 @@ export function useSincronizarPriorizacao() {
     mutationFn: () => api.post<ResumoSincronizacao>('/priorizacao/sincronizar', {}),
     onSuccess: () => {
       clienteQuery.invalidateQueries({ queryKey: ['priorizacao'] });
+    },
+  });
+}
+
+export function useDatasPorStatus(filialId: number | null) {
+  return useQuery({
+    queryKey: ['datas-por-status', filialId],
+    queryFn: () => api.get<DatasPorStatus>(`/rollout/filiais/${filialId}/datas`),
+    enabled: filialId !== null,
+  });
+}
+
+export function useDefinirDatas() {
+  const clienteQuery = useQueryClient();
+
+  return useMutation({
+    mutationFn: (variaveis: { id: number; datas: Partial<DatasPorStatus> }) =>
+      api.put<Filial>(`/rollout/filiais/${variaveis.id}/datas`, { datas: variaveis.datas }),
+    onSuccess: () => {
+      clienteQuery.invalidateQueries();
     },
   });
 }

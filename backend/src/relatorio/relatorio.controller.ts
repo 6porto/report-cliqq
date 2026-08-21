@@ -15,6 +15,11 @@ export class RelatorioController {
     return this.relatorioService.evolucao(granularidade === 'mes' ? 'mes' : 'semana');
   }
 
+  @Get('status-por-dia')
+  statusPorDia() {
+    return this.relatorioService.statusPorDia();
+  }
+
   @Get('uf')
   porUf() {
     return this.relatorioService.porUf();

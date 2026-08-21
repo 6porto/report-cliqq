@@ -7,12 +7,14 @@ describe('RelatorioService', () => {
   let prisma: {
     filial: { findMany: jest.Mock; count: jest.Mock };
     metaRollout: { findMany: jest.Mock };
+    eventoRollout: { findMany: jest.Mock };
   };
 
   beforeEach(async () => {
     prisma = {
       filial: { findMany: jest.fn(), count: jest.fn() },
       metaRollout: { findMany: jest.fn() },
+      eventoRollout: { findMany: jest.fn() },
     };
 
     const modulo = await Test.createTestingModule({
@@ -103,6 +105,93 @@ describe('RelatorioService', () => {
       const resultado = await servico.evolucao();
 
       expect(resultado.pontos).toEqual([]);
+    });
+  });
+
+  describe('statusPorDia', () => {
+    const criadoEm = new Date('2026-03-01T12:00:00.000Z');
+
+    it('move a loja de status na data do evento e mantém o total', async () => {
+      prisma.filial.findMany.mockResolvedValue([
+        { id: 1, status: 'CONCLUIDO', criadoEm },
+        { id: 2, status: 'NAO_INICIADO', criadoEm },
+      ]);
+      prisma.eventoRollout.findMany.mockResolvedValue([
+        {
+          filialId: 1,
+          statusAnterior: 'NAO_INICIADO',
+          statusNovo: 'EM_TREINAMENTO',
+          registradoEm: new Date('2026-03-02T09:00:00.000Z'),
+        },
+        {
+          filialId: 1,
+          statusAnterior: 'EM_TREINAMENTO',
+          statusNovo: 'CONCLUIDO',
+          registradoEm: new Date('2026-03-04T09:00:00.000Z'),
+        },
+      ]);
+
+      const resultado = await servico.statusPorDia();
+
+      expect(resultado.total).toBe(2);
+      expect(resultado.pontos[0]).toMatchObject({
+        dia: '2026-03-01',
+        NAO_INICIADO: 2,
+        EM_TREINAMENTO: 0,
+        CONCLUIDO: 0,
+      });
+      expect(resultado.pontos[1]).toMatchObject({
+        dia: '2026-03-02',
+        NAO_INICIADO: 1,
+        EM_TREINAMENTO: 1,
+      });
+      // Nada muda no dia 3: a contagem do dia 2 se mantém.
+      expect(resultado.pontos[2]).toMatchObject({
+        dia: '2026-03-03',
+        EM_TREINAMENTO: 1,
+      });
+      expect(resultado.pontos[3]).toMatchObject({
+        dia: '2026-03-04',
+        EM_TREINAMENTO: 0,
+        CONCLUIDO: 1,
+        NAO_INICIADO: 1,
+      });
+      expect(resultado.pontos.every((ponto) => ponto.total === 2)).toBe(true);
+    });
+
+    it('inclui a loja já na data do evento quando ela é anterior ao cadastro', async () => {
+      prisma.filial.findMany.mockResolvedValue([
+        { id: 1, status: 'CONCLUIDO', criadoEm: new Date('2026-03-10T12:00:00.000Z') },
+      ]);
+      prisma.eventoRollout.findMany.mockResolvedValue([
+        {
+          filialId: 1,
+          statusAnterior: 'NAO_INICIADO',
+          statusNovo: 'CONCLUIDO',
+          registradoEm: new Date('2026-03-08T09:00:00.000Z'),
+        },
+      ]);
+
+      const resultado = await servico.statusPorDia();
+
+      expect(resultado.pontos[0]).toMatchObject({ dia: '2026-03-08', CONCLUIDO: 1, total: 1 });
+      expect(resultado.pontos.every((ponto) => ponto.total === 1)).toBe(true);
+    });
+
+    it('usa o status atual de quem nunca teve evento', async () => {
+      prisma.filial.findMany.mockResolvedValue([{ id: 1, status: 'BLOQUEADO', criadoEm }]);
+      prisma.eventoRollout.findMany.mockResolvedValue([]);
+
+      const resultado = await servico.statusPorDia();
+
+      expect(resultado.pontos[0]).toMatchObject({ dia: '2026-03-01', BLOQUEADO: 1 });
+    });
+
+    it('devolve vazio sem filiais', async () => {
+      prisma.filial.findMany.mockResolvedValue([]);
+      prisma.eventoRollout.findMany.mockResolvedValue([]);
+
+      expect(await servico.statusPorDia()).toEqual({ total: 0, pontos: [] });
     });
   });
 

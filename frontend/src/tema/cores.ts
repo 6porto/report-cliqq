@@ -36,6 +36,16 @@ export const ORDEM_PILHA_STATUS: StatusRollout[] = [
   'BLOQUEADO',
 ];
 
+/** Ordem em que a loja costuma passar pelos status — usada nos campos de data. */
+export const ORDEM_DO_FLUXO_STATUS: StatusRollout[] = [
+  'NAO_INICIADO',
+  'EM_TREINAMENTO',
+  'EM_ADAPTACAO',
+  'EM_OPERACAO',
+  'CONCLUIDO',
+  'BLOQUEADO',
+];
+
 export const STATUS_EM_IMPLANTACAO: StatusRollout[] = [
   'EM_TREINAMENTO',
   'EM_ADAPTACAO',

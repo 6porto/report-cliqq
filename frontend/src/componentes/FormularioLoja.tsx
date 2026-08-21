@@ -1,8 +1,14 @@
 import { useEffect, useState } from 'react';
-import { useAtualizarFilial, useAtualizarStatus, useRemoverFilial } from '../api/hooks';
-import type { Filial, StatusRollout } from '../api/tipos';
+import {
+  useAtualizarFilial,
+  useDatasPorStatus,
+  useDefinirDatas,
+  useRemoverFilial,
+} from '../api/hooks';
+import type { DatasPorStatus, Filial, StatusRollout } from '../api/tipos';
 import { ONDAS } from '../dominio/ondas';
-import { ORDEM_PILHA_STATUS, ROTULO_STATUS, STATUS_EM_IMPLANTACAO } from '../tema/cores';
+import { COR_STATUS, ICONE_STATUS, ORDEM_DO_FLUXO_STATUS, ROTULO_STATUS } from '../tema/cores';
+import { BadgeStatus } from './BadgeStatus';
 
 interface Props {
   loja: Filial;
@@ -18,10 +24,13 @@ interface Campos {
   mediaOperacoes90Dias: string;
   observacao: string;
   dataPrevista: string;
-  dataInicio: string;
-  dataConclusao: string;
-  status: StatusRollout;
 }
+
+type CamposDeData = Record<StatusRollout, string>;
+
+const DATAS_VAZIAS = Object.fromEntries(
+  ORDEM_DO_FLUXO_STATUS.map((status) => [status, '']),
+) as CamposDeData;
 
 function paraCampoData(valor: string | null) {
   return valor ? valor.slice(0, 10) : '';
@@ -37,9 +46,6 @@ function paraCampos(loja: Filial): Campos {
     mediaOperacoes90Dias: String(loja.mediaOperacoes90Dias),
     observacao: loja.observacao ?? '',
     dataPrevista: paraCampoData(loja.dataPrevista),
-    dataInicio: paraCampoData(loja.dataInicio),
-    dataConclusao: paraCampoData(loja.dataConclusao),
-    status: loja.status,
   };
 }
 
@@ -49,21 +55,38 @@ function ouNulo(valor: string) {
 
 export function FormularioLoja({ loja, aoFechar }: Props) {
   const [campos, setCampos] = useState<Campos>(() => paraCampos(loja));
+  const [datas, setDatas] = useState<CamposDeData>(DATAS_VAZIAS);
   const [erro, setErro] = useState<string | null>(null);
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
 
+  const datasSalvas = useDatasPorStatus(loja.id);
   const atualizarFilial = useAtualizarFilial();
-  const atualizarStatus = useAtualizarStatus();
+  const definirDatas = useDefinirDatas();
   const removerFilial = useRemoverFilial();
 
   const salvando =
-    atualizarFilial.isPending || atualizarStatus.isPending || removerFilial.isPending;
+    atualizarFilial.isPending || definirDatas.isPending || removerFilial.isPending;
 
   useEffect(() => {
     setCampos(paraCampos(loja));
     setErro(null);
     setConfirmandoExclusao(false);
   }, [loja]);
+
+  useEffect(() => {
+    if (!datasSalvas.data) {
+      return;
+    }
+
+    setDatas(
+      Object.fromEntries(
+        ORDEM_DO_FLUXO_STATUS.map((status) => [
+          status,
+          paraCampoData(datasSalvas.data[status]),
+        ]),
+      ) as CamposDeData,
+    );
+  }, [datasSalvas.data]);
 
   useEffect(() => {
     const aoTeclar = (evento: KeyboardEvent) => {
@@ -78,6 +101,9 @@ export function FormularioLoja({ loja, aoFechar }: Props) {
 
   const alterar = (campo: keyof Campos) => (valor: string) =>
     setCampos((anterior) => ({ ...anterior, [campo]: valor }));
+
+  const alterarData = (status: StatusRollout) => (valor: string) =>
+    setDatas((anterior) => ({ ...anterior, [status]: valor }));
 
   const salvar = async () => {
     setErro(null);
@@ -99,26 +125,15 @@ export function FormularioLoja({ loja, aoFechar }: Props) {
           mediaOperacoes90Dias: Number(campos.mediaOperacoes90Dias) || 0,
           observacao: ouNulo(campos.observacao),
           dataPrevista: ouNulo(campos.dataPrevista),
-          dataInicio: ouNulo(campos.dataInicio),
-          dataConclusao: ouNulo(campos.dataConclusao),
         },
       });
 
-      if (campos.status !== loja.status) {
-        const dataDoEvento =
-          campos.status === 'CONCLUIDO'
-            ? ouNulo(campos.dataConclusao)
-            : STATUS_EM_IMPLANTACAO.includes(campos.status)
-              ? ouNulo(campos.dataInicio)
-              : null;
-
-        await atualizarStatus.mutateAsync({
-          id: loja.id,
-          status: campos.status,
-          data: dataDoEvento ?? undefined,
-          observacao: ouNulo(campos.observacao) ?? undefined,
-        });
-      }
+      await definirDatas.mutateAsync({
+        id: loja.id,
+        datas: Object.fromEntries(
+          ORDEM_DO_FLUXO_STATUS.map((status) => [status, ouNulo(datas[status])]),
+        ) as Partial<DatasPorStatus>,
+      });
 
       aoFechar();
     } catch (falha) {
@@ -136,6 +151,11 @@ export function FormularioLoja({ loja, aoFechar }: Props) {
       setErro(falha instanceof Error ? falha.message : 'Falha ao excluir');
     }
   };
+
+  const ultimoStatus = [...ORDEM_DO_FLUXO_STATUS]
+    .filter((status) => datas[status])
+    .sort((a, b) => datas[a].localeCompare(datas[b]))
+    .pop();
 
   return (
     <div className="modal-fundo" onClick={aoFechar}>
@@ -184,37 +204,11 @@ export function FormularioLoja({ loja, aoFechar }: Props) {
             valor={campos.mediaOperacoes90Dias}
             aoAlterar={alterar('mediaOperacoes90Dias')}
           />
-          <label className="campo">
-            <span>Status</span>
-            <select
-              value={campos.status}
-              onChange={(evento) => alterar('status')(evento.target.value)}
-            >
-              {ORDEM_PILHA_STATUS.map((status) => (
-                <option key={status} value={status}>
-                  {ROTULO_STATUS[status]}
-                </option>
-              ))}
-            </select>
-          </label>
-
           <Campo
             rotulo="Data prevista"
             tipo="date"
             valor={campos.dataPrevista}
             aoAlterar={alterar('dataPrevista')}
-          />
-          <Campo
-            rotulo="Data de início"
-            tipo="date"
-            valor={campos.dataInicio}
-            aoAlterar={alterar('dataInicio')}
-          />
-          <Campo
-            rotulo="Data de conclusão"
-            tipo="date"
-            valor={campos.dataConclusao}
-            aoAlterar={alterar('dataConclusao')}
           />
 
           <label className="campo campo-largo">
@@ -227,14 +221,42 @@ export function FormularioLoja({ loja, aoFechar }: Props) {
           </label>
         </div>
 
-        {campos.status !== loja.status ? (
+        <section className="datas-status">
+          <header>
+            <h3>Datas por status</h3>
+            <BadgeStatus status={ultimoStatus ?? 'NAO_INICIADO'} />
+          </header>
+
+          {datasSalvas.isLoading ? (
+            <p className="carregando">Carregando histórico…</p>
+          ) : (
+            <div className="grade-form">
+              {ORDEM_DO_FLUXO_STATUS.map((status) => (
+                <label className="campo" key={status}>
+                  <span>
+                    <span
+                      className="marca"
+                      style={{ background: COR_STATUS[status] }}
+                      aria-hidden
+                    />
+                    {ICONE_STATUS[status]} {ROTULO_STATUS[status]}
+                  </span>
+                  <input
+                    type="date"
+                    value={datas[status]}
+                    onChange={(evento) => alterarData(status)(evento.target.value)}
+                  />
+                </label>
+              ))}
+            </div>
+          )}
+
           <p className="aviso">
-            A mudança de status grava um evento no histórico
-            {campos.status === 'CONCLUIDO' || STATUS_EM_IMPLANTACAO.includes(campos.status)
-              ? ' e usa a data informada acima (ou hoje, se vazia).'
-              : '.'}
+            Cada data preenchida vira um evento no histórico e alimenta o gráfico “Status dia a
+            dia”. O status atual da loja é o da data mais recente; limpar um campo apaga o evento
+            correspondente.
           </p>
-        ) : null}
+        </section>
 
         {erro ? <p className="erro">{erro}</p> : null}
 
@@ -268,7 +290,11 @@ export function FormularioLoja({ loja, aoFechar }: Props) {
           <button className="aba" onClick={aoFechar} disabled={salvando}>
             Cancelar
           </button>
-          <button className="aba primario" onClick={salvar} disabled={salvando}>
+          <button
+            className="aba primario"
+            onClick={salvar}
+            disabled={salvando || datasSalvas.isLoading}
+          >
             {salvando ? 'Salvando…' : 'Salvar'}
           </button>
         </footer>

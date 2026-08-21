@@ -448,6 +448,33 @@ textarea {
   color: var(--tinta-secundaria);
 }
 
+.datas-status {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--borda);
+}
+
+.datas-status > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.datas-status h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--tinta-primaria);
+}
+
+.datas-status .campo > span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .erro {
   margin: 12px 0 0;
   font-size: 12px;

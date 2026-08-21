@@ -6,6 +6,7 @@ import { STATUS_ROLLOUT, StatusRollout } from '../comum/status-rollout';
 
 const SEM_ONDA = 'Sem onda';
 const LIMITE_DE_SEMANAS = 260;
+const LIMITE_DE_DIAS = 400;
 
 export type Granularidade = 'semana' | 'mes';
 
@@ -153,6 +154,112 @@ export class RelatorioService {
     }
 
     return { total, granularidade, pontos };
+  }
+
+  /**
+   * Refaz o histórico dia a dia a partir dos eventos: cada mudança tira a loja
+   * de um status e coloca em outro na data em que aconteceu.
+   */
+  async statusPorDia() {
+    const [filiais, eventos] = await Promise.all([
+      this.prisma.filial.findMany({ select: { id: true, status: true, criadoEm: true } }),
+      this.prisma.eventoRollout.findMany({
+        select: { filialId: true, statusAnterior: true, statusNovo: true, registradoEm: true },
+        orderBy: { registradoEm: 'asc' },
+      }),
+    ]);
+
+    if (filiais.length === 0) {
+      return { total: 0, pontos: [] };
+    }
+
+    const partida = new Map<number, StatusRollout>(
+      filiais.map((filial) => [filial.id, filial.status as StatusRollout]),
+    );
+    const primeiroEvento = new Map<number, Date>();
+
+    for (const evento of eventos) {
+      if (primeiroEvento.has(evento.filialId)) {
+        continue;
+      }
+
+      primeiroEvento.set(evento.filialId, evento.registradoEm);
+
+      if (evento.statusAnterior) {
+        partida.set(evento.filialId, evento.statusAnterior as StatusRollout);
+      }
+    }
+
+    const deltas = new Map<string, Map<StatusRollout, number>>();
+
+    const somar = (dia: Date, status: StatusRollout, quanto: number) => {
+      const chave = this.chave(dia);
+      const doDia = deltas.get(chave) ?? new Map<StatusRollout, number>();
+      doDia.set(status, (doDia.get(status) ?? 0) + quanto);
+      deltas.set(chave, doDia);
+    };
+
+    let inicio: Date | null = null;
+    let fim = this.dia(new Date());
+
+    for (const filial of filiais) {
+      // Uma data de evento informada à mão pode ser anterior ao cadastro da
+      // loja; nesse caso ela entra no gráfico já na data do evento.
+      const evento = primeiroEvento.get(filial.id);
+      const entrada = this.dia(
+        evento && evento < filial.criadoEm ? evento : filial.criadoEm,
+      );
+
+      somar(entrada, partida.get(filial.id) as StatusRollout, 1);
+
+      if (!inicio || entrada < inicio) {
+        inicio = entrada;
+      }
+    }
+
+    const corrente = new Map(partida);
+
+    for (const evento of eventos) {
+      const atual = corrente.get(evento.filialId);
+
+      if (!atual) {
+        continue;
+      }
+
+      const dia = this.dia(evento.registradoEm);
+      somar(dia, atual, -1);
+      somar(dia, evento.statusNovo as StatusRollout, 1);
+      corrente.set(evento.filialId, evento.statusNovo as StatusRollout);
+
+      if (dia > fim) {
+        fim = dia;
+      }
+    }
+
+    const contagem = new Map<StatusRollout, number>(STATUS_ROLLOUT.map((status) => [status, 0]));
+    const pontos: ({ dia: string; total: number } & Record<StatusRollout, number>)[] = [];
+
+    for (
+      let cursor = inicio as Date;
+      cursor <= fim;
+      cursor = new Date(cursor.getTime() + DIA_EM_MS)
+    ) {
+      const chave = this.chave(cursor);
+
+      for (const [status, valor] of deltas.get(chave) ?? []) {
+        contagem.set(status, (contagem.get(status) ?? 0) + valor);
+      }
+
+      const porStatus = Object.fromEntries(contagem) as Record<StatusRollout, number>;
+
+      pontos.push({
+        dia: chave,
+        total: STATUS_ROLLOUT.reduce((soma, status) => soma + porStatus[status], 0),
+        ...porStatus,
+      });
+    }
+
+    return { total: filiais.length, pontos: pontos.slice(-LIMITE_DE_DIAS) };
   }
 
   async porUf() {
@@ -442,6 +549,10 @@ export class RelatorioService {
     }
 
     return new Date(data.getTime() + 7 * DIA_EM_MS);
+  }
+
+  private dia(data: Date) {
+    return new Date(Date.UTC(data.getUTCFullYear(), data.getUTCMonth(), data.getUTCDate()));
   }
 
   private chave(data: Date) {

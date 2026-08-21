@@ -54,6 +54,18 @@ export interface Evolucao {
   pontos: PontoEvolucao[];
 }
 
+export type DatasPorStatus = Record<StatusRollout, string | null>;
+
+export type PontoStatusDia = {
+  dia: string;
+  total: number;
+} & Record<StatusRollout, number>;
+
+export interface StatusPorDia {
+  total: number;
+  pontos: PontoStatusDia[];
+}
+
 export type GrupoRollout = {
   nome: string;
   total: number;

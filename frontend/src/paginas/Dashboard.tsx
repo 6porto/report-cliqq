@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useEvolucao, useOndas, useResumo, useUf } from '../api/hooks';
+import { useEvolucao, useOndas, useResumo, useStatusPorDia, useUf } from '../api/hooks';
 import { REGRA_DAS_ONDAS } from '../dominio/ondas';
 import { STATUS_EM_IMPLANTACAO } from '../tema/cores';
 import { CartaoGrafico } from '../componentes/CartaoGrafico';
@@ -7,6 +7,7 @@ import { CartaoKpi } from '../componentes/CartaoKpi';
 import { GraficoEvolucao } from '../componentes/GraficoEvolucao';
 import { GraficoGrupos } from '../componentes/GraficoGrupos';
 import { GraficoStatus } from '../componentes/GraficoStatus';
+import { GraficoStatusPorDia } from '../componentes/GraficoStatusPorDia';
 
 export function Dashboard() {
   const [granularidade, setGranularidade] = useState<'semana' | 'mes'>('semana');
@@ -14,6 +15,7 @@ export function Dashboard() {
   const evolucao = useEvolucao(granularidade);
   const porUf = useUf();
   const porOnda = useOndas();
+  const statusPorDia = useStatusPorDia();
 
   if (resumo.isLoading || !resumo.data) {
     return <p className="carregando">Carregando indicadores…</p>;
@@ -76,6 +78,17 @@ export function Dashboard() {
         >
           {evolucao.data ? (
             <GraficoEvolucao dados={evolucao.data} />
+          ) : (
+            <p className="carregando">Carregando…</p>
+          )}
+        </CartaoGrafico>
+
+        <CartaoGrafico
+          titulo="Status dia a dia"
+          subtitulo="Quantidade de lojas em cada status ao longo do tempo — clique na legenda para ocultar"
+        >
+          {statusPorDia.data ? (
+            <GraficoStatusPorDia dados={statusPorDia.data} />
           ) : (
             <p className="carregando">Carregando…</p>
           )}

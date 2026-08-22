@@ -94,7 +94,7 @@ export function Dashboard() {
           )}
         </CartaoGrafico>
 
-        <CartaoGrafico titulo="Situação das lojas" subtitulo={`Base de ${dados.total} lojas`}>
+        <CartaoGrafico titulo="Situação das lojas" subtitulo="Distribuição da base por status">
           <GraficoStatus resumo={dados} />
         </CartaoGrafico>
 

@@ -448,6 +448,12 @@ textarea {
   color: var(--tinta-secundaria);
 }
 
+.acoes-topo {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+
 .modal-largo {
   width: min(1040px, 100%);
 }

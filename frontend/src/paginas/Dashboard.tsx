@@ -33,8 +33,19 @@ export function Dashboard() {
 
   const dados = resumo.data;
 
+  const semanasLancadas = new Set([
+    ...(medias.data ?? []).map((media) => media.semana),
+    ...(latencias.data ?? []).map((latencia) => latencia.semana),
+  ]).size;
+
   return (
     <>
+      <div className="acoes-topo">
+        <button className="aba primario" onClick={() => setLancamentosAbertos(true)}>
+          Lançamentos por semana{semanasLancadas ? ` (${semanasLancadas})` : ''}
+        </button>
+      </div>
+
       <div className="grade-kpi">
         <CartaoKpi
           rotulo="Rollout concluído"
@@ -87,11 +98,6 @@ export function Dashboard() {
         <CartaoGrafico
           titulo="Média de operações por semana"
           subtitulo="Média diária de operações apurada em cada semana"
-          acoes={
-            <button className="aba" onClick={() => setLancamentosAbertos(true)}>
-              Lançamentos{medias.data?.length ? ` (${medias.data.length})` : ''}
-            </button>
-          }
         >
           <GraficoMediaSemanal />
         </CartaoGrafico>
@@ -99,11 +105,6 @@ export function Dashboard() {
         <CartaoGrafico
           titulo="Latência das requisições"
           subtitulo="P50, P75, P95 e P99 por semana, em milissegundos"
-          acoes={
-            <button className="aba" onClick={() => setLancamentosAbertos(true)}>
-              Lançamentos{latencias.data?.length ? ` (${latencias.data.length})` : ''}
-            </button>
-          }
         >
           <GraficoLatenciaSemanal />
         </CartaoGrafico>

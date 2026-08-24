@@ -44,11 +44,13 @@ describe('MediasSemanaisService', () => {
           mediaOperacoes: 13050,
           operacoesLegado: null,
           operacoesCentralizado: null,
+          pedidosLegadoPiloto: null,
         },
         update: {
           mediaOperacoes: 13050,
           operacoesLegado: null,
           operacoesCentralizado: null,
+          pedidosLegadoPiloto: null,
         },
       });
     });
@@ -59,6 +61,7 @@ describe('MediasSemanaisService', () => {
         mediaOperacoes: 13050,
         operacoesLegado: 9000,
         operacoesCentralizado: 4050,
+        pedidosLegadoPiloto: 1200,
       });
 
       expect(prisma.mediaOperacoesSemanal.upsert).toHaveBeenCalledWith(
@@ -67,6 +70,7 @@ describe('MediasSemanaisService', () => {
             mediaOperacoes: 13050,
             operacoesLegado: 9000,
             operacoesCentralizado: 4050,
+            pedidosLegadoPiloto: 1200,
           },
         }),
       );
@@ -80,6 +84,7 @@ describe('MediasSemanaisService', () => {
           update: expect.objectContaining({
             operacoesLegado: null,
             operacoesCentralizado: null,
+            pedidosLegadoPiloto: null,
           }),
         }),
       );

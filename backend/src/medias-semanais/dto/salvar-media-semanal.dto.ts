@@ -19,4 +19,10 @@ export class SalvarMediaSemanalDto {
   @IsInt()
   @Min(0)
   operacoesCentralizado?: number | null;
+
+  /** Operações que ficaram no legado apenas nas lojas do piloto. */
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  pedidosLegadoPiloto?: number | null;
 }

@@ -1,8 +1,8 @@
 import {
-  Bar,
-  BarChart,
   CartesianGrid,
-  LabelList,
+  Legend,
+  Line,
+  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -14,6 +14,9 @@ import { Dica } from './Dica';
 
 const formatarNumero = (valor: number) => valor.toLocaleString('pt-BR');
 
+const percentual = (parte: number, total: number) =>
+  total <= 0 ? null : Number(((parte / total) * 100).toFixed(1));
+
 export function GraficoAdesaoCentralizado() {
   const medias = useMediasSemanais();
 
@@ -22,41 +25,38 @@ export function GraficoAdesaoCentralizado() {
   }
 
   const pontos = (medias.data ?? [])
-    .filter(
-      (media) =>
-        media.operacoesLegado !== null &&
-        media.operacoesCentralizado !== null &&
-        media.operacoesLegado + media.operacoesCentralizado > 0,
-    )
+    .filter((media) => media.operacoesCentralizado !== null)
     .map((media) => {
-      const legado = media.operacoesLegado ?? 0;
       const centralizado = media.operacoesCentralizado ?? 0;
-      const total = legado + centralizado;
-
-      const penetracao = Number(((centralizado / total) * 100).toFixed(1));
+      const legado = media.operacoesLegado;
+      const legadoPiloto = media.pedidosLegadoPiloto;
 
       return {
         semana: paraCampoData(media.semana),
-        legado,
         centralizado,
-        total,
-        penetracao,
-        rotulo: `${penetracao}%`,
+        legado,
+        legadoPiloto,
+        totalRede: legado === null ? null : legado + centralizado,
+        totalPiloto: legadoPiloto === null ? null : legadoPiloto + centralizado,
+        todasLojas: legado === null ? null : percentual(centralizado, legado + centralizado),
+        lojasEmOperacao:
+          legadoPiloto === null ? null : percentual(centralizado, legadoPiloto + centralizado),
       };
-    });
+    })
+    .filter((ponto) => ponto.todasLojas !== null || ponto.lojasEmOperacao !== null);
 
   if (pontos.length === 0) {
     return (
       <p className="carregando">
-        Nenhuma semana com as operações dos dois sistemas — informe o legado e o centralizado em
-        “Lançamentos por semana”.
+        Nenhuma semana com operações do centralizado e do legado — informe os dois em “Lançamentos
+        por semana”.
       </p>
     );
   }
 
   return (
     <ResponsiveContainer width="100%" height={260}>
-      <BarChart data={pontos} margin={{ top: 20, right: 16, bottom: 0, left: -12 }}>
+      <LineChart data={pontos} margin={{ top: 8, right: 16, bottom: 0, left: -12 }}>
         <CartesianGrid stroke="var(--grade)" vertical={false} />
         <XAxis
           dataKey="semana"
@@ -76,7 +76,7 @@ export function GraficoAdesaoCentralizado() {
           width={56}
         />
         <Tooltip
-          cursor={{ fill: 'var(--grade)', fillOpacity: 0.4 }}
+          cursor={{ stroke: 'var(--linha-base)', strokeWidth: 1 }}
           content={({ active, payload, label }) => {
             if (!active || !payload?.length) {
               return null;
@@ -84,37 +84,64 @@ export function GraficoAdesaoCentralizado() {
 
             const ponto = payload[0].payload as (typeof pontos)[number];
 
-            return (
-              <Dica
-                titulo={`Semana de ${formatarSemana(String(label))}`}
-                itens={[
-                  {
-                    nome: 'Penetração do centralizado',
-                    valor: `${ponto.penetracao}%`,
-                    cor: 'var(--serie-1)',
-                  },
-                  { nome: 'Centralizado', valor: `${formatarNumero(ponto.centralizado)} operações` },
-                  { nome: 'Legado', valor: `${formatarNumero(ponto.legado)} operações` },
-                  { nome: 'Total da semana', valor: `${formatarNumero(ponto.total)} operações` },
-                ]}
-              />
-            );
+            const itens = [
+              {
+                nome: 'Todas as lojas',
+                valor:
+                  ponto.todasLojas === null
+                    ? 'sem o legado da rede'
+                    : `${ponto.todasLojas}% de ${formatarNumero(ponto.totalRede ?? 0)} operações`,
+                cor: 'var(--serie-1)',
+              },
+              {
+                nome: 'Lojas em operação',
+                valor:
+                  ponto.lojasEmOperacao === null
+                    ? 'sem o legado do piloto'
+                    : `${ponto.lojasEmOperacao}% de ${formatarNumero(
+                        ponto.totalPiloto ?? 0,
+                      )} operações`,
+                cor: 'var(--serie-2)',
+              },
+              {
+                nome: 'No centralizado',
+                valor: `${formatarNumero(ponto.centralizado)} operações`,
+              },
+            ];
+
+            return <Dica titulo={`Semana de ${formatarSemana(String(label))}`} itens={itens} />;
           }}
         />
-        <Bar
-          dataKey="penetracao"
-          fill="var(--serie-1)"
-          radius={[4, 4, 0, 0]}
-          maxBarSize={28}
+        <Legend
+          verticalAlign="top"
+          align="right"
+          height={28}
+          wrapperStyle={{ fontSize: 12, color: 'var(--tinta-secundaria)' }}
+        />
+        <Line
+          name="Todas as lojas"
+          type="monotone"
+          dataKey="todasLojas"
+          stroke="var(--serie-1)"
+          strokeWidth={2}
+          dot={{ r: 3 }}
+          activeDot={{ r: 5, strokeWidth: 2, stroke: 'var(--superficie)' }}
+          connectNulls
           isAnimationActive={false}
-        >
-          <LabelList
-            dataKey="rotulo"
-            position="top"
-            style={{ fill: 'var(--tinta-secundaria)', fontSize: 11 }}
-          />
-        </Bar>
-      </BarChart>
+        />
+        <Line
+          name="Lojas em operação"
+          type="monotone"
+          dataKey="lojasEmOperacao"
+          stroke="var(--serie-2)"
+          strokeWidth={2}
+          strokeDasharray="6 3"
+          dot={{ r: 3 }}
+          activeDot={{ r: 5, strokeWidth: 2, stroke: 'var(--superficie)' }}
+          connectNulls
+          isAnimationActive={false}
+        />
+      </LineChart>
     </ResponsiveContainer>
   );
 }

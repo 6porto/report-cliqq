@@ -62,6 +62,8 @@ model MediaOperacoesSemanal {
   /// Operações da semana que rodaram em cada sistema; nulo enquanto não apuradas.
   operacoesLegado       Int?
   operacoesCentralizado Int?
+  /// Operações que ficaram no legado apenas nas lojas do piloto.
+  pedidosLegadoPiloto   Int?
   criadoEm       DateTime @default(now())
   atualizadoEm   DateTime @updatedAt
 }

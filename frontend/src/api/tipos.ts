@@ -75,6 +75,8 @@ export interface MediaSemanal {
   /** Operações da semana em cada sistema; nulo enquanto não apuradas. */
   operacoesLegado: number | null;
   operacoesCentralizado: number | null;
+  /** Operações que ficaram no legado apenas nas lojas do piloto. */
+  pedidosLegadoPiloto: number | null;
 }
 
 export type PontoStatusDia = {

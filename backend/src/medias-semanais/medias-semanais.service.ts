@@ -21,6 +21,7 @@ export class MediasSemanaisService {
       mediaOperacoes: dto.mediaOperacoes,
       operacoesLegado: dto.operacoesLegado ?? null,
       operacoesCentralizado: dto.operacoesCentralizado ?? null,
+      pedidosLegadoPiloto: dto.pedidosLegadoPiloto ?? null,
     };
 
     return this.prisma.mediaOperacoesSemanal.upsert({

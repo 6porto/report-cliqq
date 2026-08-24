@@ -83,7 +83,7 @@ export function Dashboard() {
 
         <CartaoGrafico
           titulo="Adesão ao CliQQ Centralizado"
-          subtitulo="% das operações da semana que rodaram no centralizado, sobre o total lançado (legado + centralizado)"
+          subtitulo="% das operações no centralizado: sobre a rede toda e só entre as lojas que já estão em operação"
         >
           <GraficoAdesaoCentralizado />
         </CartaoGrafico>

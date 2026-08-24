@@ -181,6 +181,7 @@ export function useSalvarMediaSemanal() {
       mediaOperacoes: number;
       operacoesLegado: number | null;
       operacoesCentralizado: number | null;
+      pedidosLegadoPiloto: number | null;
     }) => api.put<MediaSemanal>('/medias-semanais', variaveis),
     onSuccess: () => {
       clienteQuery.invalidateQueries({ queryKey: ['medias-semanais'] });

@@ -25,6 +25,7 @@ interface Linha {
   mediaOperacoes: string;
   operacoesLegado: string;
   operacoesCentralizado: string;
+  pedidosLegadoPiloto: string;
   p50: string;
   p75: string;
   p95: string;
@@ -32,11 +33,15 @@ interface Linha {
 }
 
 type CampoDeLatencia = 'p50' | 'p75' | 'p95' | 'p99';
-type CampoDeOperacoes = 'operacoesLegado' | 'operacoesCentralizado';
+type CampoDeOperacoes = 'operacoesLegado' | 'operacoesCentralizado' | 'pedidosLegadoPiloto';
 
 const CAMPOS_DE_LATENCIA: CampoDeLatencia[] = ['p50', 'p75', 'p95', 'p99'];
 
-const CAMPOS_DE_OPERACOES: CampoDeOperacoes[] = ['operacoesLegado', 'operacoesCentralizado'];
+const CAMPOS_DE_OPERACOES: CampoDeOperacoes[] = [
+  'operacoesLegado',
+  'operacoesCentralizado',
+  'pedidosLegadoPiloto',
+];
 
 let contadorDeLinhas = 0;
 
@@ -52,6 +57,7 @@ function linhaVazia(semana: string): Linha {
     mediaOperacoes: '',
     operacoesLegado: '',
     operacoesCentralizado: '',
+    pedidosLegadoPiloto: '',
     p50: '',
     p75: '',
     p95: '',
@@ -87,6 +93,8 @@ function montarLinhas(medias: MediaSemanal[], latencias: LatenciaSemanal[]): Lin
     linha.operacoesLegado = media.operacoesLegado === null ? '' : String(media.operacoesLegado);
     linha.operacoesCentralizado =
       media.operacoesCentralizado === null ? '' : String(media.operacoesCentralizado);
+    linha.pedidosLegadoPiloto =
+      media.pedidosLegadoPiloto === null ? '' : String(media.pedidosLegadoPiloto);
   });
 
   latencias.forEach((latencia) => {
@@ -225,11 +233,11 @@ export function ModalLancamentosSemanais({ aoFechar }: Props) {
       );
 
       if (operacoesPorSistema.some((campo) => !inteiroValido(linha[campo]))) {
-        return 'As operações do legado e do centralizado devem ser números inteiros iguais ou maiores que zero.';
+        return 'As contagens de operações devem ser números inteiros iguais ou maiores que zero.';
       }
 
       if (operacoesPorSistema.length > 0 && linha.mediaOperacoes.trim() === '') {
-        return 'Informe a média de operações da semana para gravar as operações do legado e do centralizado.';
+        return 'Informe a média de operações da semana para gravar as contagens por sistema.';
       }
 
       const preenchidos = CAMPOS_DE_LATENCIA.filter((campo) => linha[campo].trim() !== '');
@@ -274,6 +282,10 @@ export function ModalLancamentosSemanais({ aoFechar }: Props) {
               linha.operacoesCentralizado.trim() === ''
                 ? null
                 : Number(linha.operacoesCentralizado),
+            pedidosLegadoPiloto:
+              linha.pedidosLegadoPiloto.trim() === ''
+                ? null
+                : Number(linha.pedidosLegadoPiloto),
           });
 
           if (mudouDeSemana && linha.mediaId !== null) {
@@ -343,6 +355,7 @@ export function ModalLancamentosSemanais({ aoFechar }: Props) {
                   <th>Média de operações/dia</th>
                   <th>Operações no legado</th>
                   <th>Operações no centralizado</th>
+                  <th>Total pedidos legado piloto</th>
                   <th>P50 (ms)</th>
                   <th>P75 (ms)</th>
                   <th>P95 (ms)</th>
@@ -353,7 +366,7 @@ export function ModalLancamentosSemanais({ aoFechar }: Props) {
               <tbody>
                 {linhas.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="carregando">
+                    <td colSpan={10} className="carregando">
                       Nenhum lançamento ainda — use “Adicionar semana”.
                     </td>
                   </tr>

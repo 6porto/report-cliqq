@@ -39,6 +39,11 @@ export class RelatorioController {
     return this.relatorioService.distribuicaoHoraria();
   }
 
+  @Get('operacoes-esperadas')
+  operacoesEsperadasPorDia() {
+    return this.relatorioService.operacoesEsperadasPorDia();
+  }
+
   @Get('cobertura-ondas')
   coberturaPorOnda() {
     return this.relatorioService.coberturaPorOnda();

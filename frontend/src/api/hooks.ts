@@ -11,6 +11,7 @@ import type {
   GrupoRollout,
   LatenciaSemanal,
   MediaSemanal,
+  OperacoesEsperadas,
   PaginaFiliais,
   Projecao,
   RespostaPriorizacao,
@@ -162,6 +163,13 @@ export function useSincronizarPriorizacao() {
     onSuccess: () => {
       clienteQuery.invalidateQueries({ queryKey: ['priorizacao'] });
     },
+  });
+}
+
+export function useOperacoesEsperadas() {
+  return useQuery({
+    queryKey: ['operacoes-esperadas'],
+    queryFn: () => api.get<OperacoesEsperadas>('/relatorio/operacoes-esperadas'),
   });
 }
 

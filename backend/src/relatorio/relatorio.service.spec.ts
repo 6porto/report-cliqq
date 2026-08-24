@@ -159,6 +159,58 @@ describe('RelatorioService', () => {
       expect(resultado.pontos.every((ponto) => ponto.total === 2)).toBe(true);
     });
 
+    it('soma as operações das lojas com o centralizado ligado e desconta quando ele sai do ar', async () => {
+      prisma.filial.findMany.mockResolvedValue([
+        { id: 1, status: 'EM_ADAPTACAO', criadoEm, mediaOperacoes90Dias: 40 },
+        { id: 2, status: 'NAO_INICIADO', criadoEm, mediaOperacoes90Dias: 25 },
+      ]);
+      prisma.eventoRollout.findMany.mockResolvedValue([
+        {
+          filialId: 1,
+          statusAnterior: 'NAO_INICIADO',
+          statusNovo: 'EM_ADAPTACAO',
+          registradoEm: new Date('2026-03-02T09:00:00.000Z'),
+        },
+        {
+          filialId: 2,
+          statusAnterior: 'NAO_INICIADO',
+          statusNovo: 'EM_OPERACAO',
+          registradoEm: new Date('2026-03-03T09:00:00.000Z'),
+        },
+        {
+          filialId: 2,
+          statusAnterior: 'EM_OPERACAO',
+          statusNovo: 'BLOQUEADO',
+          registradoEm: new Date('2026-03-04T09:00:00.000Z'),
+        },
+      ]);
+
+      const resultado = await servico.operacoesEsperadasPorDia();
+
+      expect(resultado.pontos[0]).toEqual({ dia: '2026-03-01', operacoesEsperadas: 0 });
+      expect(resultado.pontos[1]).toEqual({ dia: '2026-03-02', operacoesEsperadas: 40 });
+      expect(resultado.pontos[2]).toEqual({ dia: '2026-03-03', operacoesEsperadas: 65 });
+      expect(resultado.pontos[3]).toEqual({ dia: '2026-03-04', operacoesEsperadas: 40 });
+    });
+
+    it('não conta a loja que só chegou ao treinamento', async () => {
+      prisma.filial.findMany.mockResolvedValue([
+        { id: 1, status: 'EM_TREINAMENTO', criadoEm, mediaOperacoes90Dias: 40 },
+      ]);
+      prisma.eventoRollout.findMany.mockResolvedValue([
+        {
+          filialId: 1,
+          statusAnterior: 'NAO_INICIADO',
+          statusNovo: 'EM_TREINAMENTO',
+          registradoEm: new Date('2026-03-02T09:00:00.000Z'),
+        },
+      ]);
+
+      const resultado = await servico.operacoesEsperadasPorDia();
+
+      expect(resultado.pontos.every((ponto) => ponto.operacoesEsperadas === 0)).toBe(true);
+    });
+
     it('inclui a loja já na data do evento quando ela é anterior ao cadastro', async () => {
       prisma.filial.findMany.mockResolvedValue([
         { id: 1, status: 'CONCLUIDO', criadoEm: new Date('2026-03-10T12:00:00.000Z') },

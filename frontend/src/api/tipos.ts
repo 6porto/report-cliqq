@@ -67,6 +67,10 @@ export interface LatenciaSemanal {
   p99: number;
 }
 
+export interface OperacoesEsperadas {
+  pontos: { dia: string; operacoesEsperadas: number }[];
+}
+
 export interface MediaSemanal {
   id: number;
   /** Dia inicial da semana. */

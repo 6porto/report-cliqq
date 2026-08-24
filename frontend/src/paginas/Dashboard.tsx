@@ -41,7 +41,7 @@ export function Dashboard() {
   return (
     <>
       <div className="acoes-topo">
-        <button className="aba primario" onClick={() => setLancamentosAbertos(true)}>
+        <button className="aba" onClick={() => setLancamentosAbertos(true)}>
           Lançamentos por semana{semanasLancadas ? ` (${semanasLancadas})` : ''}
         </button>
       </div>

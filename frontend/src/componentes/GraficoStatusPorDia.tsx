@@ -35,8 +35,38 @@ export function GraficoStatusPorDia({ dados }: Props) {
         : [...atuais, status],
     );
 
+  const nenhumVisivel = ocultos.length === ORDEM_PILHA_STATUS.length;
+
   return (
-    <ResponsiveContainer width="100%" height={280}>
+    <>
+      <div className="filtros-serie">
+        {ORDEM_PILHA_STATUS.map((status) => {
+          const visivel = !ocultos.includes(status);
+
+          return (
+            <label key={status} className={visivel ? 'filtro-serie' : 'filtro-serie apagado'}>
+              <input
+                type="checkbox"
+                checked={visivel}
+                onChange={() => alternar(status)}
+              />
+              <span className="marca" style={{ background: COR_STATUS[status] }} aria-hidden />
+              {ICONE_STATUS[status]} {ROTULO_STATUS[status]}
+            </label>
+          );
+        })}
+        {ocultos.length > 0 ? (
+          <button className="aba" onClick={() => setOcultos([])}>
+            Mostrar todas
+          </button>
+        ) : null}
+      </div>
+
+      {nenhumVisivel ? (
+        <p className="carregando">Nenhuma série selecionada — marque ao menos um status.</p>
+      ) : null}
+
+      <ResponsiveContainer width="100%" height={280}>
       <LineChart data={dados.pontos} margin={{ top: 8, right: 16, bottom: 0, left: -12 }}>
         <CartesianGrid stroke="var(--grade)" vertical={false} />
         <XAxis
@@ -75,17 +105,6 @@ export function GraficoStatusPorDia({ dados }: Props) {
           align="right"
           height={28}
           wrapperStyle={{ fontSize: 12, color: 'var(--tinta-secundaria)' }}
-          onClick={(item) => alternar(item.dataKey as StatusRollout)}
-          formatter={(valor, item) => (
-            <span
-              style={{
-                cursor: 'pointer',
-                opacity: ocultos.includes(item.dataKey as StatusRollout) ? 0.4 : 1,
-              }}
-            >
-              {valor}
-            </span>
-          )}
         />
         {ORDEM_PILHA_STATUS.map((status) => (
           <Line
@@ -102,6 +121,7 @@ export function GraficoStatusPorDia({ dados }: Props) {
           />
         ))}
       </LineChart>
-    </ResponsiveContainer>
+      </ResponsiveContainer>
+    </>
   );
 }

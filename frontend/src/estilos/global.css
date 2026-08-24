@@ -294,7 +294,8 @@ body {
   white-space: nowrap;
 }
 
-.badge .marca {
+.badge .marca,
+.filtro-serie .marca {
   width: 10px;
   height: 10px;
   border-radius: 3px;
@@ -446,6 +447,39 @@ textarea {
   margin: 12px 0 0;
   font-size: 12px;
   color: var(--tinta-secundaria);
+}
+
+.filtros-serie {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  margin: 4px 0 12px;
+  font-size: 12px;
+  color: var(--tinta-secundaria);
+}
+
+.filtro-serie {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.filtro-serie input {
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  accent-color: var(--tinta-secundaria);
+  cursor: pointer;
+}
+
+.filtro-serie.apagado {
+  color: var(--tinta-mutada);
+}
+
+.filtro-serie.apagado .marca {
+  opacity: 0.35;
 }
 
 .acoes-topo {

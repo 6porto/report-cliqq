@@ -8,6 +8,7 @@ import {
   useUf,
 } from '../api/hooks';
 import { REGRA_DAS_ONDAS } from '../dominio/ondas';
+import { formatarSemanaCompleta, paraCampoData } from '../dominio/semanas';
 import { STATUS_EM_IMPLANTACAO } from '../tema/cores';
 import { CartaoGrafico } from '../componentes/CartaoGrafico';
 import { CartaoKpi } from '../componentes/CartaoKpi';
@@ -39,6 +40,25 @@ export function Dashboard() {
     ...(latencias.data ?? []).map((latencia) => latencia.semana),
   ]).size;
 
+  const ultimaSemanaComOperacoes = [...(medias.data ?? [])]
+    .filter(
+      (media) => media.operacoesLegado !== null || media.operacoesCentralizado !== null,
+    )
+    .sort((a, b) => a.semana.localeCompare(b.semana))
+    .at(-1);
+
+  const operacoesDaUltimaSemana = ultimaSemanaComOperacoes
+    ? (ultimaSemanaComOperacoes.operacoesLegado ?? 0) +
+      (ultimaSemanaComOperacoes.operacoesCentralizado ?? 0)
+    : null;
+
+  const centralizadoNaUltimaSemana = ultimaSemanaComOperacoes?.operacoesCentralizado ?? null;
+
+  const adesaoNaUltimaSemana =
+    centralizadoNaUltimaSemana === null || !operacoesDaUltimaSemana
+      ? null
+      : Number(((centralizadoNaUltimaSemana / operacoesDaUltimaSemana) * 100).toFixed(1));
+
   return (
     <>
       <div className="acoes-topo">
@@ -60,6 +80,25 @@ export function Dashboard() {
           rotulo="Rollout concluído"
           valor={`${dados.percentualConcluido}%`}
           apoio={`${dados.concluidas} de ${dados.total} lojas`}
+        />
+        <CartaoKpi
+          rotulo="Centralizado na última semana"
+          valor={
+            centralizadoNaUltimaSemana === null
+              ? '—'
+              : centralizadoNaUltimaSemana.toLocaleString('pt-BR')
+          }
+          apoio={
+            ultimaSemanaComOperacoes
+              ? `${(operacoesDaUltimaSemana ?? 0).toLocaleString('pt-BR')} operações no total${
+                  adesaoNaUltimaSemana === null
+                    ? ''
+                    : ` · ${adesaoNaUltimaSemana.toLocaleString('pt-BR')}% de adesão`
+                } · semana de ${formatarSemanaCompleta(
+                  paraCampoData(ultimaSemanaComOperacoes.semana),
+                )}`
+              : 'sem operações lançadas ainda'
+          }
         />
       </div>
 

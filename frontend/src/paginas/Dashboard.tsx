@@ -11,6 +11,7 @@ import { REGRA_DAS_ONDAS } from '../dominio/ondas';
 import { STATUS_EM_IMPLANTACAO } from '../tema/cores';
 import { CartaoGrafico } from '../componentes/CartaoGrafico';
 import { CartaoKpi } from '../componentes/CartaoKpi';
+import { GraficoAdesaoCentralizado } from '../componentes/GraficoAdesaoCentralizado';
 import { GraficoGrupos } from '../componentes/GraficoGrupos';
 import { GraficoStatus } from '../componentes/GraficoStatus';
 import { GraficoStatusPorDia } from '../componentes/GraficoStatusPorDia';
@@ -78,6 +79,13 @@ export function Dashboard() {
           ) : (
             <p className="carregando">Carregando…</p>
           )}
+        </CartaoGrafico>
+
+        <CartaoGrafico
+          titulo="Adesão ao CliQQ Centralizado"
+          subtitulo="% das operações da semana que rodaram no centralizado, sobre o total lançado (legado + centralizado)"
+        >
+          <GraficoAdesaoCentralizado />
         </CartaoGrafico>
 
         <CartaoGrafico

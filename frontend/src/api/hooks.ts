@@ -5,11 +5,12 @@ import type {
   DatasPorStatus,
   DemandaPriorizada,
   DistribuicaoHoraria,
-  Evolucao,
   Filial,
   FiltroFiliais,
   Filtros,
   GrupoRollout,
+  LatenciaSemanal,
+  MediaSemanal,
   PaginaFiliais,
   Projecao,
   RespostaPriorizacao,
@@ -23,13 +24,6 @@ export function useResumo() {
   return useQuery({
     queryKey: ['resumo'],
     queryFn: () => api.get<Resumo>('/relatorio/resumo'),
-  });
-}
-
-export function useEvolucao(granularidade: 'semana' | 'mes' = 'semana') {
-  return useQuery({
-    queryKey: ['evolucao', granularidade],
-    queryFn: () => api.get<Evolucao>(`/relatorio/evolucao?granularidade=${granularidade}`),
   });
 }
 
@@ -167,6 +161,72 @@ export function useSincronizarPriorizacao() {
     mutationFn: () => api.post<ResumoSincronizacao>('/priorizacao/sincronizar', {}),
     onSuccess: () => {
       clienteQuery.invalidateQueries({ queryKey: ['priorizacao'] });
+    },
+  });
+}
+
+export function useMediasSemanais() {
+  return useQuery({
+    queryKey: ['medias-semanais'],
+    queryFn: () => api.get<MediaSemanal[]>('/medias-semanais'),
+  });
+}
+
+export function useSalvarMediaSemanal() {
+  const clienteQuery = useQueryClient();
+
+  return useMutation({
+    mutationFn: (variaveis: { semana: string; mediaOperacoes: number }) =>
+      api.put<MediaSemanal>('/medias-semanais', variaveis),
+    onSuccess: () => {
+      clienteQuery.invalidateQueries({ queryKey: ['medias-semanais'] });
+    },
+  });
+}
+
+export function useRemoverMediaSemanal() {
+  const clienteQuery = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => api.delete<MediaSemanal>(`/medias-semanais/${id}`),
+    onSuccess: () => {
+      clienteQuery.invalidateQueries({ queryKey: ['medias-semanais'] });
+    },
+  });
+}
+
+export function useLatenciasSemanais() {
+  return useQuery({
+    queryKey: ['latencias-semanais'],
+    queryFn: () => api.get<LatenciaSemanal[]>('/latencias-semanais'),
+  });
+}
+
+export function useSalvarLatenciaSemanal() {
+  const clienteQuery = useQueryClient();
+
+  return useMutation({
+    mutationFn: (variaveis: {
+      semana: string;
+      p50: number;
+      p75: number;
+      p95: number;
+      p99: number;
+    }) =>
+      api.put<LatenciaSemanal>('/latencias-semanais', variaveis),
+    onSuccess: () => {
+      clienteQuery.invalidateQueries({ queryKey: ['latencias-semanais'] });
+    },
+  });
+}
+
+export function useRemoverLatenciaSemanal() {
+  const clienteQuery = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => api.delete<LatenciaSemanal>(`/latencias-semanais/${id}`),
+    onSuccess: () => {
+      clienteQuery.invalidateQueries({ queryKey: ['latencias-semanais'] });
     },
   });
 }

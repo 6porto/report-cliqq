@@ -448,6 +448,23 @@ textarea {
   color: var(--tinta-secundaria);
 }
 
+.lancamento-semana {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.lancamento-semana .campo {
+  min-width: 150px;
+}
+
+.lista-lancamentos {
+  margin-top: 16px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
 .legenda-pizza {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));

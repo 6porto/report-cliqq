@@ -1,21 +1,33 @@
 import { useState } from 'react';
-import { useEvolucao, useOndas, useResumo, useStatusPorDia, useUf } from '../api/hooks';
+import {
+  useLatenciasSemanais,
+  useMediasSemanais,
+  useOndas,
+  useResumo,
+  useStatusPorDia,
+  useUf,
+} from '../api/hooks';
 import { REGRA_DAS_ONDAS } from '../dominio/ondas';
 import { STATUS_EM_IMPLANTACAO } from '../tema/cores';
 import { CartaoGrafico } from '../componentes/CartaoGrafico';
 import { CartaoKpi } from '../componentes/CartaoKpi';
-import { GraficoEvolucao } from '../componentes/GraficoEvolucao';
 import { GraficoGrupos } from '../componentes/GraficoGrupos';
 import { GraficoStatus } from '../componentes/GraficoStatus';
 import { GraficoStatusPorDia } from '../componentes/GraficoStatusPorDia';
+import { GraficoLatenciaSemanal } from '../componentes/GraficoLatenciaSemanal';
+import { GraficoMediaSemanal } from '../componentes/GraficoMediaSemanal';
+import { ModalLatenciasSemanais } from '../componentes/ModalLatenciasSemanais';
+import { ModalMediasSemanais } from '../componentes/ModalMediasSemanais';
 
 export function Dashboard() {
-  const [granularidade, setGranularidade] = useState<'semana' | 'mes'>('semana');
   const resumo = useResumo();
-  const evolucao = useEvolucao(granularidade);
   const porUf = useUf();
   const porOnda = useOndas();
   const statusPorDia = useStatusPorDia();
+  const medias = useMediasSemanais();
+  const latencias = useLatenciasSemanais();
+  const [lancamentosAbertos, setLancamentosAbertos] = useState(false);
+  const [latenciasAbertas, setLatenciasAbertas] = useState(false);
 
   if (resumo.isLoading || !resumo.data) {
     return <p className="carregando">Carregando indicadores…</p>;
@@ -63,27 +75,7 @@ export function Dashboard() {
 
       <div className="grade-graficos">
         <CartaoGrafico
-          titulo="Evolução do rollout"
-          subtitulo="Lojas concluídas acumuladas x meta"
-          acoes={
-            <select
-              aria-label="Granularidade"
-              value={granularidade}
-              onChange={(evento) => setGranularidade(evento.target.value as 'semana' | 'mes')}
-            >
-              <option value="semana">Semanal</option>
-              <option value="mes">Mensal</option>
-            </select>
-          }
-        >
-          {evolucao.data ? (
-            <GraficoEvolucao dados={evolucao.data} />
-          ) : (
-            <p className="carregando">Carregando…</p>
-          )}
-        </CartaoGrafico>
-
-        <CartaoGrafico
+          largo
           titulo="Status dia a dia"
           subtitulo="Quantidade de lojas em cada status ao longo do tempo — clique na legenda para ocultar"
         >
@@ -92,6 +84,30 @@ export function Dashboard() {
           ) : (
             <p className="carregando">Carregando…</p>
           )}
+        </CartaoGrafico>
+
+        <CartaoGrafico
+          titulo="Média de operações por semana"
+          subtitulo="Média diária de operações apurada em cada semana"
+          acoes={
+            <button className="aba" onClick={() => setLancamentosAbertos(true)}>
+              Lançamentos{medias.data?.length ? ` (${medias.data.length})` : ''}
+            </button>
+          }
+        >
+          <GraficoMediaSemanal />
+        </CartaoGrafico>
+
+        <CartaoGrafico
+          titulo="Latência das requisições"
+          subtitulo="P50, P75, P95 e P99 por semana, em milissegundos"
+          acoes={
+            <button className="aba" onClick={() => setLatenciasAbertas(true)}>
+              Lançamentos{latencias.data?.length ? ` (${latencias.data.length})` : ''}
+            </button>
+          }
+        >
+          <GraficoLatenciaSemanal />
         </CartaoGrafico>
 
         <CartaoGrafico titulo="Situação das lojas" subtitulo="Distribuição da base por status">
@@ -115,6 +131,14 @@ export function Dashboard() {
           )}
         </CartaoGrafico>
       </div>
+
+      {lancamentosAbertos ? (
+        <ModalMediasSemanais aoFechar={() => setLancamentosAbertos(false)} />
+      ) : null}
+
+      {latenciasAbertas ? (
+        <ModalLatenciasSemanais aoFechar={() => setLatenciasAbertas(false)} />
+      ) : null}
     </>
   );
 }

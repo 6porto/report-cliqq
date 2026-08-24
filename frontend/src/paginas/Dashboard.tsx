@@ -90,7 +90,7 @@ export function Dashboard() {
 
         <CartaoGrafico
           titulo="Média de operações por semana"
-          subtitulo="Média diária de operações apurada em cada semana"
+          subtitulo="Lançado x esperado pelas lojas já no ar; a linha traz o % realizado (eixo à direita)"
         >
           <GraficoMediaSemanal />
         </CartaoGrafico>

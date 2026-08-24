@@ -29,11 +29,16 @@ export function GraficoMediaSemanal() {
 
   const pontos = (medias.data ?? []).map((media) => {
     const semana = paraCampoData(media.semana);
+    const esperado = esperadaNoDia.get(semana) ?? null;
 
     return {
       semana,
       mediaOperacoes: media.mediaOperacoes,
-      esperado: esperadaNoDia.get(semana) ?? null,
+      esperado,
+      aderencia:
+        esperado === null || esperado <= 0
+          ? null
+          : Number(((media.mediaOperacoes / esperado) * 100).toFixed(1)),
     };
   });
 
@@ -45,9 +50,14 @@ export function GraficoMediaSemanal() {
     );
   }
 
+  const tetoDaAderencia = Math.max(
+    100,
+    ...pontos.map((ponto) => Math.ceil((ponto.aderencia ?? 0) / 25) * 25),
+  );
+
   return (
     <ResponsiveContainer width="100%" height={260}>
-      <ComposedChart data={pontos} margin={{ top: 8, right: 16, bottom: 0, left: -12 }}>
+      <ComposedChart data={pontos} margin={{ top: 8, right: 4, bottom: 0, left: -12 }}>
         <CartesianGrid stroke="var(--grade)" vertical={false} />
         <XAxis
           dataKey="semana"
@@ -58,10 +68,21 @@ export function GraficoMediaSemanal() {
           minTickGap={16}
         />
         <YAxis
+          yAxisId="operacoes"
           tick={{ fill: 'var(--tinta-mutada)', fontSize: 11 }}
           tickLine={false}
           axisLine={false}
           width={56}
+        />
+        <YAxis
+          yAxisId="aderencia"
+          orientation="right"
+          domain={[0, tetoDaAderencia]}
+          tickFormatter={(valor) => `${valor}%`}
+          tick={{ fill: 'var(--serie-violeta)', fontSize: 11 }}
+          tickLine={false}
+          axisLine={false}
+          width={52}
         />
         <Tooltip
           cursor={{ fill: 'var(--grade)', fillOpacity: 0.4 }}
@@ -71,6 +92,7 @@ export function GraficoMediaSemanal() {
             }
 
             const ponto = payload[0].payload as (typeof pontos)[number];
+            const diferenca = ponto.esperado === null ? null : ponto.mediaOperacoes - ponto.esperado;
 
             const itens: { nome: string; valor: string; cor?: string }[] = [
               {
@@ -88,10 +110,18 @@ export function GraficoMediaSemanal() {
               },
             ];
 
-            if (ponto.esperado !== null && ponto.esperado > 0) {
+            if (ponto.aderencia !== null) {
               itens.push({
-                nome: 'Do esperado',
-                valor: `${Number(((ponto.mediaOperacoes / ponto.esperado) * 100).toFixed(1))}%`,
+                nome: 'Realizado do esperado',
+                valor: `${ponto.aderencia}%`,
+                cor: 'var(--serie-violeta)',
+              });
+            }
+
+            if (diferenca !== null) {
+              itens.push({
+                nome: 'Diferença',
+                valor: `${diferenca > 0 ? '+' : ''}${formatarNumero(diferenca)} operações`,
               });
             }
 
@@ -105,6 +135,7 @@ export function GraficoMediaSemanal() {
           wrapperStyle={{ fontSize: 12, color: 'var(--tinta-secundaria)' }}
         />
         <Bar
+          yAxisId="operacoes"
           name="Operações lançadas"
           dataKey="mediaOperacoes"
           fill="var(--serie-1)"
@@ -112,13 +143,22 @@ export function GraficoMediaSemanal() {
           maxBarSize={28}
           isAnimationActive={false}
         />
-        <Line
+        <Bar
+          yAxisId="operacoes"
           name="Esperado pelas lojas no ar"
-          type="monotone"
           dataKey="esperado"
-          stroke="var(--serie-2)"
+          fill="var(--serie-2)"
+          radius={[4, 4, 0, 0]}
+          maxBarSize={28}
+          isAnimationActive={false}
+        />
+        <Line
+          yAxisId="aderencia"
+          name="Realizado do esperado (%)"
+          type="monotone"
+          dataKey="aderencia"
+          stroke="var(--serie-violeta)"
           strokeWidth={2}
-          strokeDasharray="6 3"
           dot={{ r: 3 }}
           activeDot={{ r: 5, strokeWidth: 2, stroke: 'var(--superficie)' }}
           connectNulls

@@ -56,6 +56,24 @@ export interface Evolucao {
 
 export type DatasPorStatus = Record<StatusRollout, string | null>;
 
+export interface LatenciaSemanal {
+  id: number;
+  /** Dia inicial da semana. */
+  semana: string;
+  /** Latência em milissegundos. */
+  p50: number;
+  p75: number;
+  p95: number;
+  p99: number;
+}
+
+export interface MediaSemanal {
+  id: number;
+  /** Dia inicial da semana. */
+  semana: string;
+  mediaOperacoes: number;
+}
+
 export type PontoStatusDia = {
   dia: string;
   total: number;

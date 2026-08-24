@@ -448,6 +448,35 @@ textarea {
   color: var(--tinta-secundaria);
 }
 
+.modal-largo {
+  width: min(1040px, 100%);
+}
+
+.grade-lancamentos th {
+  white-space: normal;
+  vertical-align: bottom;
+}
+
+.grade-lancamentos td {
+  padding: 6px 8px;
+}
+
+.grade-lancamentos input {
+  width: 100%;
+  min-width: 92px;
+  padding: 6px 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+.grade-lancamentos input[type='date'] {
+  min-width: 140px;
+}
+
+.aviso-salvo {
+  font-size: 12px;
+  color: var(--status-bom);
+}
+
 .lancamento-semana {
   display: flex;
   flex-wrap: wrap;

@@ -16,8 +16,7 @@ import { GraficoStatus } from '../componentes/GraficoStatus';
 import { GraficoStatusPorDia } from '../componentes/GraficoStatusPorDia';
 import { GraficoLatenciaSemanal } from '../componentes/GraficoLatenciaSemanal';
 import { GraficoMediaSemanal } from '../componentes/GraficoMediaSemanal';
-import { ModalLatenciasSemanais } from '../componentes/ModalLatenciasSemanais';
-import { ModalMediasSemanais } from '../componentes/ModalMediasSemanais';
+import { ModalLancamentosSemanais } from '../componentes/ModalLancamentosSemanais';
 
 export function Dashboard() {
   const resumo = useResumo();
@@ -27,7 +26,6 @@ export function Dashboard() {
   const medias = useMediasSemanais();
   const latencias = useLatenciasSemanais();
   const [lancamentosAbertos, setLancamentosAbertos] = useState(false);
-  const [latenciasAbertas, setLatenciasAbertas] = useState(false);
 
   if (resumo.isLoading || !resumo.data) {
     return <p className="carregando">Carregando indicadores…</p>;
@@ -102,7 +100,7 @@ export function Dashboard() {
           titulo="Latência das requisições"
           subtitulo="P50, P75, P95 e P99 por semana, em milissegundos"
           acoes={
-            <button className="aba" onClick={() => setLatenciasAbertas(true)}>
+            <button className="aba" onClick={() => setLancamentosAbertos(true)}>
               Lançamentos{latencias.data?.length ? ` (${latencias.data.length})` : ''}
             </button>
           }
@@ -133,11 +131,7 @@ export function Dashboard() {
       </div>
 
       {lancamentosAbertos ? (
-        <ModalMediasSemanais aoFechar={() => setLancamentosAbertos(false)} />
-      ) : null}
-
-      {latenciasAbertas ? (
-        <ModalLatenciasSemanais aoFechar={() => setLatenciasAbertas(false)} />
+        <ModalLancamentosSemanais aoFechar={() => setLancamentosAbertos(false)} />
       ) : null}
     </>
   );

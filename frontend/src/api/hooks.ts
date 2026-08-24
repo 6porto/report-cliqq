@@ -176,8 +176,12 @@ export function useSalvarMediaSemanal() {
   const clienteQuery = useQueryClient();
 
   return useMutation({
-    mutationFn: (variaveis: { semana: string; mediaOperacoes: number }) =>
-      api.put<MediaSemanal>('/medias-semanais', variaveis),
+    mutationFn: (variaveis: {
+      semana: string;
+      mediaOperacoes: number;
+      operacoesLegado: number | null;
+      operacoesCentralizado: number | null;
+    }) => api.put<MediaSemanal>('/medias-semanais', variaveis),
     onSuccess: () => {
       clienteQuery.invalidateQueries({ queryKey: ['medias-semanais'] });
     },

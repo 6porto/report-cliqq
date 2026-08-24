@@ -23,6 +23,8 @@ interface Linha {
   mediaId: number | null;
   latenciaId: number | null;
   mediaOperacoes: string;
+  operacoesLegado: string;
+  operacoesCentralizado: string;
   p50: string;
   p75: string;
   p95: string;
@@ -30,8 +32,11 @@ interface Linha {
 }
 
 type CampoDeLatencia = 'p50' | 'p75' | 'p95' | 'p99';
+type CampoDeOperacoes = 'operacoesLegado' | 'operacoesCentralizado';
 
 const CAMPOS_DE_LATENCIA: CampoDeLatencia[] = ['p50', 'p75', 'p95', 'p99'];
+
+const CAMPOS_DE_OPERACOES: CampoDeOperacoes[] = ['operacoesLegado', 'operacoesCentralizado'];
 
 let contadorDeLinhas = 0;
 
@@ -45,6 +50,8 @@ function linhaVazia(semana: string): Linha {
     mediaId: null,
     latenciaId: null,
     mediaOperacoes: '',
+    operacoesLegado: '',
+    operacoesCentralizado: '',
     p50: '',
     p75: '',
     p95: '',
@@ -77,6 +84,9 @@ function montarLinhas(medias: MediaSemanal[], latencias: LatenciaSemanal[]): Lin
     const linha = linhaDaSemana(paraCampoData(media.semana));
     linha.mediaId = media.id;
     linha.mediaOperacoes = String(media.mediaOperacoes);
+    linha.operacoesLegado = media.operacoesLegado === null ? '' : String(media.operacoesLegado);
+    linha.operacoesCentralizado =
+      media.operacoesCentralizado === null ? '' : String(media.operacoesCentralizado);
   });
 
   latencias.forEach((latencia) => {
@@ -210,6 +220,18 @@ export function ModalLancamentosSemanais({ aoFechar }: Props) {
         return 'A média de operações deve ser um número inteiro igual ou maior que zero.';
       }
 
+      const operacoesPorSistema = CAMPOS_DE_OPERACOES.filter(
+        (campo) => linha[campo].trim() !== '',
+      );
+
+      if (operacoesPorSistema.some((campo) => !inteiroValido(linha[campo]))) {
+        return 'As operações do legado e do centralizado devem ser números inteiros iguais ou maiores que zero.';
+      }
+
+      if (operacoesPorSistema.length > 0 && linha.mediaOperacoes.trim() === '') {
+        return 'Informe a média de operações da semana para gravar as operações do legado e do centralizado.';
+      }
+
       const preenchidos = CAMPOS_DE_LATENCIA.filter((campo) => linha[campo].trim() !== '');
 
       if (preenchidos.length > 0 && preenchidos.length < CAMPOS_DE_LATENCIA.length) {
@@ -246,6 +268,12 @@ export function ModalLancamentosSemanais({ aoFechar }: Props) {
           await salvarMedia.mutateAsync({
             semana: linha.semana,
             mediaOperacoes: Number(linha.mediaOperacoes),
+            operacoesLegado:
+              linha.operacoesLegado.trim() === '' ? null : Number(linha.operacoesLegado),
+            operacoesCentralizado:
+              linha.operacoesCentralizado.trim() === ''
+                ? null
+                : Number(linha.operacoesCentralizado),
           });
 
           if (mudouDeSemana && linha.mediaId !== null) {
@@ -297,8 +325,9 @@ export function ModalLancamentosSemanais({ aoFechar }: Props) {
 
         <p className="aviso">
           Uma linha por semana, identificada pelo dia inicial. A média alimenta o gráfico de
-          operações e os quatro percentis alimentam o de latência — deixe em branco o que ainda não
-          tiver. Os gráficos recarregam ao salvar.
+          operações, os quatro percentis alimentam o de latência e as operações por sistema ficam
+          registradas junto da semana — deixe em branco o que ainda não tiver. Os gráficos
+          recarregam ao salvar.
         </p>
 
         {erro ? <p className="erro">{erro}</p> : null}
@@ -312,6 +341,8 @@ export function ModalLancamentosSemanais({ aoFechar }: Props) {
                 <tr>
                   <th>Semana (dia inicial)</th>
                   <th>Média de operações/dia</th>
+                  <th>Operações no legado</th>
+                  <th>Operações no centralizado</th>
                   <th>P50 (ms)</th>
                   <th>P75 (ms)</th>
                   <th>P95 (ms)</th>
@@ -322,7 +353,7 @@ export function ModalLancamentosSemanais({ aoFechar }: Props) {
               <tbody>
                 {linhas.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="carregando">
+                    <td colSpan={9} className="carregando">
                       Nenhum lançamento ainda — use “Adicionar semana”.
                     </td>
                   </tr>
@@ -347,6 +378,16 @@ export function ModalLancamentosSemanais({ aoFechar }: Props) {
                           }
                         />
                       </td>
+                      {CAMPOS_DE_OPERACOES.map((campo) => (
+                        <td key={campo}>
+                          <input
+                            type="number"
+                            min={0}
+                            value={linha[campo]}
+                            onChange={(evento) => alterar(linha.chave, campo, evento.target.value)}
+                          />
+                        </td>
+                      ))}
                       {CAMPOS_DE_LATENCIA.map((campo) => (
                         <td key={campo}>
                           <input

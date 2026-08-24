@@ -59,6 +59,9 @@ model MediaOperacoesSemanal {
   id             Int      @id @default(autoincrement())
   semana         DateTime @unique
   mediaOperacoes Int
+  /// Operações da semana que rodaram em cada sistema; nulo enquanto não apuradas.
+  operacoesLegado       Int?
+  operacoesCentralizado Int?
   criadoEm       DateTime @default(now())
   atualizadoEm   DateTime @updatedAt
 }

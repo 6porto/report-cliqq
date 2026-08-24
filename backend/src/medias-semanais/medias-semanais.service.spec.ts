@@ -39,9 +39,50 @@ describe('MediasSemanaisService', () => {
 
       expect(prisma.mediaOperacoesSemanal.upsert).toHaveBeenCalledWith({
         where: { semana: meiaNoite },
-        create: { semana: meiaNoite, mediaOperacoes: 13050 },
-        update: { mediaOperacoes: 13050 },
+        create: {
+          semana: meiaNoite,
+          mediaOperacoes: 13050,
+          operacoesLegado: null,
+          operacoesCentralizado: null,
+        },
+        update: {
+          mediaOperacoes: 13050,
+          operacoesLegado: null,
+          operacoesCentralizado: null,
+        },
       });
+    });
+
+    it('grava as operações de cada sistema quando informadas', async () => {
+      await servico.salvar({
+        semana: '2026-08-17',
+        mediaOperacoes: 13050,
+        operacoesLegado: 9000,
+        operacoesCentralizado: 4050,
+      });
+
+      expect(prisma.mediaOperacoesSemanal.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          update: {
+            mediaOperacoes: 13050,
+            operacoesLegado: 9000,
+            operacoesCentralizado: 4050,
+          },
+        }),
+      );
+    });
+
+    it('limpa as operações por sistema quando a semana é relançada sem elas', async () => {
+      await servico.salvar({ semana: '2026-08-17', mediaOperacoes: 13050 });
+
+      expect(prisma.mediaOperacoesSemanal.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          update: expect.objectContaining({
+            operacoesLegado: null,
+            operacoesCentralizado: null,
+          }),
+        }),
+      );
     });
 
     it('descarta a hora quando a data vem com horário', async () => {

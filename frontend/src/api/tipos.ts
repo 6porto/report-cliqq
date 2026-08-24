@@ -72,6 +72,9 @@ export interface MediaSemanal {
   /** Dia inicial da semana. */
   semana: string;
   mediaOperacoes: number;
+  /** Operações da semana em cada sistema; nulo enquanto não apuradas. */
+  operacoesLegado: number | null;
+  operacoesCentralizado: number | null;
 }
 
 export type PontoStatusDia = {

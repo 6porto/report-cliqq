@@ -1,4 +1,4 @@
-import { IsDateString, IsInt, Min } from 'class-validator';
+import { IsDateString, IsInt, IsOptional, Min } from 'class-validator';
 
 export class SalvarMediaSemanalDto {
   /** Dia inicial da semana; identifica o lançamento. */
@@ -8,4 +8,15 @@ export class SalvarMediaSemanalDto {
   @IsInt()
   @Min(0)
   mediaOperacoes: number;
+
+  /** Operações da semana em cada sistema; ausente enquanto não apuradas. */
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  operacoesLegado?: number | null;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  operacoesCentralizado?: number | null;
 }

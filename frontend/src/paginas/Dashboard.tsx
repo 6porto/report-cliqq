@@ -49,22 +49,17 @@ export function Dashboard() {
 
       <div className="grade-kpi">
         <CartaoKpi
-          rotulo="Rollout concluído"
-          valor={`${dados.percentualConcluido}%`}
-          apoio={`${dados.concluidas} de ${dados.total} lojas`}
-        />
-        <CartaoKpi
-          rotulo="Operações cobertas"
-          valor={`${dados.percentualOperacoesCobertas}%`}
-          apoio={`${dados.operacoesConcluidas} de ${dados.operacoesTotais} operações/dia`}
-        />
-        <CartaoKpi
           rotulo="Em implantação"
           valor={STATUS_EM_IMPLANTACAO.reduce(
             (soma, status) => soma + (dados.porStatus[status] ?? 0),
             0,
           )}
           apoio="treinamento, adaptação ou operação"
+        />
+        <CartaoKpi
+          rotulo="Rollout concluído"
+          valor={`${dados.percentualConcluido}%`}
+          apoio={`${dados.concluidas} de ${dados.total} lojas`}
         />
       </div>
 

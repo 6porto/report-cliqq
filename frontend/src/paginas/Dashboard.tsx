@@ -65,21 +65,6 @@ export function Dashboard() {
           )}
           apoio="treinamento, adaptação ou operação"
         />
-        <CartaoKpi
-          rotulo="Concluídas (7 dias)"
-          valor={dados.concluidasUltimos7Dias}
-          apoio="ritmo da última semana"
-        />
-        <CartaoKpi
-          rotulo="Atrasadas"
-          valor={dados.atrasadas}
-          apoio="passaram da data prevista"
-        />
-        <CartaoKpi
-          rotulo="Bloqueadas"
-          valor={dados.porStatus.BLOQUEADO}
-          apoio="dependem de tratativa"
-        />
       </div>
 
       <div className="grade-graficos">

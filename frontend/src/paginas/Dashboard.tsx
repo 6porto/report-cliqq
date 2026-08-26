@@ -7,18 +7,36 @@ import {
   useStatusPorDia,
   useUf,
 } from '../api/hooks';
+import type { StatusRollout } from '../api/tipos';
 import { REGRA_DAS_ONDAS } from '../dominio/ondas';
-import { formatarSemanaCompleta, paraCampoData } from '../dominio/semanas';
-import { STATUS_EM_IMPLANTACAO } from '../tema/cores';
+import { COR_STATUS, ICONE_STATUS } from '../tema/cores';
 import { CartaoGrafico } from '../componentes/CartaoGrafico';
-import { CartaoKpi } from '../componentes/CartaoKpi';
 import { GraficoAdesaoCentralizado } from '../componentes/GraficoAdesaoCentralizado';
+import { GraficoBugsPorCriticidade } from '../componentes/GraficoBugsPorCriticidade';
+import { GraficoPercentualErros } from '../componentes/GraficoPercentualErros';
 import { GraficoGrupos } from '../componentes/GraficoGrupos';
+import { GraficoMediaDiaria } from '../componentes/GraficoMediaDiaria';
 import { GraficoStatus } from '../componentes/GraficoStatus';
 import { GraficoStatusPorDia } from '../componentes/GraficoStatusPorDia';
 import { GraficoLatenciaSemanal } from '../componentes/GraficoLatenciaSemanal';
 import { GraficoMediaSemanal } from '../componentes/GraficoMediaSemanal';
+import { RoscaProporcao } from '../componentes/RoscaProporcao';
+import { ModalDescricoesDeBugs } from '../componentes/ModalDescricoesDeBugs';
 import { ModalLancamentosSemanais } from '../componentes/ModalLancamentosSemanais';
+
+/** Fora do rollout: ainda não começaram ou estão travadas. */
+const STATUS_FORA_DO_CENTRALIZADO: StatusRollout[] = ['NAO_INICIADO', 'BLOQUEADO'];
+
+/** % do total que já roda no centralizado, pronto para o miolo da rosca. */
+function formatarAdesao(centralizado: number, legado: number) {
+  const total = centralizado + legado;
+
+  if (total <= 0) {
+    return '—';
+  }
+
+  return `${Number(((centralizado / total) * 100).toFixed(1)).toLocaleString('pt-BR')}%`;
+}
 
 export function Dashboard() {
   const resumo = useResumo();
@@ -28,6 +46,7 @@ export function Dashboard() {
   const medias = useMediasSemanais();
   const latencias = useLatenciasSemanais();
   const [lancamentosAbertos, setLancamentosAbertos] = useState(false);
+  const [descricoesAbertas, setDescricoesAbertas] = useState(false);
 
   if (resumo.isLoading || !resumo.data) {
     return <p className="carregando">Carregando indicadores…</p>;
@@ -40,24 +59,53 @@ export function Dashboard() {
     ...(latencias.data ?? []).map((latencia) => latencia.semana),
   ]).size;
 
-  const ultimaSemanaComOperacoes = [...(medias.data ?? [])]
-    .filter(
-      (media) => media.operacoesLegado !== null || media.operacoesCentralizado !== null,
-    )
-    .sort((a, b) => a.semana.localeCompare(b.semana))
-    .at(-1);
+  const semanasComDescricao = (medias.data ?? []).filter(
+    (media) => (media.bugsDescricao ?? '').trim() !== '',
+  ).length;
 
-  const operacoesDaUltimaSemana = ultimaSemanaComOperacoes
-    ? (ultimaSemanaComOperacoes.operacoesLegado ?? 0) +
-      (ultimaSemanaComOperacoes.operacoesCentralizado ?? 0)
-    : null;
+  const semanasComOperacoes = [...(medias.data ?? [])]
+    .filter((media) => media.operacoesLegado !== null || media.operacoesCentralizado !== null)
+    .sort((a, b) => a.semana.localeCompare(b.semana));
 
-  const centralizadoNaUltimaSemana = ultimaSemanaComOperacoes?.operacoesCentralizado ?? null;
+  const ultimaSemanaCrua = semanasComOperacoes.at(-1);
 
-  const adesaoNaUltimaSemana =
-    centralizadoNaUltimaSemana === null || !operacoesDaUltimaSemana
+  const lojasOperando =
+    dados.total -
+    STATUS_FORA_DO_CENTRALIZADO.reduce(
+      (soma, status) => soma + (dados.porStatus[status] ?? 0),
+      0,
+    );
+
+  const pontosDeStatus = statusPorDia.data?.pontos ?? [];
+  const concluidasHoje = pontosDeStatus.at(-1)?.CONCLUIDO ?? null;
+  // Sete dias antes do último ponto; com série mais curta, o começo dela.
+  const concluidasHaUmaSemana =
+    pontosDeStatus.length === 0
       ? null
-      : Number(((centralizadoNaUltimaSemana / operacoesDaUltimaSemana) * 100).toFixed(1));
+      : (pontosDeStatus.at(-8) ?? pontosDeStatus[0]).CONCLUIDO;
+
+  const variacaoSemanal =
+    concluidasHoje === null || concluidasHaUmaSemana === null
+      ? null
+      : concluidasHoje - concluidasHaUmaSemana;
+
+  const crescimentoSemanal = (() => {
+    // Semana parada não vira texto: o cartão fica só com a descrição.
+    if (variacaoSemanal === null || variacaoSemanal === 0) {
+      return null;
+    }
+
+    const sinal = variacaoSemanal > 0 ? '+' : '−';
+    const absoluto = Math.abs(variacaoSemanal);
+
+    if (!concluidasHaUmaSemana) {
+      return `${sinal}${absoluto} ${absoluto === 1 ? 'loja' : 'lojas'} na semana`;
+    }
+
+    const percentual = Number(((absoluto / concluidasHaUmaSemana) * 100).toFixed(1));
+
+    return `${sinal}${percentual.toLocaleString('pt-BR')}% na semana`;
+  })();
 
   return (
     <>
@@ -67,42 +115,163 @@ export function Dashboard() {
         </button>
       </div>
 
-      <div className="grade-kpi">
-        <CartaoKpi
-          rotulo="Em implantação"
-          valor={STATUS_EM_IMPLANTACAO.reduce(
-            (soma, status) => soma + (dados.porStatus[status] ?? 0),
-            0,
-          )}
-          apoio="treinamento, adaptação ou operação"
-        />
-        <CartaoKpi
-          rotulo="Rollout concluído"
-          valor={`${dados.percentualConcluido}%`}
-          apoio={`${dados.concluidas} de ${dados.total} lojas`}
-        />
-        <CartaoKpi
-          rotulo="Centralizado na última semana"
-          valor={
-            centralizadoNaUltimaSemana === null
-              ? '—'
-              : centralizadoNaUltimaSemana.toLocaleString('pt-BR')
+      <div className="grade-roscas">
+        <CartaoGrafico
+          titulo="Lojas Operando no Centralizado"
+          subtitulo="Lojas que já entraram no rollout, fora as não iniciadas e bloqueadas"
+        >
+          <RoscaProporcao
+            fatias={[
+              {
+                chave: 'operando',
+                rotulo: 'Operando',
+                icone: ICONE_STATUS.EM_OPERACAO,
+                valor: lojasOperando,
+                cor: 'var(--serie-1)',
+              },
+              {
+                chave: 'fora',
+                rotulo: 'Não iniciadas ou bloqueadas',
+                valor: dados.total - lojasOperando,
+                cor: 'var(--neutro)',
+              },
+            ]}
+            destaque={
+              dados.total === 0
+                ? '—'
+                : `${Number(((lojasOperando / dados.total) * 100).toFixed(1)).toLocaleString('pt-BR')}%`
+            }
+            legendaDoDestaque="da rede"
+            unidade="Lojas"
+            vazio="Nenhuma loja cadastrada."
+          />
+        </CartaoGrafico>
+
+        <CartaoGrafico
+          titulo="Lojas com CliQQ Legado Desligado"
+          subtitulo={
+            crescimentoSemanal
+              ? `Lojas rodando só no CliQQ Centralizado · ${crescimentoSemanal}`
+              : 'Lojas rodando só no CliQQ Centralizado'
           }
-          apoio={
-            ultimaSemanaComOperacoes
-              ? `${(operacoesDaUltimaSemana ?? 0).toLocaleString('pt-BR')} operações no total${
-                  adesaoNaUltimaSemana === null
-                    ? ''
-                    : ` · ${adesaoNaUltimaSemana.toLocaleString('pt-BR')}% de adesão`
-                } · semana de ${formatarSemanaCompleta(
-                  paraCampoData(ultimaSemanaComOperacoes.semana),
-                )}`
-              : 'sem operações lançadas ainda'
-          }
-        />
+        >
+          <RoscaProporcao
+            fatias={[
+              {
+                chave: 'desligado',
+                rotulo: 'Legado desligado',
+                icone: ICONE_STATUS.CONCLUIDO,
+                valor: dados.concluidas,
+                cor: COR_STATUS.CONCLUIDO,
+              },
+              {
+                chave: 'ativo',
+                rotulo: 'Legado ainda ativo',
+                valor: dados.total - dados.concluidas,
+                cor: 'var(--neutro)',
+              },
+            ]}
+            destaque={`${dados.percentualConcluido.toLocaleString('pt-BR')}%`}
+            legendaDoDestaque="concluído"
+            unidade="Lojas"
+            vazio="Nenhuma loja cadastrada."
+          />
+        </CartaoGrafico>
+
+        <CartaoGrafico
+          titulo="Adesão da rede na última semana"
+          subtitulo="Operações no centralizado sobre o total da rede"
+        >
+          <RoscaProporcao
+            fatias={[
+              {
+                chave: 'centralizado',
+                rotulo: 'CliQQ Centralizado',
+                valor: ultimaSemanaCrua?.operacoesCentralizado ?? 0,
+                cor: 'var(--serie-1)',
+              },
+              {
+                chave: 'legado',
+                rotulo: 'Legado da rede',
+                valor: ultimaSemanaCrua?.operacoesLegado ?? 0,
+                cor: 'var(--neutro)',
+              },
+            ]}
+            destaque={formatarAdesao(
+              ultimaSemanaCrua?.operacoesCentralizado ?? 0,
+              ultimaSemanaCrua?.operacoesLegado ?? 0,
+            )}
+            legendaDoDestaque="no centralizado"
+            unidade="Operações"
+            vazio="Informe as operações do legado e do centralizado em “Lançamentos por semana”."
+          />
+        </CartaoGrafico>
+
+        <CartaoGrafico
+          titulo="Adesão do piloto na última semana"
+          subtitulo="Operações no centralizado sobre o total das lojas do piloto"
+        >
+          <RoscaProporcao
+            fatias={[
+              {
+                chave: 'centralizado',
+                rotulo: 'CliQQ Centralizado',
+                valor: ultimaSemanaCrua?.operacoesCentralizado ?? 0,
+                cor: 'var(--serie-1)',
+              },
+              {
+                chave: 'legado',
+                rotulo: 'Legado no piloto',
+                valor: ultimaSemanaCrua?.pedidosLegadoPiloto ?? 0,
+                cor: 'var(--neutro)',
+              },
+            ]}
+            destaque={formatarAdesao(
+              ultimaSemanaCrua?.operacoesCentralizado ?? 0,
+              ultimaSemanaCrua?.pedidosLegadoPiloto ?? 0,
+            )}
+            legendaDoDestaque="no centralizado"
+            unidade="Operações"
+            vazio="Informe o total de pedidos do legado piloto em “Lançamentos por semana”."
+          />
+        </CartaoGrafico>
       </div>
 
       <div className="grade-graficos">
+        <CartaoGrafico
+          titulo="Performance / Tempo de Resposta"
+          subtitulo="% das requisições por faixa de tempo (eixo à esquerda) e total de transações da semana (barra, eixo à direita)"
+        >
+          <GraficoLatenciaSemanal />
+        </CartaoGrafico>
+
+        <CartaoGrafico
+          titulo="% de erros"
+          subtitulo="Requisições com erro em cada semana"
+        >
+          <GraficoPercentualErros />
+        </CartaoGrafico>
+
+        <CartaoGrafico titulo="Média de operações por dia">
+          <GraficoMediaDiaria />
+        </CartaoGrafico>
+
+        <CartaoGrafico
+          titulo="Bugs Reportados pelas Lojas"
+          subtitulo="Bugs ainda abertos ao fim de cada semana, empilhados da criticidade alta para a baixa"
+          acoes={
+            <button
+              className="aba"
+              onClick={() => setDescricoesAbertas(true)}
+              disabled={semanasComDescricao === 0}
+            >
+              Descrições{semanasComDescricao ? ` (${semanasComDescricao})` : ''}
+            </button>
+          }
+        >
+          <GraficoBugsPorCriticidade />
+        </CartaoGrafico>
+
         <CartaoGrafico
           largo
           titulo="Status dia a dia"
@@ -116,24 +285,17 @@ export function Dashboard() {
         </CartaoGrafico>
 
         <CartaoGrafico
-          titulo="Adesão ao CliQQ Centralizado"
-          subtitulo="% das operações no centralizado: sobre a rede toda e só entre as lojas que já estão em operação"
+          titulo="Adesão ao CliQQ Centralizado (Rede)"
+          subtitulo="% das operações da semana que rodaram no centralizado, sobre o total da rede (legado + centralizado)"
         >
           <GraficoAdesaoCentralizado />
         </CartaoGrafico>
 
         <CartaoGrafico
-          titulo="Média de operações por semana"
-          subtitulo="Lançado x esperado pelas lojas já no ar; a linha traz o % realizado (eixo à direita)"
+          titulo="Adesão ao CliQQ Centralizado (Lojas Piloto)"
+          subtitulo="Centralizado x realizado pelas lojas do piloto; a linha traz o % entre os dois (eixo à direita)"
         >
           <GraficoMediaSemanal />
-        </CartaoGrafico>
-
-        <CartaoGrafico
-          titulo="Latência das requisições"
-          subtitulo="P50, P75, P95 e P99 por semana, em milissegundos"
-        >
-          <GraficoLatenciaSemanal />
         </CartaoGrafico>
 
         <CartaoGrafico titulo="Situação das lojas" subtitulo="Distribuição da base por status">
@@ -160,6 +322,13 @@ export function Dashboard() {
 
       {lancamentosAbertos ? (
         <ModalLancamentosSemanais aoFechar={() => setLancamentosAbertos(false)} />
+      ) : null}
+
+      {descricoesAbertas ? (
+        <ModalDescricoesDeBugs
+          semanas={medias.data ?? []}
+          aoFechar={() => setDescricoesAbertas(false)}
+        />
       ) : null}
     </>
   );

@@ -18,10 +18,13 @@ export class MediasSemanaisService {
     const semana = this.inicioDoDia(dto.semana);
 
     const valores = {
-      mediaOperacoes: dto.mediaOperacoes,
       operacoesLegado: dto.operacoesLegado ?? null,
       operacoesCentralizado: dto.operacoesCentralizado ?? null,
       pedidosLegadoPiloto: dto.pedidosLegadoPiloto ?? null,
+      bugsAlta: dto.bugsAlta ?? null,
+      bugsMedia: dto.bugsMedia ?? null,
+      bugsBaixa: dto.bugsBaixa ?? null,
+      bugsDescricao: dto.bugsDescricao?.trim() || null,
     };
 
     return this.prisma.mediaOperacoesSemanal.upsert({

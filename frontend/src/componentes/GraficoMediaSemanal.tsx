@@ -9,7 +9,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { useMediasSemanais, useOperacoesEsperadas } from '../api/hooks';
+import { useMediasSemanais } from '../api/hooks';
 import { formatarSemana, paraCampoData } from '../dominio/semanas';
 import { Dica } from './Dica';
 
@@ -17,28 +17,23 @@ const formatarNumero = (valor: number) => valor.toLocaleString('pt-BR');
 
 export function GraficoMediaSemanal() {
   const medias = useMediasSemanais();
-  const esperadas = useOperacoesEsperadas();
 
   if (medias.isLoading) {
     return <p className="carregando">Carregando…</p>;
   }
 
-  const esperadaNoDia = new Map(
-    (esperadas.data?.pontos ?? []).map((ponto) => [ponto.dia, ponto.operacoesEsperadas]),
-  );
-
   const pontos = (medias.data ?? []).map((media) => {
-    const semana = paraCampoData(media.semana);
-    const esperado = esperadaNoDia.get(semana) ?? null;
+    const realizado = media.pedidosLegadoPiloto;
+    const centralizado = media.operacoesCentralizado;
 
     return {
-      semana,
-      mediaOperacoes: media.mediaOperacoes,
-      esperado,
+      semana: paraCampoData(media.semana),
+      centralizado,
+      realizado,
       aderencia:
-        esperado === null || esperado <= 0
+        centralizado === null || realizado === null || realizado <= 0
           ? null
-          : Number(((media.mediaOperacoes / esperado) * 100).toFixed(1)),
+          : Number(((centralizado / realizado) * 100).toFixed(1)),
     };
   });
 
@@ -92,28 +87,34 @@ export function GraficoMediaSemanal() {
             }
 
             const ponto = payload[0].payload as (typeof pontos)[number];
-            const diferenca = ponto.esperado === null ? null : ponto.mediaOperacoes - ponto.esperado;
+            const diferenca =
+              ponto.realizado === null || ponto.centralizado === null
+                ? null
+                : ponto.centralizado - ponto.realizado;
 
             const itens: { nome: string; valor: string; cor?: string }[] = [
               {
-                nome: 'Operações lançadas',
-                valor: formatarNumero(ponto.mediaOperacoes),
+                nome: 'Operações no centralizado',
+                valor:
+                  ponto.centralizado === null
+                    ? 'sem lançamento na semana'
+                    : formatarNumero(ponto.centralizado),
                 cor: 'var(--serie-1)',
               },
               {
-                nome: 'Esperado pelas lojas no ar',
+                nome: 'Realizado pelas lojas',
                 valor:
-                  ponto.esperado === null
-                    ? 'sem histórico para a data'
-                    : formatarNumero(ponto.esperado),
+                  ponto.realizado === null
+                    ? 'sem lançamento na semana'
+                    : formatarNumero(ponto.realizado),
                 cor: 'var(--serie-2)',
               },
             ];
 
             if (ponto.aderencia !== null) {
               itens.push({
-                nome: 'Realizado do esperado',
-                valor: `${ponto.aderencia}%`,
+                nome: 'Lançado sobre o realizado',
+                valor: `${ponto.aderencia.toLocaleString('pt-BR')}%`,
                 cor: 'var(--serie-violeta)',
               });
             }
@@ -136,8 +137,8 @@ export function GraficoMediaSemanal() {
         />
         <Bar
           yAxisId="operacoes"
-          name="Operações lançadas"
-          dataKey="mediaOperacoes"
+          name="Operações no centralizado"
+          dataKey="centralizado"
           fill="var(--serie-1)"
           radius={[4, 4, 0, 0]}
           maxBarSize={28}
@@ -145,8 +146,8 @@ export function GraficoMediaSemanal() {
         />
         <Bar
           yAxisId="operacoes"
-          name="Esperado pelas lojas no ar"
-          dataKey="esperado"
+          name="Realizado pelas lojas"
+          dataKey="realizado"
           fill="var(--serie-2)"
           radius={[4, 4, 0, 0]}
           maxBarSize={28}
@@ -154,7 +155,7 @@ export function GraficoMediaSemanal() {
         />
         <Line
           yAxisId="aderencia"
-          name="Realizado do esperado (%)"
+          name="Lançado sobre o realizado (%)"
           type="monotone"
           dataKey="aderencia"
           stroke="var(--serie-violeta)"

@@ -1,24 +1,33 @@
-import { IsDateString, IsInt, Min } from 'class-validator';
+import { IsDateString, IsInt, IsNumber, IsOptional, Max, Min } from 'class-validator';
 
 export class SalvarLatenciaSemanalDto {
   /** Dia inicial da semana; identifica o lançamento. */
   @IsDateString()
   semana: string;
 
-  /** Latência em milissegundos. */
-  @IsInt()
+  /** Distribuição do tempo de resposta na semana, em % das requisições. */
+  @IsOptional()
+  @IsNumber()
   @Min(0)
-  p50: number;
+  @Max(100)
+  percentualAte1s?: number | null;
 
-  @IsInt()
+  @IsOptional()
+  @IsNumber()
   @Min(0)
-  p75: number;
+  @Max(100)
+  percentualAte3s?: number | null;
 
-  @IsInt()
+  /** Requisições com erro na semana, em % do total. */
+  @IsOptional()
+  @IsNumber()
   @Min(0)
-  p95: number;
+  @Max(100)
+  percentualErros?: number | null;
 
+  /** Quantas requisições passaram de 3 segundos na semana. */
+  @IsOptional()
   @IsInt()
   @Min(0)
-  p99: number;
+  requisicoesAcima3s?: number | null;
 }

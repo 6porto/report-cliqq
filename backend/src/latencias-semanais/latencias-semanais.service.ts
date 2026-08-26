@@ -12,13 +12,23 @@ export class LatenciasSemanaisService {
 
   /** Um lançamento por semana: relançar a mesma data corrige os valores. */
   salvar(dto: SalvarLatenciaSemanalDto) {
-    // Percentil maior nunca é menor que o anterior.
-    if (dto.p75 < dto.p50 || dto.p95 < dto.p75 || dto.p99 < dto.p95) {
-      throw new BadRequestException('Os percentis devem crescer: P50 ≤ P75 ≤ P95 ≤ P99.');
+    const ate1s = dto.percentualAte1s ?? null;
+    const ate3s = dto.percentualAte3s ?? null;
+
+    // "Até 3s" é acumulado, então nunca fica abaixo de "até 1s".
+    if (ate1s !== null && ate3s !== null && ate3s < ate1s) {
+      throw new BadRequestException(
+        'O % até 3 segundos inclui o de até 1 segundo, então não pode ser menor.',
+      );
     }
 
     const semana = this.inicioDoDia(dto.semana);
-    const valores = { p50: dto.p50, p75: dto.p75, p95: dto.p95, p99: dto.p99 };
+    const valores = {
+      percentualAte1s: ate1s,
+      percentualAte3s: ate3s,
+      percentualErros: dto.percentualErros ?? null,
+      requisicoesAcima3s: dto.requisicoesAcima3s ?? null,
+    };
 
     return this.prisma.latenciaSemanal.upsert({
       where: { semana },

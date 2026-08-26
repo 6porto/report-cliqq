@@ -7,46 +7,39 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { useMediasSemanais } from '../api/hooks';
+import { useLatenciasSemanais } from '../api/hooks';
 import { formatarSemana, paraCampoData } from '../dominio/semanas';
 import { Dica } from './Dica';
 
-const formatarNumero = (valor: number) => valor.toLocaleString('pt-BR');
+export function GraficoPercentualErros() {
+  const latencias = useLatenciasSemanais();
 
-export function GraficoAdesaoCentralizado() {
-  const medias = useMediasSemanais();
-
-  if (medias.isLoading) {
+  if (latencias.isLoading) {
     return <p className="carregando">Carregando…</p>;
   }
 
-  const pontos = (medias.data ?? [])
-    .filter((media) => media.operacoesCentralizado !== null && media.operacoesLegado !== null)
-    .map((media) => {
-      const centralizado = media.operacoesCentralizado ?? 0;
-      const total = centralizado + (media.operacoesLegado ?? 0);
-
-      return {
-        semana: paraCampoData(media.semana),
-        centralizado,
-        total,
-        adesao: total > 0 ? Number(((centralizado / total) * 100).toFixed(1)) : null,
-      };
-    })
-    .filter((ponto) => ponto.adesao !== null);
+  const pontos = (latencias.data ?? [])
+    .filter((latencia) => latencia.percentualErros !== null)
+    .map((latencia) => ({
+      semana: paraCampoData(latencia.semana),
+      erros: latencia.percentualErros as number,
+    }));
 
   if (pontos.length === 0) {
     return (
       <p className="carregando">
-        Nenhuma semana com operações do centralizado e do legado — informe os dois em “Lançamentos
-        por semana”.
+        Nenhuma semana com erros lançados — informe o % de erros em “Lançamentos por semana”.
       </p>
     );
   }
 
+  const maiorErro = Math.max(...pontos.map((ponto) => ponto.erros));
+  // Uma folga acima do pior valor, para a linha não encostar no topo.
+  const teto = Math.max(0.1, Number((maiorErro * 1.25).toFixed(3)));
+
   return (
     <ResponsiveContainer width="100%" height={260}>
-      <LineChart data={pontos} margin={{ top: 8, right: 16, bottom: 0, left: -12 }}>
+      <LineChart data={pontos} margin={{ top: 8, right: 16, bottom: 0, left: -8 }}>
         <CartesianGrid stroke="var(--grade)" vertical={false} />
         <XAxis
           dataKey="semana"
@@ -57,13 +50,12 @@ export function GraficoAdesaoCentralizado() {
           minTickGap={16}
         />
         <YAxis
-          domain={[0, 100]}
-          ticks={[0, 25, 50, 75, 100]}
-          tickFormatter={(valor) => `${valor}%`}
+          domain={[0, teto]}
+          tickFormatter={(valor) => `${Number(valor).toLocaleString('pt-BR')}%`}
           tick={{ fill: 'var(--tinta-mutada)', fontSize: 11 }}
           tickLine={false}
           axisLine={false}
-          width={56}
+          width={64}
         />
         <Tooltip
           cursor={{ stroke: 'var(--linha-base)', strokeWidth: 1 }}
@@ -79,21 +71,19 @@ export function GraficoAdesaoCentralizado() {
                 titulo={`Semana de ${formatarSemana(String(label))}`}
                 itens={[
                   {
-                    nome: 'Adesão da rede',
-                    valor: `${(ponto.adesao ?? 0).toLocaleString('pt-BR')}%`,
+                    nome: 'Erros',
+                    valor: `${ponto.erros.toLocaleString('pt-BR')}%`,
                     cor: 'var(--serie-1)',
                   },
-                  { nome: 'No centralizado', valor: `${formatarNumero(ponto.centralizado)} operações` },
-                  { nome: 'Total da rede', valor: `${formatarNumero(ponto.total)} operações` },
                 ]}
               />
             );
           }}
         />
         <Line
-          name="Todas as lojas"
+          name="% de erros"
           type="monotone"
-          dataKey="adesao"
+          dataKey="erros"
           stroke="var(--serie-1)"
           strokeWidth={2}
           dot={{ r: 3 }}

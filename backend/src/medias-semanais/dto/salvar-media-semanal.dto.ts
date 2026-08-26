@@ -1,13 +1,9 @@
-import { IsDateString, IsInt, IsOptional, Min } from 'class-validator';
+import { IsDateString, IsInt, IsOptional, IsString, MaxLength, Min } from 'class-validator';
 
 export class SalvarMediaSemanalDto {
   /** Dia inicial da semana; identifica o lançamento. */
   @IsDateString()
   semana: string;
-
-  @IsInt()
-  @Min(0)
-  mediaOperacoes: number;
 
   /** Operações da semana em cada sistema; ausente enquanto não apuradas. */
   @IsOptional()
@@ -25,4 +21,26 @@ export class SalvarMediaSemanalDto {
   @IsInt()
   @Min(0)
   pedidosLegadoPiloto?: number | null;
+
+  /** Bugs ainda em aberto ao fim da semana, por criticidade. */
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  bugsAlta?: number | null;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  bugsMedia?: number | null;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  bugsBaixa?: number | null;
+
+  /** Anotação livre sobre os bugs da semana. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  bugsDescricao?: string | null;
 }

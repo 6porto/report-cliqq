@@ -33,40 +33,70 @@ describe('LatenciasSemanaisService', () => {
 
   describe('salvar', () => {
     it('grava a semana à meia-noite UTC e faz upsert pelo dia inicial', async () => {
-      await servico.salvar({ semana: '2026-08-17', p50: 120, p75: 200, p95: 480, p99: 900 });
+      await servico.salvar({
+        semana: '2026-08-17',
+        percentualAte1s: 82.4,
+        percentualAte3s: 95,
+      });
 
       const meiaNoite = new Date(Date.UTC(2026, 7, 17));
 
       expect(prisma.latenciaSemanal.upsert).toHaveBeenCalledWith({
         where: { semana: meiaNoite },
-        create: { semana: meiaNoite, p50: 120, p75: 200, p95: 480, p99: 900 },
-        update: { p50: 120, p75: 200, p95: 480, p99: 900 },
+        create: {
+          semana: meiaNoite,
+          percentualAte1s: 82.4,
+          percentualAte3s: 95,
+          percentualErros: null,
+          requisicoesAcima3s: null,
+        },
+        update: {
+          percentualAte1s: 82.4,
+          percentualAte3s: 95,
+          percentualErros: null,
+          requisicoesAcima3s: null,
+        },
       });
     });
 
-    it('aceita percentis iguais', async () => {
-      await servico.salvar({ semana: '2026-08-17', p50: 120, p75: 120, p95: 120, p99: 120 });
+    it('aceita a semana com só uma faixa apurada', async () => {
+      await servico.salvar({ semana: '2026-08-17', percentualAte1s: 78.5 });
 
-      expect(prisma.latenciaSemanal.upsert).toHaveBeenCalled();
+      expect(prisma.latenciaSemanal.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          update: {
+            percentualAte1s: 78.5,
+            percentualAte3s: null,
+            percentualErros: null,
+            requisicoesAcima3s: null,
+          },
+        }),
+      );
     });
 
-    it('recusa P75 menor que o P50', async () => {
-      expect(() =>
-        servico.salvar({ semana: '2026-08-17', p50: 200, p75: 120, p95: 480, p99: 900 }),
-      ).toThrow(BadRequestException);
-      expect(prisma.latenciaSemanal.upsert).not.toHaveBeenCalled();
+    it('aceita fração nas requisições acima de 3s', async () => {
+      await servico.salvar({ semana: '2026-08-17', requisicoesAcima3s: 12.5 });
+
+      expect(prisma.latenciaSemanal.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          update: expect.objectContaining({ requisicoesAcima3s: 12.5 }),
+        }),
+      );
     });
 
-    it('recusa P95 menor que o P75', async () => {
-      expect(() =>
-        servico.salvar({ semana: '2026-08-17', p50: 120, p75: 480, p95: 200, p99: 900 }),
-      ).toThrow(BadRequestException);
-      expect(prisma.latenciaSemanal.upsert).not.toHaveBeenCalled();
+    it('grava o % de erros da semana', async () => {
+      await servico.salvar({ semana: '2026-08-17', percentualErros: 0.07 });
+
+      expect(prisma.latenciaSemanal.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          update: expect.objectContaining({ percentualErros: 0.07 }),
+        }),
+      );
     });
 
-    it('recusa P99 menor que o P95', async () => {
+    it('recusa o % até 3s menor que o de até 1s, que ele já inclui', async () => {
       expect(() =>
-        servico.salvar({ semana: '2026-08-17', p50: 120, p75: 200, p95: 480, p99: 300 }),
+        servico.salvar({ semana: '2026-08-17', percentualAte1s: 90, percentualAte3s: 80 }),
       ).toThrow(BadRequestException);
       expect(prisma.latenciaSemanal.upsert).not.toHaveBeenCalled();
     });

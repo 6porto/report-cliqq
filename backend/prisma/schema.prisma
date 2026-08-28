@@ -58,7 +58,19 @@ model MetaRollout {
 model MediaOperacoesSemanal {
   id             Int      @id @default(autoincrement())
   semana         DateTime @unique
-  mediaOperacoes Int
+  /// Aposentada: a série passou a usar operacoesCentralizado. Mantida só pelo histórico.
+  mediaOperacoes Int?
+  /// Operações da semana que rodaram em cada sistema; nulo enquanto não apuradas.
+  operacoesLegado       Int?
+  operacoesCentralizado Int?
+  /// Operações que ficaram no legado apenas nas lojas do piloto.
+  pedidosLegadoPiloto   Int?
+  /// Bugs ainda em aberto ao fim da semana, por criticidade.
+  bugsAlta              Int?
+  bugsMedia             Int?
+  bugsBaixa             Int?
+  /// Anotação livre sobre os bugs da semana.
+  bugsDescricao         String?
   criadoEm       DateTime @default(now())
   atualizadoEm   DateTime @updatedAt
 }
@@ -67,10 +79,18 @@ model MediaOperacoesSemanal {
 model LatenciaSemanal {
   id           Int      @id @default(autoincrement())
   semana       DateTime @unique
-  p50          Int
-  p75          Int
-  p95          Int
-  p99          Int
+  /// Percentis aposentados: a apuração passou a ser por faixa de tempo.
+  p50          Int?
+  p75          Int?
+  p95          Int?
+  p99          Int?
+  /// Distribuição do tempo de resposta na semana, em % das requisições.
+  percentualAte1s    Float?
+  percentualAte3s    Float?
+  /// Requisições com erro na semana, em % do total.
+  percentualErros    Float?
+  /// Quantas requisições passaram de 3 segundos na semana.
+  requisicoesAcima3s Float?
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 }

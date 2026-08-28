@@ -11,6 +11,7 @@ import type {
   GrupoRollout,
   LatenciaSemanal,
   MediaSemanal,
+  OperacoesEsperadas,
   PaginaFiliais,
   Projecao,
   RespostaPriorizacao,
@@ -165,6 +166,13 @@ export function useSincronizarPriorizacao() {
   });
 }
 
+export function useOperacoesEsperadas() {
+  return useQuery({
+    queryKey: ['operacoes-esperadas'],
+    queryFn: () => api.get<OperacoesEsperadas>('/relatorio/operacoes-esperadas'),
+  });
+}
+
 export function useMediasSemanais() {
   return useQuery({
     queryKey: ['medias-semanais'],
@@ -176,8 +184,16 @@ export function useSalvarMediaSemanal() {
   const clienteQuery = useQueryClient();
 
   return useMutation({
-    mutationFn: (variaveis: { semana: string; mediaOperacoes: number }) =>
-      api.put<MediaSemanal>('/medias-semanais', variaveis),
+    mutationFn: (variaveis: {
+      semana: string;
+      operacoesLegado: number | null;
+      operacoesCentralizado: number | null;
+      pedidosLegadoPiloto: number | null;
+      bugsAlta: number | null;
+      bugsMedia: number | null;
+      bugsBaixa: number | null;
+      bugsDescricao: string | null;
+    }) => api.put<MediaSemanal>('/medias-semanais', variaveis),
     onSuccess: () => {
       clienteQuery.invalidateQueries({ queryKey: ['medias-semanais'] });
     },
@@ -208,12 +224,11 @@ export function useSalvarLatenciaSemanal() {
   return useMutation({
     mutationFn: (variaveis: {
       semana: string;
-      p50: number;
-      p75: number;
-      p95: number;
-      p99: number;
-    }) =>
-      api.put<LatenciaSemanal>('/latencias-semanais', variaveis),
+      percentualAte1s: number | null;
+      percentualAte3s: number | null;
+      percentualErros: number | null;
+      requisicoesAcima3s: number | null;
+    }) => api.put<LatenciaSemanal>('/latencias-semanais', variaveis),
     onSuccess: () => {
       clienteQuery.invalidateQueries({ queryKey: ['latencias-semanais'] });
     },

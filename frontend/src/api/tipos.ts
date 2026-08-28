@@ -60,18 +60,34 @@ export interface LatenciaSemanal {
   id: number;
   /** Dia inicial da semana. */
   semana: string;
-  /** Latência em milissegundos. */
-  p50: number;
-  p75: number;
-  p95: number;
-  p99: number;
+  /** Distribuição do tempo de resposta na semana, em % das requisições. */
+  percentualAte1s: number | null;
+  percentualAte3s: number | null;
+  /** Requisições com erro na semana, em % do total. */
+  percentualErros: number | null;
+  /** Quantas requisições passaram de 3 segundos na semana. */
+  requisicoesAcima3s: number | null;
+}
+
+export interface OperacoesEsperadas {
+  pontos: { dia: string; operacoesEsperadas: number }[];
 }
 
 export interface MediaSemanal {
   id: number;
   /** Dia inicial da semana. */
   semana: string;
-  mediaOperacoes: number;
+  /** Operações da semana em cada sistema; nulo enquanto não apuradas. */
+  operacoesLegado: number | null;
+  operacoesCentralizado: number | null;
+  /** Operações que ficaram no legado apenas nas lojas do piloto. */
+  pedidosLegadoPiloto: number | null;
+  /** Bugs ainda em aberto ao fim da semana, por criticidade. */
+  bugsAlta: number | null;
+  bugsMedia: number | null;
+  bugsBaixa: number | null;
+  /** Anotação livre sobre os bugs da semana. */
+  bugsDescricao: string | null;
 }
 
 export type PontoStatusDia = {

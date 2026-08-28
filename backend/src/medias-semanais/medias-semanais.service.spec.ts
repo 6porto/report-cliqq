@@ -33,19 +33,84 @@ describe('MediasSemanaisService', () => {
 
   describe('salvar', () => {
     it('grava a semana à meia-noite UTC e faz upsert pelo dia inicial', async () => {
-      await servico.salvar({ semana: '2026-08-17', mediaOperacoes: 13050 });
+      await servico.salvar({ semana: '2026-08-17' });
 
       const meiaNoite = new Date(Date.UTC(2026, 7, 17));
 
       expect(prisma.mediaOperacoesSemanal.upsert).toHaveBeenCalledWith({
         where: { semana: meiaNoite },
-        create: { semana: meiaNoite, mediaOperacoes: 13050 },
-        update: { mediaOperacoes: 13050 },
+        create: {
+          semana: meiaNoite,
+          operacoesLegado: null,
+          operacoesCentralizado: null,
+          pedidosLegadoPiloto: null,
+          bugsAlta: null,
+          bugsMedia: null,
+          bugsBaixa: null,
+          bugsDescricao: null,
+        },
+        update: {
+          operacoesLegado: null,
+          operacoesCentralizado: null,
+          pedidosLegadoPiloto: null,
+          bugsAlta: null,
+          bugsMedia: null,
+          bugsBaixa: null,
+          bugsDescricao: null,
+        },
       });
     });
 
+    it('grava as operações de cada sistema quando informadas', async () => {
+      await servico.salvar({
+        semana: '2026-08-17',
+        operacoesLegado: 9000,
+        operacoesCentralizado: 4050,
+        pedidosLegadoPiloto: 1200,
+      });
+
+      expect(prisma.mediaOperacoesSemanal.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          update: expect.objectContaining({
+            operacoesLegado: 9000,
+            operacoesCentralizado: 4050,
+            pedidosLegadoPiloto: 1200,
+          }),
+        }),
+      );
+    });
+
+    it('grava os bugs em aberto por criticidade', async () => {
+      await servico.salvar({
+        semana: '2026-08-17',
+        bugsAlta: 3,
+        bugsMedia: 7,
+        bugsBaixa: 12,
+      });
+
+      expect(prisma.mediaOperacoesSemanal.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          update: expect.objectContaining({ bugsAlta: 3, bugsMedia: 7, bugsBaixa: 12 }),
+        }),
+      );
+    });
+
+    it('limpa as operações por sistema quando a semana é relançada sem elas', async () => {
+      await servico.salvar({ semana: '2026-08-17' });
+
+      expect(prisma.mediaOperacoesSemanal.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          update: expect.objectContaining({
+            operacoesLegado: null,
+            operacoesCentralizado: null,
+            pedidosLegadoPiloto: null,
+          }),
+        }),
+      );
+    });
+
     it('descarta a hora quando a data vem com horário', async () => {
-      await servico.salvar({ semana: '2026-08-17T18:45:00.000Z', mediaOperacoes: 10 });
+      await servico.salvar({ semana: '2026-08-17T18:45:00.000Z' });
 
       expect(prisma.mediaOperacoesSemanal.upsert).toHaveBeenCalledWith(
         expect.objectContaining({ where: { semana: new Date(Date.UTC(2026, 7, 17)) } }),

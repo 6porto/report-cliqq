@@ -10,14 +10,27 @@ export class MediasSemanaisService {
     return this.prisma.mediaOperacoesSemanal.findMany({ orderBy: { semana: 'asc' } });
   }
 
-  /** Um lançamento por semana: relançar a mesma data corrige o valor. */
+  /**
+   * Um lançamento por semana: relançar a mesma data corrige o valor. O PUT
+   * substitui a semana inteira, então omitir as operações por sistema as limpa.
+   */
   salvar(dto: SalvarMediaSemanalDto) {
     const semana = this.inicioDoDia(dto.semana);
 
+    const valores = {
+      operacoesLegado: dto.operacoesLegado ?? null,
+      operacoesCentralizado: dto.operacoesCentralizado ?? null,
+      pedidosLegadoPiloto: dto.pedidosLegadoPiloto ?? null,
+      bugsAlta: dto.bugsAlta ?? null,
+      bugsMedia: dto.bugsMedia ?? null,
+      bugsBaixa: dto.bugsBaixa ?? null,
+      bugsDescricao: dto.bugsDescricao?.trim() || null,
+    };
+
     return this.prisma.mediaOperacoesSemanal.upsert({
       where: { semana },
-      create: { semana, mediaOperacoes: dto.mediaOperacoes },
-      update: { mediaOperacoes: dto.mediaOperacoes },
+      create: { semana, ...valores },
+      update: valores,
     });
   }
 

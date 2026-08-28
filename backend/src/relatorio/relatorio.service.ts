@@ -2,7 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { DISTRIBUICAO_HORARIA, PERCENTUAL_INFORMADO } from '../comum/distribuicao-horaria';
 import { ONDAS } from '../comum/ondas';
-import { STATUS_ROLLOUT, StatusRollout } from '../comum/status-rollout';
+import {
+  STATUS_COM_CENTRALIZADO,
+  STATUS_ROLLOUT,
+  StatusRollout,
+} from '../comum/status-rollout';
 
 const SEM_ONDA = 'Sem onda';
 const LIMITE_DE_SEMANAS = 260;
@@ -260,6 +264,116 @@ export class RelatorioService {
     }
 
     return { total: filiais.length, pontos: pontos.slice(-LIMITE_DE_DIAS) };
+  }
+
+  /**
+   * Quanto a rede deveria estar processando no CliQQ Centralizado em cada dia:
+   * a média de operações das lojas que já tinham o centralizado ligado naquela
+   * data, reconstruída pelo histórico de eventos do rollout.
+   */
+  async operacoesEsperadasPorDia() {
+    const [filiais, eventos] = await Promise.all([
+      this.prisma.filial.findMany({
+        select: { id: true, status: true, criadoEm: true, mediaOperacoes90Dias: true },
+      }),
+      this.prisma.eventoRollout.findMany({
+        select: { filialId: true, statusAnterior: true, statusNovo: true, registradoEm: true },
+        orderBy: { registradoEm: 'asc' },
+      }),
+    ]);
+
+    if (filiais.length === 0) {
+      return { pontos: [] };
+    }
+
+    const partida = new Map<number, StatusRollout>(
+      filiais.map((filial) => [filial.id, filial.status as StatusRollout]),
+    );
+    const primeiroEvento = new Map<number, Date>();
+
+    for (const evento of eventos) {
+      if (primeiroEvento.has(evento.filialId)) {
+        continue;
+      }
+
+      primeiroEvento.set(evento.filialId, evento.registradoEm);
+
+      if (evento.statusAnterior) {
+        partida.set(evento.filialId, evento.statusAnterior as StatusRollout);
+      }
+    }
+
+    const operacoesDaFilial = new Map(
+      filiais.map((filial) => [filial.id, filial.mediaOperacoes90Dias]),
+    );
+    const ligado = (status: StatusRollout) => STATUS_COM_CENTRALIZADO.includes(status);
+
+    const deltas = new Map<string, number>();
+
+    const somar = (dia: Date, quanto: number) => {
+      const chave = this.chave(dia);
+      deltas.set(chave, (deltas.get(chave) ?? 0) + quanto);
+    };
+
+    let inicio: Date | null = null;
+    let fim = this.dia(new Date());
+
+    for (const filial of filiais) {
+      const evento = primeiroEvento.get(filial.id);
+      const entrada = this.dia(evento && evento < filial.criadoEm ? evento : filial.criadoEm);
+
+      if (ligado(partida.get(filial.id) as StatusRollout)) {
+        somar(entrada, filial.mediaOperacoes90Dias);
+      }
+
+      if (!inicio || entrada < inicio) {
+        inicio = entrada;
+      }
+    }
+
+    const corrente = new Map(partida);
+
+    for (const evento of eventos) {
+      const atual = corrente.get(evento.filialId);
+
+      if (!atual) {
+        continue;
+      }
+
+      const dia = this.dia(evento.registradoEm);
+      const novo = evento.statusNovo as StatusRollout;
+      const operacoes = operacoesDaFilial.get(evento.filialId) ?? 0;
+
+      if (ligado(atual) && !ligado(novo)) {
+        somar(dia, -operacoes);
+      }
+
+      if (!ligado(atual) && ligado(novo)) {
+        somar(dia, operacoes);
+      }
+
+      corrente.set(evento.filialId, novo);
+
+      if (dia > fim) {
+        fim = dia;
+      }
+    }
+
+    const pontos: { dia: string; operacoesEsperadas: number }[] = [];
+    let acumulado = 0;
+
+    for (
+      let cursor = inicio as Date;
+      cursor <= fim;
+      cursor = new Date(cursor.getTime() + DIA_EM_MS)
+    ) {
+      const chave = this.chave(cursor);
+      acumulado += deltas.get(chave) ?? 0;
+
+      pontos.push({ dia: chave, operacoesEsperadas: acumulado });
+    }
+
+    return { pontos: pontos.slice(-LIMITE_DE_DIAS) };
   }
 
   async porUf() {

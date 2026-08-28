@@ -1,57 +1,71 @@
 import {
+  Bar,
   CartesianGrid,
+  ComposedChart,
   Legend,
   Line,
-  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from 'recharts';
-import { useLatenciasSemanais } from '../api/hooks';
+import { useLatenciasSemanais, useMediasSemanais } from '../api/hooks';
 import { formatarSemana, paraCampoData } from '../dominio/semanas';
 import { Dica } from './Dica';
 
-function formatarMs(valor: number) {
-  return `${valor.toLocaleString('pt-BR')} ms`;
-}
-
-// Semáforo: quanto maior o percentil, mais grave a cauda. O amarelo e o laranja
-// são vizinhos demais para se distinguirem só pela cor (ΔE 13,6), então cada
-// linha também tem seu traço.
-const PERCENTIS = [
-  { chave: 'p50', nome: 'P50 (mediana)', cor: 'var(--status-bom)', traco: undefined },
-  { chave: 'p75', nome: 'P75', cor: 'var(--status-atencao)', traco: '7 4' },
-  { chave: 'p95', nome: 'P95', cor: 'var(--status-serio)', traco: '2 3' },
-  { chave: 'p99', nome: 'P99', cor: 'var(--status-critico)', traco: undefined },
+const FAIXAS = [
+  { chave: 'ate1s', rotulo: 'Menor que 1s', cor: 'var(--status-bom)', traco: '0' },
+  { chave: 'ate3s', rotulo: 'Menor que 3s', cor: 'var(--status-atencao)', traco: '6 3' },
 ] as const;
+
+const formatarPercentual = (valor: number | null) =>
+  valor === null ? '—' : `${valor.toLocaleString('pt-BR')}%`;
 
 export function GraficoLatenciaSemanal() {
   const latencias = useLatenciasSemanais();
+  const medias = useMediasSemanais();
 
   if (latencias.isLoading) {
     return <p className="carregando">Carregando…</p>;
   }
 
-  const pontos = (latencias.data ?? []).map((latencia) => ({
-    semana: paraCampoData(latencia.semana),
-    p50: latencia.p50,
-    p75: latencia.p75,
-    p95: latencia.p95,
-    p99: latencia.p99,
-  }));
+  const transacoesNaSemana = new Map(
+    (medias.data ?? [])
+      .filter((media) => media.operacoesLegado !== null || media.operacoesCentralizado !== null)
+      .map((media) => [
+        paraCampoData(media.semana),
+        (media.operacoesLegado ?? 0) + (media.operacoesCentralizado ?? 0),
+      ]),
+  );
+
+  const pontos = (latencias.data ?? [])
+    .map((latencia) => {
+      const semana = paraCampoData(latencia.semana);
+
+      return {
+        semana,
+        ate1s: latencia.percentualAte1s,
+        ate3s: latencia.percentualAte3s,
+        acima3s: latencia.requisicoesAcima3s,
+        transacoes: transacoesNaSemana.get(semana) ?? null,
+      };
+    })
+    .filter(
+      (ponto) => ponto.ate1s !== null || ponto.ate3s !== null || ponto.acima3s !== null,
+    );
 
   if (pontos.length === 0) {
     return (
       <p className="carregando">
-        Nenhum lançamento ainda — use o botão “Lançamentos” para registrar uma semana.
+        Nenhuma semana com tempo de resposta lançado — informe os percentuais em “Lançamentos por
+        semana”.
       </p>
     );
   }
 
   return (
     <ResponsiveContainer width="100%" height={260}>
-      <LineChart data={pontos} margin={{ top: 8, right: 16, bottom: 0, left: -4 }}>
+      <ComposedChart data={pontos} margin={{ top: 8, right: 4, bottom: 0, left: -12 }}>
         <CartesianGrid stroke="var(--grade)" vertical={false} />
         <XAxis
           dataKey="semana"
@@ -62,32 +76,60 @@ export function GraficoLatenciaSemanal() {
           minTickGap={16}
         />
         <YAxis
+          yAxisId="percentual"
+          domain={[0, 100]}
+          ticks={[0, 25, 50, 75, 100]}
+          tickFormatter={(valor) => `${valor}%`}
           tick={{ fill: 'var(--tinta-mutada)', fontSize: 11 }}
           tickLine={false}
           axisLine={false}
+          width={56}
+        />
+        <YAxis
+          yAxisId="transacoes"
+          orientation="right"
+          tickFormatter={(valor) => Number(valor).toLocaleString('pt-BR')}
+          tick={{ fill: 'var(--serie-1)', fontSize: 11 }}
+          tickLine={false}
+          axisLine={false}
           width={64}
-          tickFormatter={(valor) => `${Number(valor).toLocaleString('pt-BR')}`}
-          label={{
-            value: 'ms',
-            position: 'insideTopLeft',
-            offset: -4,
-            style: { fill: 'var(--tinta-mutada)', fontSize: 11 },
-          }}
         />
         <Tooltip
           cursor={{ stroke: 'var(--linha-base)', strokeWidth: 1 }}
-          content={({ active, payload, label }) =>
-            active && payload?.length ? (
+          content={({ active, payload, label }) => {
+            if (!active || !payload?.length) {
+              return null;
+            }
+
+            const ponto = payload[0].payload as (typeof pontos)[number];
+
+            return (
               <Dica
                 titulo={`Semana de ${formatarSemana(String(label))}`}
-                itens={payload.map((item) => ({
-                  nome: String(item.name),
-                  valor: formatarMs(Number(item.value)),
-                  cor: item.color,
-                }))}
+                itens={[
+                  ...FAIXAS.map((faixa) => ({
+                    nome: faixa.rotulo,
+                    valor: formatarPercentual(ponto[faixa.chave]),
+                    cor: faixa.cor,
+                  })),
+                  {
+                    nome: 'Total de transações',
+                    valor:
+                      ponto.transacoes === null
+                        ? 'sem operações lançadas'
+                        : ponto.transacoes.toLocaleString('pt-BR'),
+                    cor: 'var(--serie-1)',
+                  },
+                  {
+                    nome: 'Requisições acima de 3s',
+                    valor:
+                      ponto.acima3s === null ? '—' : ponto.acima3s.toLocaleString('pt-BR'),
+                    cor: 'var(--status-critico)',
+                  },
+                ]}
               />
-            ) : null
-          }
+            );
+          }}
         />
         <Legend
           verticalAlign="top"
@@ -95,21 +137,42 @@ export function GraficoLatenciaSemanal() {
           height={28}
           wrapperStyle={{ fontSize: 12, color: 'var(--tinta-secundaria)' }}
         />
-        {PERCENTIS.map((percentil) => (
+        <Bar
+          yAxisId="transacoes"
+          name="Total de transações"
+          dataKey="transacoes"
+          fill="var(--serie-1)"
+          fillOpacity={0.25}
+          radius={[4, 4, 0, 0]}
+          maxBarSize={36}
+          isAnimationActive={false}
+        />
+        <Bar
+          yAxisId="transacoes"
+          name="Requisições acima de 3s"
+          dataKey="acima3s"
+          fill="var(--status-critico)"
+          radius={[4, 4, 0, 0]}
+          maxBarSize={36}
+          isAnimationActive={false}
+        />
+        {FAIXAS.map((faixa) => (
           <Line
-            key={percentil.chave}
-            name={percentil.nome}
+            key={faixa.chave}
+            yAxisId="percentual"
+            name={faixa.rotulo}
             type="monotone"
-            dataKey={percentil.chave}
-            stroke={percentil.cor}
+            dataKey={faixa.chave}
+            stroke={faixa.cor}
             strokeWidth={2}
-            strokeDasharray={percentil.traco}
+            strokeDasharray={faixa.traco}
             dot={{ r: 3 }}
             activeDot={{ r: 5, strokeWidth: 2, stroke: 'var(--superficie)' }}
+            connectNulls
             isAnimationActive={false}
           />
         ))}
-      </LineChart>
+      </ComposedChart>
     </ResponsiveContainer>
   );
 }

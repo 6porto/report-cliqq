@@ -25,3 +25,10 @@ export const STATUS_EM_IMPLANTACAO: StatusRollout[] = [
   'EM_ADAPTACAO',
   'EM_OPERACAO',
 ];
+
+/** Lojas com o CliQQ Centralizado já ligado, mesmo que o legado siga ativo. */
+export const STATUS_COM_CENTRALIZADO: StatusRollout[] = [
+  'EM_ADAPTACAO',
+  'EM_OPERACAO',
+  'CONCLUIDO',
+];

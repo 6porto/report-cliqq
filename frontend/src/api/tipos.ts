@@ -69,6 +69,16 @@ export interface LatenciaSemanal {
   requisicoesAcima3s: number | null;
 }
 
+export interface Melhoria {
+  id: number;
+  descricao: string;
+  /** Dia previsto para subir; nulo enquanto não há data definida. */
+  dataPrevista: string | null;
+  subiuEmProducao: boolean;
+  /** Momento em que foi marcada como no ar. */
+  dataSubida: string | null;
+}
+
 export interface OperacoesEsperadas {
   pontos: { dia: string; operacoesEsperadas: number }[];
 }

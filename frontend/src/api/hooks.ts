@@ -11,6 +11,7 @@ import type {
   GrupoRollout,
   LatenciaSemanal,
   MediaSemanal,
+  Melhoria,
   OperacoesEsperadas,
   PaginaFiliais,
   Projecao,
@@ -162,6 +163,47 @@ export function useSincronizarPriorizacao() {
     mutationFn: () => api.post<ResumoSincronizacao>('/priorizacao/sincronizar', {}),
     onSuccess: () => {
       clienteQuery.invalidateQueries({ queryKey: ['priorizacao'] });
+    },
+  });
+}
+
+export function useMelhorias() {
+  return useQuery({
+    queryKey: ['melhorias'],
+    queryFn: () => api.get<Melhoria[]>('/melhorias'),
+  });
+}
+
+export function useMelhoriasEmDestaque() {
+  return useQuery({
+    queryKey: ['melhorias', 'destaque'],
+    queryFn: () => api.get<Melhoria[]>('/melhorias/destaque'),
+  });
+}
+
+export function useSalvarMelhoria() {
+  const clienteQuery = useQueryClient();
+
+  return useMutation({
+    mutationFn: (variaveis: {
+      id?: number;
+      descricao: string;
+      dataPrevista: string | null;
+      subiuEmProducao: boolean;
+    }) => api.put<Melhoria>('/melhorias', variaveis),
+    onSuccess: () => {
+      clienteQuery.invalidateQueries({ queryKey: ['melhorias'] });
+    },
+  });
+}
+
+export function useRemoverMelhoria() {
+  const clienteQuery = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => api.delete<Melhoria>(`/melhorias/${id}`),
+    onSuccess: () => {
+      clienteQuery.invalidateQueries({ queryKey: ['melhorias'] });
     },
   });
 }

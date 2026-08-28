@@ -10,12 +10,20 @@ export interface FatiaDaRosca {
   icone?: string;
 }
 
+export interface VariacaoDaRosca {
+  /** Diferença já formatada, ex.: "0,4 p.p.". */
+  texto: string;
+  sentido: 'alta' | 'baixa' | 'estavel';
+}
+
 interface Props {
   fatias: FatiaDaRosca[];
   /** Texto grande no miolo da rosca. */
   destaque: string;
   /** Linha abaixo do destaque. */
   legendaDoDestaque: string;
+  /** Comparação com o período anterior, quando existir. */
+  variacao?: VariacaoDaRosca | null;
   /** Como chamar o que está sendo contado, ex.: "operações". */
   unidade: string;
   /** Mensagem quando não há o que somar. */
@@ -24,7 +32,21 @@ interface Props {
 
 const formatarNumero = (valor: number) => valor.toLocaleString('pt-BR');
 
-export function RoscaProporcao({ fatias, destaque, legendaDoDestaque, unidade, vazio }: Props) {
+/** O sinal no texto já diz a direção; a cor só reforça. */
+const COR_DA_VARIACAO = {
+  alta: 'var(--status-bom)',
+  baixa: 'var(--status-critico)',
+  estavel: 'var(--tinta-secundaria)',
+} as const;
+
+export function RoscaProporcao({
+  fatias,
+  destaque,
+  legendaDoDestaque,
+  variacao,
+  unidade,
+  vazio,
+}: Props) {
   const total = fatias.reduce((soma, fatia) => soma + fatia.valor, 0);
 
   if (total <= 0) {
@@ -39,6 +61,11 @@ export function RoscaProporcao({ fatias, destaque, legendaDoDestaque, unidade, v
         <div className="rosca-centro" aria-hidden>
           <strong>{destaque}</strong>
           <span>{legendaDoDestaque}</span>
+          {variacao ? (
+            <span className="rosca-variacao" style={{ color: COR_DA_VARIACAO[variacao.sentido] }}>
+              {variacao.texto}
+            </span>
+          ) : null}
         </div>
         <ResponsiveContainer width="100%" height={200}>
           <PieChart>

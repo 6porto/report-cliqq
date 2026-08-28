@@ -20,7 +20,9 @@ import { GraficoStatusPorDia } from '../componentes/GraficoStatusPorDia';
 import { GraficoLatenciaSemanal } from '../componentes/GraficoLatenciaSemanal';
 import { GraficoMediaSemanal } from '../componentes/GraficoMediaSemanal';
 import { RoscaProporcao } from '../componentes/RoscaProporcao';
+import { ListaProximasMelhorias } from '../componentes/ListaProximasMelhorias';
 import { ModalDescricoesDeBugs } from '../componentes/ModalDescricoesDeBugs';
+import { ModalMelhorias } from '../componentes/ModalMelhorias';
 import { ModalLancamentosSemanais } from '../componentes/ModalLancamentosSemanais';
 
 /** Fora do rollout: ainda não começaram ou estão travadas. */
@@ -46,6 +48,7 @@ export function Dashboard() {
   const latencias = useLatenciasSemanais();
   const [lancamentosAbertos, setLancamentosAbertos] = useState(false);
   const [descricoesAbertas, setDescricoesAbertas] = useState(false);
+  const [melhoriasAbertas, setMelhoriasAbertas] = useState(false);
 
   if (resumo.isLoading || !resumo.data) {
     return <p className="carregando">Carregando indicadores…</p>;
@@ -67,20 +70,74 @@ export function Dashboard() {
     .sort((a, b) => a.semana.localeCompare(b.semana));
 
   const ultimaSemanaCrua = semanasComOperacoes.at(-1);
+  const semanaAnteriorCrua = semanasComOperacoes.at(-2);
 
-  const ultimaLatencia = [...(latencias.data ?? [])]
-    .filter((latencia) => latencia.percentualAte3s !== null)
-    .sort((a, b) => a.semana.localeCompare(b.semana))
-    .at(-1);
+  const adesaoDaRede = (media: (typeof semanasComOperacoes)[number] | undefined) => {
+    if (!media) {
+      return null;
+    }
 
-  const abaixoDe3s = ultimaLatencia?.percentualAte3s ?? null;
+    const centralizado = media.operacoesCentralizado ?? 0;
+    const total = centralizado + (media.operacoesLegado ?? 0);
 
-  const ultimaLatenciaAte1s = [...(latencias.data ?? [])]
-    .filter((latencia) => latencia.percentualAte1s !== null)
-    .sort((a, b) => a.semana.localeCompare(b.semana))
-    .at(-1);
+    return total > 0 ? (centralizado / total) * 100 : null;
+  };
 
-  const abaixoDe1s = ultimaLatenciaAte1s?.percentualAte1s ?? null;
+  const adesaoDoPiloto = (media: (typeof semanasComOperacoes)[number] | undefined) => {
+    if (!media) {
+      return null;
+    }
+
+    const centralizado = media.operacoesCentralizado ?? 0;
+    const total = centralizado + (media.pedidosLegadoPiloto ?? 0);
+
+    return total > 0 ? (centralizado / total) * 100 : null;
+  };
+
+  /** Diferença entre dois percentuais, em pontos percentuais. */
+  const compararEmPontos = (atual: number | null, anterior: number | null) => {
+    if (atual === null || anterior === null) {
+      return null;
+    }
+
+    const diferenca = Number((atual - anterior).toFixed(1));
+    const sinal = diferenca > 0 ? '+' : diferenca < 0 ? '−' : '';
+
+    return {
+      texto: `${sinal}${Math.abs(diferenca).toLocaleString('pt-BR')} p.p.`,
+      sentido: diferenca > 0 ? ('alta' as const) : diferenca < 0 ? ('baixa' as const) : ('estavel' as const),
+    };
+  };
+
+  const variacaoDaAdesaoDaRede = compararEmPontos(
+    adesaoDaRede(ultimaSemanaCrua),
+    adesaoDaRede(semanaAnteriorCrua),
+  );
+
+  const variacaoDaAdesaoDoPiloto = compararEmPontos(
+    adesaoDoPiloto(ultimaSemanaCrua),
+    adesaoDoPiloto(semanaAnteriorCrua),
+  );
+
+  /** As duas últimas semanas com a faixa de tempo apurada. */
+  const faixasApuradas = (campo: 'percentualAte1s' | 'percentualAte3s') =>
+    [...(latencias.data ?? [])]
+      .filter((latencia) => latencia[campo] !== null)
+      .sort((a, b) => a.semana.localeCompare(b.semana));
+
+  const semanasAte3s = faixasApuradas('percentualAte3s');
+  const abaixoDe3s = semanasAte3s.at(-1)?.percentualAte3s ?? null;
+  const variacaoAbaixoDe3s = compararEmPontos(
+    abaixoDe3s,
+    semanasAte3s.at(-2)?.percentualAte3s ?? null,
+  );
+
+  const semanasAte1s = faixasApuradas('percentualAte1s');
+  const abaixoDe1s = semanasAte1s.at(-1)?.percentualAte1s ?? null;
+  const variacaoAbaixoDe1s = compararEmPontos(
+    abaixoDe1s,
+    semanasAte1s.at(-2)?.percentualAte1s ?? null,
+  );
 
 
   const lojasOperando =
@@ -91,12 +148,38 @@ export function Dashboard() {
     );
 
   const pontosDeStatus = statusPorDia.data?.pontos ?? [];
-  const concluidasHoje = pontosDeStatus.at(-1)?.CONCLUIDO ?? null;
   // Sete dias antes do último ponto; com série mais curta, o começo dela.
-  const concluidasHaUmaSemana =
-    pontosDeStatus.length === 0
-      ? null
-      : (pontosDeStatus.at(-8) ?? pontosDeStatus[0]).CONCLUIDO;
+  const statusHaUmaSemana =
+    pontosDeStatus.length === 0 ? null : (pontosDeStatus.at(-8) ?? pontosDeStatus[0]);
+
+  const percentualOperando = (ponto: (typeof pontosDeStatus)[number] | null | undefined) => {
+    if (!ponto || ponto.total === 0) {
+      return null;
+    }
+
+    const fora = STATUS_FORA_DO_CENTRALIZADO.reduce(
+      (soma, status) => soma + (ponto[status] ?? 0),
+      0,
+    );
+
+    return ((ponto.total - fora) / ponto.total) * 100;
+  };
+
+  const variacaoDeLojasOperando = compararEmPontos(
+    percentualOperando(pontosDeStatus.at(-1)),
+    percentualOperando(statusHaUmaSemana),
+  );
+
+  const percentualConcluido = (ponto: (typeof pontosDeStatus)[number] | null | undefined) =>
+    !ponto || ponto.total === 0 ? null : (ponto.CONCLUIDO / ponto.total) * 100;
+
+  const variacaoDeConcluidas = compararEmPontos(
+    percentualConcluido(pontosDeStatus.at(-1)),
+    percentualConcluido(statusHaUmaSemana),
+  );
+
+  const concluidasHoje = pontosDeStatus.at(-1)?.CONCLUIDO ?? null;
+  const concluidasHaUmaSemana = statusHaUmaSemana?.CONCLUIDO ?? null;
 
   const variacaoSemanal =
     concluidasHoje === null || concluidasHaUmaSemana === null
@@ -127,9 +210,14 @@ export function Dashboard() {
         <button className="aba" onClick={() => setLancamentosAbertos(true)}>
           Lançamentos por semana{semanasLancadas ? ` (${semanasLancadas})` : ''}
         </button>
+        <button className="aba" onClick={() => setMelhoriasAbertas(true)}>
+          Melhorias
+        </button>
       </div>
 
-      <div className="grade-roscas">
+      <h2 className="titulo-secao">Evolução das lojas</h2>
+
+      <div className="grade-secao">
         <CartaoGrafico
           titulo="Lojas Operando no Centralizado"
           subtitulo="Lojas que já entraram no rollout, fora as não iniciadas e bloqueadas"
@@ -156,6 +244,7 @@ export function Dashboard() {
                 : `${Number(((lojasOperando / dados.total) * 100).toFixed(1)).toLocaleString('pt-BR')}%`
             }
             legendaDoDestaque="da rede"
+            variacao={variacaoDeLojasOperando}
             unidade="Lojas"
             vazio="Nenhuma loja cadastrada."
           />
@@ -191,11 +280,16 @@ export function Dashboard() {
             ]}
             destaque={`${dados.percentualConcluido.toLocaleString('pt-BR')}%`}
             legendaDoDestaque="concluído"
+            variacao={variacaoDeConcluidas}
             unidade="Lojas"
             vazio="Nenhuma loja cadastrada."
           />
         </CartaoGrafico>
+      </div>
 
+      <h2 className="titulo-secao">Adesão</h2>
+
+      <div className="grade-secao">
         <CartaoGrafico
           titulo="Adesão da rede na última semana"
           subtitulo="Operações no centralizado sobre o total da rede"
@@ -220,6 +314,7 @@ export function Dashboard() {
               ultimaSemanaCrua?.operacoesLegado ?? 0,
             )}
             legendaDoDestaque="no centralizado"
+            variacao={variacaoDaAdesaoDaRede}
             unidade="Operações"
             vazio="Informe as operações do legado e do centralizado em “Lançamentos por semana”."
           />
@@ -249,11 +344,17 @@ export function Dashboard() {
               ultimaSemanaCrua?.pedidosLegadoPiloto ?? 0,
             )}
             legendaDoDestaque="no centralizado"
+            variacao={variacaoDaAdesaoDoPiloto}
             unidade="Operações"
             vazio="Informe o total de pedidos do legado piloto em “Lançamentos por semana”."
           />
         </CartaoGrafico>
 
+      </div>
+
+      <h2 className="titulo-secao">Performance e Erros</h2>
+
+      <div className="grade-secao">
         <CartaoGrafico
           titulo="Requisições abaixo de 1s"
           subtitulo="Tempo de resposta na última semana apurada"
@@ -275,14 +376,12 @@ export function Dashboard() {
             ]}
             destaque={abaixoDe1s === null ? '—' : `${abaixoDe1s.toLocaleString('pt-BR')}%`}
             legendaDoDestaque="abaixo de 1s"
+            variacao={variacaoAbaixoDe1s}
             unidade="% das requisições"
             vazio="Informe o % menor que 1s em “Lançamentos por semana”."
           />
         </CartaoGrafico>
 
-      </div>
-
-      <div className="grade-graficos">
         <CartaoGrafico
           titulo="Requisições abaixo de 3s"
           subtitulo="Tempo de resposta na última semana apurada"
@@ -304,6 +403,7 @@ export function Dashboard() {
             ]}
             destaque={abaixoDe3s === null ? '—' : `${abaixoDe3s.toLocaleString('pt-BR')}%`}
             legendaDoDestaque="abaixo de 3s"
+            variacao={variacaoAbaixoDe3s}
             unidade="% das requisições"
             vazio="Informe o % menor que 3s em “Lançamentos por semana”."
           />
@@ -324,7 +424,11 @@ export function Dashboard() {
         >
           <GraficoBugsPorCriticidade />
         </CartaoGrafico>
+      </div>
 
+      <h2 className="titulo-secao">Analítico</h2>
+
+      <div className="grade-graficos">
         <CartaoGrafico
           titulo="Performance / Tempo de Resposta"
           subtitulo="% das requisições por faixa de tempo (eixo à esquerda) e total de transações da semana (barra, eixo à direita)"
@@ -334,6 +438,19 @@ export function Dashboard() {
 
         <CartaoGrafico titulo="Média de operações por dia">
           <GraficoMediaDiaria />
+        </CartaoGrafico>
+
+        <CartaoGrafico
+          largo
+          titulo="Próximas Melhorias"
+          subtitulo="O que está previsto para subir e o que entrou em produção nos últimos 7 dias"
+          acoes={
+            <button className="aba" onClick={() => setMelhoriasAbertas(true)}>
+              Cadastrar
+            </button>
+          }
+        >
+          <ListaProximasMelhorias />
         </CartaoGrafico>
 
         <CartaoGrafico
@@ -383,6 +500,8 @@ export function Dashboard() {
       {lancamentosAbertos ? (
         <ModalLancamentosSemanais aoFechar={() => setLancamentosAbertos(false)} />
       ) : null}
+
+      {melhoriasAbertas ? <ModalMelhorias aoFechar={() => setMelhoriasAbertas(false)} /> : null}
 
       {descricoesAbertas ? (
         <ModalDescricoesDeBugs

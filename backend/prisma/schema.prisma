@@ -95,6 +95,19 @@ model LatenciaSemanal {
   atualizadoEm DateTime @updatedAt
 }
 
+/// Melhoria prevista para subir em produção durante o piloto.
+model Melhoria {
+  id              Int       @id @default(autoincrement())
+  descricao       String
+  /// Quando a melhoria deve subir; nulo enquanto não há data definida.
+  dataPrevista    DateTime?
+  subiuEmProducao Boolean   @default(false)
+  /// Preenchida no momento em que a melhoria é marcada como no ar.
+  dataSubida      DateTime?
+  criadoEm        DateTime  @default(now())
+  atualizadoEm    DateTime  @updatedAt
+}
+
 model Demanda {
   id             Int      @id
   titulo         String

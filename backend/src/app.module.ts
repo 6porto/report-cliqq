@@ -7,6 +7,7 @@ import { RelatorioModule } from './relatorio/relatorio.module';
 import { PriorizacaoModule } from './priorizacao/priorizacao.module';
 import { MediasSemanaisModule } from './medias-semanais/medias-semanais.module';
 import { LatenciasSemanaisModule } from './latencias-semanais/latencias-semanais.module';
+import { MelhoriasModule } from './melhorias/melhorias.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { LatenciasSemanaisModule } from './latencias-semanais/latencias-semanais
     PriorizacaoModule,
     MediasSemanaisModule,
     LatenciasSemanaisModule,
+    MelhoriasModule,
   ],
 })
 export class AppModule {}

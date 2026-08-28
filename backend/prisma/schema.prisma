@@ -90,7 +90,7 @@ model LatenciaSemanal {
   /// Requisições com erro na semana, em % do total.
   percentualErros    Float?
   /// Quantas requisições passaram de 3 segundos na semana.
-  requisicoesAcima3s Int?
+  requisicoesAcima3s Float?
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 }

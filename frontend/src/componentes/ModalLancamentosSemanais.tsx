@@ -152,6 +152,13 @@ function inteiroValido(valor: string) {
   return valor.trim() !== '' && Number.isInteger(numero) && numero >= 0;
 }
 
+/** Número não negativo, com ou sem casas decimais. */
+function numeroValido(valor: string) {
+  const numero = Number(valor);
+
+  return valor.trim() !== '' && Number.isFinite(numero) && numero >= 0;
+}
+
 /** Aceita decimal: a apuração vem com casas, como 92,5%. */
 function percentualValido(valor: string) {
   const numero = Number(valor);
@@ -280,8 +287,8 @@ export function ModalLancamentosSemanais({ aoFechar }: Props) {
         return 'Os percentuais de tempo de resposta devem ficar entre 0 e 100.';
       }
 
-      if (linha.requisicoesAcima3s.trim() !== '' && !inteiroValido(linha.requisicoesAcima3s)) {
-        return 'As requisições acima de 3s devem ser um número inteiro igual ou maior que zero.';
+      if (linha.requisicoesAcima3s.trim() !== '' && !numeroValido(linha.requisicoesAcima3s)) {
+        return 'As requisições acima de 3s devem ser um número igual ou maior que zero.';
       }
 
       const ate1s = linha.percentualAte1s.trim();
@@ -489,6 +496,7 @@ export function ModalLancamentosSemanais({ aoFechar }: Props) {
                       <input
                         type="number"
                         min={0}
+                        step="0.01"
                         value={linha.requisicoesAcima3s}
                         onChange={(evento) =>
                           alterar(linha.chave, 'requisicoesAcima3s', evento.target.value)

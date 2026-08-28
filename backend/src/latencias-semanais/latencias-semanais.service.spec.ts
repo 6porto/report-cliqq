@@ -74,6 +74,16 @@ describe('LatenciasSemanaisService', () => {
       );
     });
 
+    it('aceita fração nas requisições acima de 3s', async () => {
+      await servico.salvar({ semana: '2026-08-17', requisicoesAcima3s: 12.5 });
+
+      expect(prisma.latenciaSemanal.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          update: expect.objectContaining({ requisicoesAcima3s: 12.5 }),
+        }),
+      );
+    });
+
     it('grava o % de erros da semana', async () => {
       await servico.salvar({ semana: '2026-08-17', percentualErros: 0.07 });
 

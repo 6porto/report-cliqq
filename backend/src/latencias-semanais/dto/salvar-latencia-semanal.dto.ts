@@ -1,4 +1,4 @@
-import { IsDateString, IsInt, IsNumber, IsOptional, Max, Min } from 'class-validator';
+import { IsDateString, IsNumber, IsOptional, Max, Min } from 'class-validator';
 
 export class SalvarLatenciaSemanalDto {
   /** Dia inicial da semana; identifica o lançamento. */
@@ -27,7 +27,7 @@ export class SalvarLatenciaSemanalDto {
 
   /** Quantas requisições passaram de 3 segundos na semana. */
   @IsOptional()
-  @IsInt()
+  @IsNumber()
   @Min(0)
   requisicoesAcima3s?: number | null;
 }

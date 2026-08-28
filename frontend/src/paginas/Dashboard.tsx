@@ -13,7 +13,6 @@ import { COR_STATUS, ICONE_STATUS } from '../tema/cores';
 import { CartaoGrafico } from '../componentes/CartaoGrafico';
 import { GraficoAdesaoCentralizado } from '../componentes/GraficoAdesaoCentralizado';
 import { GraficoBugsPorCriticidade } from '../componentes/GraficoBugsPorCriticidade';
-import { GraficoPercentualErros } from '../componentes/GraficoPercentualErros';
 import { GraficoGrupos } from '../componentes/GraficoGrupos';
 import { GraficoMediaDiaria } from '../componentes/GraficoMediaDiaria';
 import { GraficoStatus } from '../componentes/GraficoStatus';
@@ -68,6 +67,21 @@ export function Dashboard() {
     .sort((a, b) => a.semana.localeCompare(b.semana));
 
   const ultimaSemanaCrua = semanasComOperacoes.at(-1);
+
+  const ultimaLatencia = [...(latencias.data ?? [])]
+    .filter((latencia) => latencia.percentualAte3s !== null)
+    .sort((a, b) => a.semana.localeCompare(b.semana))
+    .at(-1);
+
+  const abaixoDe3s = ultimaLatencia?.percentualAte3s ?? null;
+
+  const ultimaLatenciaAte1s = [...(latencias.data ?? [])]
+    .filter((latencia) => latencia.percentualAte1s !== null)
+    .sort((a, b) => a.semana.localeCompare(b.semana))
+    .at(-1);
+
+  const abaixoDe1s = ultimaLatenciaAte1s?.percentualAte1s ?? null;
+
 
   const lojasOperando =
     dados.total -
@@ -147,12 +161,16 @@ export function Dashboard() {
           />
         </CartaoGrafico>
 
+        <CartaoGrafico titulo="Situação das lojas" subtitulo="Distribuição da base por status">
+          <GraficoStatus resumo={dados} />
+        </CartaoGrafico>
+
         <CartaoGrafico
-          titulo="Lojas com CliQQ Legado Desligado"
+          titulo="Lojas concluídas"
           subtitulo={
             crescimentoSemanal
-              ? `Lojas rodando só no CliQQ Centralizado · ${crescimentoSemanal}`
-              : 'Lojas rodando só no CliQQ Centralizado'
+              ? `Lojas operando só com o CliQQ Centralizado há mais de uma semana · ${crescimentoSemanal}`
+              : 'Lojas operando só com o CliQQ Centralizado há mais de uma semana'
           }
         >
           <RoscaProporcao
@@ -235,25 +253,60 @@ export function Dashboard() {
             vazio="Informe o total de pedidos do legado piloto em “Lançamentos por semana”."
           />
         </CartaoGrafico>
+
+        <CartaoGrafico
+          titulo="Requisições abaixo de 1s"
+          subtitulo="Tempo de resposta na última semana apurada"
+        >
+          <RoscaProporcao
+            fatias={[
+              {
+                chave: 'abaixo',
+                rotulo: 'Abaixo de 1s',
+                valor: abaixoDe1s ?? 0,
+                cor: 'var(--status-bom)',
+              },
+              {
+                chave: 'acima',
+                rotulo: 'A partir de 1s',
+                valor: abaixoDe1s === null ? 0 : Number((100 - abaixoDe1s).toFixed(1)),
+                cor: 'var(--neutro)',
+              },
+            ]}
+            destaque={abaixoDe1s === null ? '—' : `${abaixoDe1s.toLocaleString('pt-BR')}%`}
+            legendaDoDestaque="abaixo de 1s"
+            unidade="% das requisições"
+            vazio="Informe o % menor que 1s em “Lançamentos por semana”."
+          />
+        </CartaoGrafico>
+
       </div>
 
       <div className="grade-graficos">
         <CartaoGrafico
-          titulo="Performance / Tempo de Resposta"
-          subtitulo="% das requisições por faixa de tempo (eixo à esquerda) e total de transações da semana (barra, eixo à direita)"
+          titulo="Requisições abaixo de 3s"
+          subtitulo="Tempo de resposta na última semana apurada"
         >
-          <GraficoLatenciaSemanal />
-        </CartaoGrafico>
-
-        <CartaoGrafico
-          titulo="% de erros"
-          subtitulo="Requisições com erro em cada semana"
-        >
-          <GraficoPercentualErros />
-        </CartaoGrafico>
-
-        <CartaoGrafico titulo="Média de operações por dia">
-          <GraficoMediaDiaria />
+          <RoscaProporcao
+            fatias={[
+              {
+                chave: 'abaixo',
+                rotulo: 'Abaixo de 3s',
+                valor: abaixoDe3s ?? 0,
+                cor: 'var(--status-bom)',
+              },
+              {
+                chave: 'acima',
+                rotulo: 'Acima de 3s',
+                valor: abaixoDe3s === null ? 0 : Number((100 - abaixoDe3s).toFixed(1)),
+                cor: 'var(--status-critico)',
+              },
+            ]}
+            destaque={abaixoDe3s === null ? '—' : `${abaixoDe3s.toLocaleString('pt-BR')}%`}
+            legendaDoDestaque="abaixo de 3s"
+            unidade="% das requisições"
+            vazio="Informe o % menor que 3s em “Lançamentos por semana”."
+          />
         </CartaoGrafico>
 
         <CartaoGrafico
@@ -270,6 +323,17 @@ export function Dashboard() {
           }
         >
           <GraficoBugsPorCriticidade />
+        </CartaoGrafico>
+
+        <CartaoGrafico
+          titulo="Performance / Tempo de Resposta"
+          subtitulo="% das requisições por faixa de tempo (eixo à esquerda) e total de transações da semana (barra, eixo à direita)"
+        >
+          <GraficoLatenciaSemanal />
+        </CartaoGrafico>
+
+        <CartaoGrafico titulo="Média de operações por dia">
+          <GraficoMediaDiaria />
         </CartaoGrafico>
 
         <CartaoGrafico
@@ -296,10 +360,6 @@ export function Dashboard() {
           subtitulo="Centralizado x realizado pelas lojas do piloto; a linha traz o % entre os dois (eixo à direita)"
         >
           <GraficoMediaSemanal />
-        </CartaoGrafico>
-
-        <CartaoGrafico titulo="Situação das lojas" subtitulo="Distribuição da base por status">
-          <GraficoStatus resumo={dados} />
         </CartaoGrafico>
 
         <CartaoGrafico titulo="Por UF" subtitulo="Distribuição de status em cada estado">

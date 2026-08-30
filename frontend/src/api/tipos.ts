@@ -246,6 +246,20 @@ export interface Versao {
   url: string;
 }
 
+export interface RepositorioDaVersao {
+  caminho: string;
+  nome: string;
+  url: string;
+  tasks: number;
+  abertas: number;
+  fechadas: number;
+}
+
+export interface RepositoriosDaVersao {
+  repositorios: RepositorioDaVersao[];
+  issuesSemTask: number[];
+}
+
 export interface IssueDaVersao {
   id: number;
   titulo: string;

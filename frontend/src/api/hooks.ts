@@ -16,6 +16,7 @@ import type {
   OperacoesEsperadas,
   PaginaFiliais,
   Projecao,
+  RepositoriosDaVersao,
   RespostaPriorizacao,
   Resumo,
   ResumoSincronizacao,
@@ -301,6 +302,15 @@ export function useIssuesDaVersao(milestone: string | null) {
   return useQuery({
     queryKey: ['issues-da-versao', milestone],
     queryFn: () => api.get<IssueDaVersao[]>(`/versao/issues${montarQuery({ milestone })}`),
+    enabled: milestone !== null,
+  });
+}
+
+export function useRepositoriosDaVersao(milestone: string | null) {
+  return useQuery({
+    queryKey: ['repositorios-da-versao', milestone],
+    queryFn: () =>
+      api.get<RepositoriosDaVersao>(`/versao/repositorios${montarQuery({ milestone })}`),
     enabled: milestone !== null,
   });
 }

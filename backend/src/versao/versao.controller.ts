@@ -15,4 +15,9 @@ export class VersaoController {
   listarIssues(@Query() filtro: FiltroIssuesDto) {
     return this.versaoService.listarIssues(filtro.milestone);
   }
+
+  @Get('repositorios')
+  listarRepositorios(@Query() filtro: FiltroIssuesDto) {
+    return this.versaoService.listarRepositorios(filtro.milestone);
+  }
 }

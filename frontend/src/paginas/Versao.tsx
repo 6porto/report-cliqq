@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
 import { mensagemDoErro } from '../api/cliente';
-import { useIssuesDaVersao, useVersoes } from '../api/hooks';
+import { useIssuesDaVersao, useRepositoriosDaVersao, useVersoes } from '../api/hooks';
 import { CartaoGrafico } from '../componentes/CartaoGrafico';
 import { ListaIssuesDaVersao } from '../componentes/ListaIssuesDaVersao';
+import { ListaRepositoriosDaVersao } from '../componentes/ListaRepositoriosDaVersao';
 import {
   COLUNAS_ORDENAVEIS,
   FILTROS_INICIAIS,
@@ -28,12 +29,15 @@ export function Versao() {
   const [ordenacao, setOrdenacao] = useState<OrdenacaoIssues>(ORDENACAO_PADRAO);
 
   const issues = useIssuesDaVersao(versaoSelecionada);
+  const repositorios = useRepositoriosDaVersao(versaoSelecionada);
 
   const todasAsVersoes = versoes.data ?? [];
   const listadas = incluirFechadas ? todasAsVersoes : todasAsVersoes.filter(ehVersaoAtiva);
   const selecionada = todasAsVersoes.find((versao) => versao.titulo === versaoSelecionada) ?? null;
 
   const carregadas = useMemo(() => issues.data ?? [], [issues.data]);
+  const envolvidos = repositorios.data?.repositorios ?? [];
+  const issuesSemTask = repositorios.data?.issuesSemTask ?? [];
   const filtradas = useMemo(() => filtrarIssues(carregadas, filtros), [carregadas, filtros]);
   const sistemas = useMemo(() => sistemasDistintos(carregadas), [carregadas]);
   const tipos = useMemo(() => tiposDistintos(carregadas), [carregadas]);
@@ -201,6 +205,34 @@ export function Versao() {
           ) : null}
           {filtradas.length > 0 ? (
             <ListaIssuesDaVersao issues={filtradas} ordenacao={ordenacao} />
+          ) : null}
+        </CartaoGrafico>
+      ) : null}
+
+      {selecionada ? (
+        <CartaoGrafico
+          largo
+          titulo="Repositórios envolvidos"
+          subtitulo="Projetos onde as tasks das issues desta versão foram abertas. Considera todas as issues da versão, sem os filtros acima."
+        >
+          {repositorios.isError ? (
+            <p className="erro">{mensagemDoErro(repositorios.error)}</p>
+          ) : null}
+          {repositorios.isLoading ? (
+            <p className="carregando">Carregando os repositórios…</p>
+          ) : null}
+          {!repositorios.isLoading && !repositorios.isError && envolvidos.length === 0 ? (
+            <p className="carregando">Nenhuma task encontrada nas issues desta versão.</p>
+          ) : null}
+          {envolvidos.length > 0 ? (
+            <ListaRepositoriosDaVersao repositorios={envolvidos} />
+          ) : null}
+          {issuesSemTask.length > 0 ? (
+            <p className="aviso-sincronizacao">
+              {issuesSemTask.length}{' '}
+              {issuesSemTask.length === 1 ? 'issue ainda sem task' : 'issues ainda sem task'}:{' '}
+              {issuesSemTask.map((id) => `#${id}`).join(', ')}
+            </p>
           ) : null}
         </CartaoGrafico>
       ) : null}

@@ -42,9 +42,48 @@ export class GitlabService {
     });
   }
 
+  /** A hierarquia de work items (as tasks dentro da issue) só existe no GraphQL. */
+  async consultarGraphql<T>(query: string, variaveis: Record<string, unknown>): Promise<T> {
+    const token = this.token();
+    let resposta: Response;
+
+    try {
+      resposta = await fetch(`${this.base()}/api/graphql`, {
+        method: 'POST',
+        headers: { 'PRIVATE-TOKEN': token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, variables: variaveis }),
+        signal: AbortSignal.timeout(TEMPO_LIMITE),
+      });
+    } catch {
+      throw new ServiceUnavailableException(
+        'Não foi possível falar com o GitLab. Verifique a rede e a variável GITLAB_URL.',
+      );
+    }
+
+    if (!resposta.ok) {
+      throw new ServiceUnavailableException(
+        `O GitLab respondeu ${resposta.status} na consulta GraphQL. Verifique o token e o acesso ao projeto ${PROJETO_DAS_ISSUES}.`,
+      );
+    }
+
+    const corpo = (await resposta.json()) as { data?: T; errors?: { message: string }[] };
+
+    if (corpo.errors?.length) {
+      throw new ServiceUnavailableException(
+        `O GitLab recusou a consulta das tasks: ${corpo.errors.map((erro) => erro.message).join('; ')}`,
+      );
+    }
+
+    return corpo.data as T;
+  }
+
+  base() {
+    return this.config.get<string>('GITLAB_URL') ?? 'http://gitlab.queroquero.com.br';
+  }
+
   private async paginar<T>(caminho: string, parametros: Record<string, string>): Promise<T[]> {
     const token = this.token();
-    const base = this.config.get<string>('GITLAB_URL') ?? 'http://gitlab.queroquero.com.br';
+    const base = this.base();
     const projeto = encodeURIComponent(PROJETO_DAS_ISSUES);
     const itens: T[] = [];
 

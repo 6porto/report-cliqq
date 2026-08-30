@@ -1215,79 +1215,11 @@ textarea {
   list-style: none;
 }
 
-.lista-issues {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 12px;
-}
-
-.issue {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 14px 16px;
-  border: 1px solid var(--borda);
-  border-radius: 12px;
-  background: var(--fundo-cartao);
-}
-
 .issue-fechada {
   opacity: 0.72;
-}
-
-.issue-cabecalho {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
 }
 
 .issue-numero {
   font-variant-numeric: tabular-nums;
   font-weight: 600;
-}
-
-.issue-titulo {
-  margin: 0;
-  font-size: 15px;
-  line-height: 1.35;
-}
-
-.issue-fechada .issue-titulo a {
-  text-decoration: line-through;
-}
-
-.issue-tipos {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
-.issue-dados {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-  gap: 8px;
-  margin: 0;
-}
-
-.issue-dados dt {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--tinta-mutada);
-}
-
-.issue-dados dd {
-  margin: 2px 0 0;
-  font-size: 13px;
-}
-
-.issue-datas {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 12px;
-  padding-top: 8px;
-  border-top: 1px solid var(--borda);
-  font-size: 12px;
-  color: var(--tinta-secundaria);
 }

@@ -1,6 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { atualizarLinhaDoRepositorio } from '../comum/descricao-milestone';
+import { GerarVersaoDto } from './dto/gerar-versao.dto';
 import {
   agruparPorRepositorio,
+  nomeReduzido,
   type RepositoriosDaVersao,
   type WorkItemDaIssue,
 } from '../comum/repositorios-da-versao';
@@ -63,6 +66,37 @@ export class VersaoService {
 
   async listarIssues(milestone: string) {
     return mapearIssuesDaVersao(await this.gitlab.listarIssuesDaMilestone(milestone));
+  }
+
+  /**
+   * Cria a tag na branch homônima da milestone e registra o resultado na
+   * descrição dela. A tag vem primeiro: sem ela não há o que anotar.
+   */
+  async gerarVersao(dto: GerarVersaoDto) {
+    const versao = (await this.listarVersoes()).find(
+      (candidata) => candidata.titulo === dto.milestone,
+    );
+
+    if (!versao) {
+      throw new NotFoundException(`Milestone ${dto.milestone} não encontrada`);
+    }
+
+    const tag = await this.gitlab.criarTag(
+      dto.repositorio,
+      dto.tag,
+      dto.milestone,
+      dto.mensagem,
+    );
+
+    const descricao = atualizarLinhaDoRepositorio(
+      versao.descricao,
+      nomeReduzido(dto.repositorio),
+      dto.tag,
+    );
+
+    await this.gitlab.atualizarDescricaoDaMilestone(versao.id, versao.grupoId, descricao);
+
+    return { tag: tag.name, milestone: versao.titulo, descricao };
   }
 
   async listarTags(repositorio: string) {

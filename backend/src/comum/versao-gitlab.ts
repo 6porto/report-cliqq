@@ -12,6 +12,8 @@ const PREFIXO_SISTEMA = 'system::';
 export interface MilestoneGitlab {
   id: number;
   iid: number;
+  /** Presente quando a milestone é do grupo; é por lá que ela se edita. */
+  group_id?: number | null;
   title: string;
   description: string | null;
   state: string;
@@ -23,6 +25,7 @@ export interface MilestoneGitlab {
 export interface Versao {
   id: number;
   iid: number;
+  grupoId: number | null;
   titulo: string;
   descricao: string | null;
   estado: string;
@@ -120,6 +123,7 @@ export function mapearMilestone(milestone: MilestoneGitlab): Versao {
   return {
     id: milestone.id,
     iid: milestone.iid,
+    grupoId: milestone.group_id ?? null,
     titulo: milestone.title,
     descricao: milestone.description || null,
     estado: milestone.state,

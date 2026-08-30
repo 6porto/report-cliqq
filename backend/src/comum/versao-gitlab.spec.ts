@@ -143,6 +143,7 @@ describe('mapearMilestone', () => {
     expect(versao).toEqual({
       id: 412,
       iid: 37,
+      grupoId: null,
       titulo: 'release/2026-09-carrossel',
       descricao: 'Entrega do carrossel na home',
       estado: 'active',

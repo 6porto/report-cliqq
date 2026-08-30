@@ -73,6 +73,69 @@ export class GitlabService {
     return tags;
   }
 
+  async criarTag(caminhoDoProjeto: string, tag: string, ref: string, mensagem: string) {
+    const projeto = encodeURIComponent(caminhoDoProjeto);
+    const busca = new URLSearchParams({ tag_name: tag, ref, message: mensagem });
+
+    return this.escrever<{ name: string }>(
+      `${this.base()}/api/v4/projects/${projeto}/repository/tags?${busca}`,
+      'POST',
+    );
+  }
+
+  /** Milestone de grupo se edita pelo grupo; a do projeto, pelo projeto. */
+  async atualizarDescricaoDaMilestone(
+    milestoneId: number,
+    grupoId: number | null,
+    descricao: string,
+  ) {
+    const dono = grupoId
+      ? `groups/${grupoId}`
+      : `projects/${encodeURIComponent(PROJETO_DAS_ISSUES)}`;
+    const busca = new URLSearchParams({ description: descricao });
+
+    return this.escrever<{ description: string }>(
+      `${this.base()}/api/v4/${dono}/milestones/${milestoneId}?${busca}`,
+      'PUT',
+    );
+  }
+
+  private async escrever<T>(url: string, metodo: 'POST' | 'PUT'): Promise<T> {
+    const token = this.token();
+    let resposta: Response;
+
+    try {
+      resposta = await fetch(url, {
+        method: metodo,
+        headers: { 'PRIVATE-TOKEN': token },
+        signal: AbortSignal.timeout(TEMPO_LIMITE),
+      });
+    } catch {
+      throw new ServiceUnavailableException(
+        'Não foi possível falar com o GitLab. Verifique a rede e a variável GITLAB_URL.',
+      );
+    }
+
+    const corpo: unknown = await resposta.json().catch(() => null);
+
+    if (!resposta.ok) {
+      const mensagem =
+        typeof corpo === 'object' && corpo !== null && 'message' in corpo
+          ? JSON.stringify((corpo as { message: unknown }).message)
+          : resposta.statusText;
+
+      if (resposta.status === 401 || resposta.status === 403) {
+        throw new ServiceUnavailableException(
+          `O GitLab recusou a escrita (${resposta.status}). O GITLAB_TOKEN precisa do escopo api, não só read_api. Detalhe: ${mensagem}`,
+        );
+      }
+
+      throw new ServiceUnavailableException(`O GitLab respondeu ${resposta.status}: ${mensagem}`);
+    }
+
+    return corpo as T;
+  }
+
   /** A hierarquia de work items (as tasks dentro da issue) só existe no GraphQL. */
   async consultarGraphql<T>(query: string, variaveis: Record<string, unknown>): Promise<T> {
     const token = this.token();

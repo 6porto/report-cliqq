@@ -24,6 +24,7 @@ import type {
   StatusRollout,
   TagDeVersao,
   Versao,
+  VersaoGerada,
   VersaoPronta,
 } from './tipos';
 
@@ -297,6 +298,24 @@ export function useVersoes() {
   return useQuery({
     queryKey: ['versoes'],
     queryFn: () => api.get<Versao[]>('/versao/milestones'),
+  });
+}
+
+export function useGerarVersao() {
+  const clienteQuery = useQueryClient();
+
+  return useMutation({
+    mutationFn: (variaveis: {
+      milestone: string;
+      repositorio: string;
+      tag: string;
+      mensagem: string;
+    }) => api.post<VersaoGerada>('/versao/gerar', variaveis),
+    onSuccess: () => {
+      clienteQuery.invalidateQueries({ queryKey: ['versoes-prontas'] });
+      clienteQuery.invalidateQueries({ queryKey: ['versoes'] });
+      clienteQuery.invalidateQueries({ queryKey: ['tags-do-repositorio'] });
+    },
   });
 }
 

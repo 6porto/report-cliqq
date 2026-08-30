@@ -238,12 +238,19 @@ export interface Filtros {
 export interface Versao {
   id: number;
   iid: number;
+  grupoId: number | null;
   titulo: string;
   descricao: string | null;
   estado: string;
   dataInicio: string | null;
   dataFim: string | null;
   url: string;
+}
+
+export interface VersaoGerada {
+  tag: string;
+  milestone: string;
+  descricao: string;
 }
 
 export interface TagDeVersao {

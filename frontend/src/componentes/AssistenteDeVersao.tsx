@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { mensagemDoErro } from '../api/cliente';
 import {
+  useGerarVersao,
   useIssuesDaVersao,
   useRepositoriosDaVersao,
   useTagsDoRepositorio,
@@ -40,6 +41,8 @@ export function AssistenteDeVersao() {
   const [etapa, setEtapa] = useState(0);
   const [versaoEscolhida, setVersaoEscolhida] = useState<VersaoPronta | null>(null);
   const [repositorioEscolhido, setRepositorioEscolhido] = useState<string | null>(null);
+  const [confirmando, setConfirmando] = useState(false);
+  const gerar = useGerarVersao();
 
   const milestone = versaoEscolhida?.titulo ?? null;
   const issues = useIssuesDaVersao(etapa >= 1 ? milestone : null);
@@ -72,6 +75,15 @@ export function AssistenteDeVersao() {
   /** Em uma nova RC só o `rcN` é destacado: o resto do número não mudou. */
   const sufixoRc =
     naDescricao.acao === 'rc' ? (/rc\d+$/i.exec(nova ?? '')?.[0] ?? null) : null;
+
+  const mensagemDaTag = marcadas
+    .map((id) => {
+      const issue = porId.get(id);
+
+      return issue ? `- [#${issue.id}](${issue.url}) ${issue.titulo}` : `- #${id}`;
+    })
+    .join('\n');
+  const gerada = gerar.data ?? null;
   const porId = new Map(prontas.map((issue) => [issue.id, issue]));
   const carregandoEtapa2 = issues.isLoading || repositorios.isLoading;
   const erro = versoes.error ?? issues.error ?? repositorios.error;
@@ -260,7 +272,16 @@ export function AssistenteDeVersao() {
             </p>
           ) : null}
 
-          <p className="aviso">A geração da versão ainda será implementada.</p>
+          {gerar.isError ? <p className="erro">{mensagemDoErro(gerar.error)}</p> : null}
+          {gerada ? (
+            <div className="aviso-salvo">
+              <p>
+                Tag <strong>{gerada.tag}</strong> criada e descrição de {gerada.milestone}{' '}
+                atualizada:
+              </p>
+              <pre className="descricao-tag">{gerada.descricao}</pre>
+            </div>
+          ) : null}
         </div>
       ) : null}
 
@@ -268,20 +289,73 @@ export function AssistenteDeVersao() {
         <button
           type="button"
           className="aba"
-          disabled={etapa === 0}
+          disabled={etapa === 0 || gerar.isPending}
           onClick={() => setEtapa((atual) => atual - 1)}
         >
           Voltar
         </button>
-        <button
-          type="button"
-          className="aba primario"
-          disabled={!podeAvancar || etapa === ETAPAS.length - 1}
-          onClick={() => setEtapa((atual) => atual + 1)}
-        >
-          Avançar
-        </button>
+        {etapa === ETAPAS.length - 1 ? (
+          <button
+            type="button"
+            className="aba primario"
+            disabled={!nova || gerar.isPending || gerada !== null}
+            onClick={() => setConfirmando(true)}
+          >
+            {gerar.isPending ? 'Gerando…' : 'Gerar versão'}
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="aba primario"
+            disabled={!podeAvancar}
+            onClick={() => setEtapa((atual) => atual + 1)}
+          >
+            Avançar
+          </button>
+        )}
       </footer>
+
+      {confirmando && nova && escolhido && versaoEscolhida ? (
+        <div className="modal-fundo" onClick={() => setConfirmando(false)}>
+          <div
+            className="modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Confirmar a geração da versão"
+            onClick={(evento) => evento.stopPropagation()}
+          >
+            <header className="modal-cabecalho">
+              <h2>Gerar {nova}?</h2>
+            </header>
+            <p>
+              A tag <strong>{nova}</strong> será criada em{' '}
+              <strong>{escolhido.repositorio.nome}</strong> a partir da branch{' '}
+              <code>{versaoEscolhida.titulo}</code>, e a descrição da milestone{' '}
+              <strong>{versaoEscolhida.titulo}</strong> será atualizada com essa versão.
+            </p>
+            <div className="assistente-acoes">
+              <button type="button" className="aba" onClick={() => setConfirmando(false)}>
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="aba primario"
+                onClick={() => {
+                  setConfirmando(false);
+                  gerar.mutate({
+                    milestone: versaoEscolhida.titulo,
+                    repositorio: escolhido.repositorio.caminho,
+                    tag: nova,
+                    mensagem: mensagemDaTag,
+                  });
+                }}
+              >
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

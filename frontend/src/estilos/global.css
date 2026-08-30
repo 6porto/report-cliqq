@@ -1090,11 +1090,44 @@ textarea {
   color: var(--tinta-secundaria);
   font: inherit;
   text-align: left;
+}
+
+button.escolha {
   cursor: pointer;
 }
 
 .escolha strong {
   color: var(--tinta-primaria);
+}
+
+.escolha-alvo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.escolha-issues {
+  display: grid;
+  gap: 4px;
+  margin: 10px 0 0;
+  padding: 10px 0 0;
+  border-top: 1px solid var(--borda);
+  list-style: none;
+  font-size: 12px;
+}
+
+.escolha-issues li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
 }
 
 .escolha-marcada {

@@ -118,58 +118,59 @@ export function AssistenteDeVersao() {
             </p>
           ) : null}
           <div className="escolha-versoes">
-            {disponiveis.map(({ repositorio, issues: doRepositorio }) => (
-              <button
-                key={repositorio.caminho}
-                type="button"
-                className={
-                  repositorioEscolhido === repositorio.caminho
-                    ? 'escolha escolha-marcada'
-                    : 'escolha'
-                }
-                aria-pressed={repositorioEscolhido === repositorio.caminho}
-                onClick={() => setRepositorioEscolhido(repositorio.caminho)}
-              >
-                <strong>{repositorio.nome}</strong>
-                <span>
-                  {doRepositorio.length}{' '}
-                  {doRepositorio.length === 1 ? 'issue pronta' : 'issues prontas'}
-                </span>
-                <span className="escolha-apoio">{repositorio.caminho}</span>
-              </button>
-            ))}
-          </div>
+            {disponiveis.map(({ repositorio, issues: doRepositorio }) => {
+              const selecionado = repositorioEscolhido === repositorio.caminho;
 
-          {escolhido ? (
-            <ul className="issues-do-repositorio">
-              {escolhido.issues.map((id) => {
-                const issue = porId.get(id);
-
-                return (
-                  <li key={id} className="issue-linha">
-                    <input
-                      type="checkbox"
-                      checked={marcadas.includes(id)}
-                      aria-label={`Incluir a issue ${id} na versão`}
-                      onChange={() => alternarIssue(id)}
-                    />
-                    <a
-                      className="issue-numero"
-                      href={issue?.url}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      #{id}
-                    </a>
-                    <span className="issue-linha-titulo">{issue?.titulo}</span>
-                    <span className="issue-linha-dados">
-                      <span>{issue?.responsavel ?? 'sem responsável'}</span>
+              return (
+                <div
+                  key={repositorio.caminho}
+                  className={selecionado ? 'escolha escolha-marcada' : 'escolha'}
+                >
+                  <button
+                    type="button"
+                    className="escolha-alvo"
+                    aria-pressed={selecionado}
+                    onClick={() => setRepositorioEscolhido(repositorio.caminho)}
+                  >
+                    <strong>{repositorio.nome}</strong>
+                    <span>
+                      {doRepositorio.length}{' '}
+                      {doRepositorio.length === 1 ? 'issue pronta' : 'issues prontas'}
                     </span>
-                  </li>
-                );
-              })}
-            </ul>
-          ) : null}
+                    <span className="escolha-apoio">{repositorio.caminho}</span>
+                  </button>
+
+                  <ul className="escolha-issues">
+                    {doRepositorio.map((id) => {
+                      const issue = porId.get(id);
+
+                      return (
+                        <li key={id}>
+                          {selecionado ? (
+                            <input
+                              type="checkbox"
+                              checked={marcadas.includes(id)}
+                              aria-label={`Incluir a issue ${id} na versão`}
+                              onChange={() => alternarIssue(id)}
+                            />
+                          ) : null}
+                          <a
+                            className="issue-numero"
+                            href={issue?.url}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            #{id}
+                          </a>
+                          <span className="issue-linha-titulo">{issue?.titulo}</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
         </>
       ) : null}
 

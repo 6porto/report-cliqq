@@ -16,7 +16,8 @@ import {
   versaoNaDescricao,
 } from '../dominio/versao';
 
-const ETAPAS = ['Versão', 'Repositório', 'Gerar'];
+const ETAPAS = ['Versão', 'Repositório', 'Gerar', 'Resumo'];
+const ETAPA_RESUMO = 3;
 
 function issuesProntas(issues: IssueDaVersao[]) {
   return issues.filter((issue) => issue.estado === ESTADO_PRONTO_PARA_TAG);
@@ -96,6 +97,13 @@ export function AssistenteDeVersao() {
 
   const podeAvancar =
     (etapa === 0 && versaoEscolhida !== null) || (etapa === 1 && escolhido !== undefined);
+
+  const recomecar = () => {
+    gerar.reset();
+    setVersaoEscolhida(null);
+    setRepositorioEscolhido(null);
+    setEtapa(0);
+  };
 
   /** Escolher a versão já leva para a etapa do repositório. */
   const escolherVersao = (versao: VersaoPronta) => {
@@ -275,53 +283,101 @@ export function AssistenteDeVersao() {
           ) : null}
 
           {gerar.isError ? <p className="erro">{mensagemDoErro(gerar.error)}</p> : null}
-          {gerada ? (
-            <div className="aviso-salvo">
-              <p>
-                Tag <strong>{gerada.tag}</strong> criada e descrição de {gerada.milestone}{' '}
-                atualizada.
-              </p>
-              <div className="assistente-acoes">
-                <a className="aba" href={gerada.urlTag} target="_blank" rel="noreferrer">
-                  Ver a tag {gerada.tag}
+        </div>
+      ) : null}
+
+      {etapa === ETAPA_RESUMO && gerada ? (
+        <div className="resumo-versao">
+          <p className="aviso-salvo">
+            Tag <strong>{gerada.tag}</strong> criada em {escolhido?.repositorio.nome} e descrição
+            da milestone {gerada.milestone} atualizada.
+          </p>
+
+          <dl className="issue-dados">
+            <div>
+              <dt>Tag</dt>
+              <dd>
+                <a href={gerada.urlTag} target="_blank" rel="noreferrer">
+                  {gerada.tag}
                 </a>
-                <a className="aba" href={gerada.urlMilestone} target="_blank" rel="noreferrer">
-                  Ver a milestone {gerada.milestone}
-                </a>
-              </div>
-              <pre className="descricao-tag">{gerada.descricao}</pre>
+              </dd>
             </div>
-          ) : null}
+            <div>
+              <dt>Milestone</dt>
+              <dd>
+                <a href={gerada.urlMilestone} target="_blank" rel="noreferrer">
+                  {gerada.milestone}
+                </a>
+              </dd>
+            </div>
+            <div>
+              <dt>Repositório</dt>
+              <dd>
+                <a href={escolhido?.repositorio.url} target="_blank" rel="noreferrer">
+                  {escolhido?.repositorio.nome}
+                </a>
+              </dd>
+            </div>
+          </dl>
+
+          <h3 className="titulo-secao">
+            Issues na versão · {marcadas.length} {marcadas.length === 1 ? 'issue' : 'issues'}
+          </h3>
+          <ul className="escolha-issues issues-da-versao">
+            {marcadas.map((id) => {
+              const issue = porId.get(id);
+
+              return (
+                <li key={id}>
+                  <a className="issue-numero" href={issue?.url} target="_blank" rel="noreferrer">
+                    #{id}
+                  </a>
+                  <span className="issue-linha-titulo">{issue?.titulo}</span>
+                </li>
+              );
+            })}
+          </ul>
+
+          <h3 className="titulo-secao">Descrição da milestone agora</h3>
+          <pre className="descricao-tag">{gerada.descricao}</pre>
         </div>
       ) : null}
 
       <footer className="assistente-acoes">
-        <button
-          type="button"
-          className="aba"
-          disabled={etapa === 0 || gerar.isPending}
-          onClick={() => setEtapa((atual) => atual - 1)}
-        >
-          Voltar
-        </button>
-        {etapa === ETAPAS.length - 1 ? (
-          <button
-            type="button"
-            className="aba primario"
-            disabled={!nova || gerar.isPending || gerada !== null}
-            onClick={() => setConfirmando(true)}
-          >
-            {gerar.isPending ? 'Gerando…' : 'Gerar versão'}
+        {etapa === ETAPA_RESUMO ? (
+          <button type="button" className="aba primario" onClick={recomecar}>
+            Gerar outra versão
           </button>
         ) : (
-          <button
-            type="button"
-            className="aba primario"
-            disabled={!podeAvancar}
-            onClick={() => setEtapa((atual) => atual + 1)}
-          >
-            Avançar
-          </button>
+          <>
+            <button
+              type="button"
+              className="aba"
+              disabled={etapa === 0 || gerar.isPending}
+              onClick={() => setEtapa((atual) => atual - 1)}
+            >
+              Voltar
+            </button>
+            {etapa === ETAPA_RESUMO - 1 ? (
+              <button
+                type="button"
+                className="aba primario"
+                disabled={!nova || gerar.isPending}
+                onClick={() => setConfirmando(true)}
+              >
+                {gerar.isPending ? 'Gerando…' : 'Gerar versão'}
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="aba primario"
+                disabled={!podeAvancar}
+                onClick={() => setEtapa((atual) => atual + 1)}
+              >
+                Avançar
+              </button>
+            )}
+          </>
         )}
       </footer>
 
@@ -352,12 +408,15 @@ export function AssistenteDeVersao() {
                 className="aba primario"
                 onClick={() => {
                   setConfirmando(false);
-                  gerar.mutate({
-                    milestone: versaoEscolhida.titulo,
-                    repositorio: escolhido.repositorio.caminho,
-                    tag: nova,
-                    mensagem: mensagemDaTag,
-                  });
+                  gerar.mutate(
+                    {
+                      milestone: versaoEscolhida.titulo,
+                      repositorio: escolhido.repositorio.caminho,
+                      tag: nova,
+                      mensagem: mensagemDaTag,
+                    },
+                    { onSuccess: () => setEtapa(ETAPA_RESUMO) },
+                  );
                 }}
               >
                 Confirmar

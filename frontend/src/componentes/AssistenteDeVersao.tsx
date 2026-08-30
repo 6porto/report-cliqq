@@ -187,7 +187,7 @@ export function AssistenteDeVersao() {
         <div className="resumo-versao">
           <dl className="issue-dados">
             <div>
-              <dt>Versão</dt>
+              <dt>Milestone</dt>
               <dd>{versaoEscolhida?.titulo}</dd>
             </div>
             <div>

@@ -3,8 +3,6 @@ import { mensagemDoErro } from '../api/cliente';
 import { useIssuesDaVersao, useRepositoriosDaVersao, useVersoes } from '../api/hooks';
 import { CartaoGrafico } from '../componentes/CartaoGrafico';
 import { IssuesPorRepositorio } from '../componentes/IssuesPorRepositorio';
-import { ListaRepositoriosDaVersao } from '../componentes/ListaRepositoriosDaVersao';
-import { RepositoriosPorIssue } from '../componentes/RepositoriosPorIssue';
 import { PREFIXOS_DE_VERSAO, ehVersaoAtiva } from '../dominio/versao';
 
 export function Versao() {
@@ -21,7 +19,6 @@ export function Versao() {
 
   const carregadas = useMemo(() => issues.data ?? [], [issues.data]);
   const envolvidos = useMemo(() => repositorios.data?.repositorios ?? [], [repositorios.data]);
-  const issuesSemTask = repositorios.data?.issuesSemTask ?? [];
 
   return (
     <>
@@ -63,6 +60,9 @@ export function Versao() {
 
       {versoes.isError ? <p className="erro">{mensagemDoErro(versoes.error)}</p> : null}
       {issues.isError ? <p className="erro">{mensagemDoErro(issues.error)}</p> : null}
+      {repositorios.isError ? (
+        <p className="erro">{mensagemDoErro(repositorios.error)}</p>
+      ) : null}
 
       {versoes.isLoading ? <p className="carregando">Carregando as versões…</p> : null}
       {!versoes.isLoading && !versoes.isError && listadas.length === 0 ? (
@@ -73,77 +73,25 @@ export function Versao() {
       ) : null}
 
       {selecionada ? (
-        <div className="grade-graficos">
-          <CartaoGrafico
-            largo
-            titulo="Repositórios envolvidos"
-            subtitulo="Projetos onde as tasks das issues desta versão foram abertas."
-          >
-            {repositorios.isError ? (
-              <p className="erro">{mensagemDoErro(repositorios.error)}</p>
-            ) : null}
-            {repositorios.isLoading ? (
-              <p className="carregando">Carregando os repositórios…</p>
-            ) : null}
-            {!repositorios.isLoading && !repositorios.isError && envolvidos.length === 0 ? (
-              <p className="carregando">Nenhuma task encontrada nas issues desta versão.</p>
-            ) : null}
-            {envolvidos.length > 0 ? (
-              <ListaRepositoriosDaVersao repositorios={envolvidos} />
-            ) : null}
-            {issuesSemTask.length > 0 ? (
-              <p className="aviso-sincronizacao">
-                {issuesSemTask.length}{' '}
-                {issuesSemTask.length === 1 ? 'issue ainda sem task' : 'issues ainda sem task'}:{' '}
-                {issuesSemTask.map((id) => `#${id}`).join(', ')}
-              </p>
-            ) : null}
-          </CartaoGrafico>
-        </div>
-      ) : null}
-
-      {selecionada ? (
-        <div className="secao-repositorios">
-          <CartaoGrafico
-            largo
-            titulo="Versões"
-            subtitulo="Cada repositório com as issues da versão que têm task nele. Uma issue aparece em todos os repositórios onde foi desdobrada."
-          >
-            {repositorios.isLoading || issues.isLoading ? (
-              <p className="carregando">Carregando…</p>
-            ) : null}
-            {!repositorios.isLoading && !repositorios.isError && envolvidos.length === 0 ? (
-              <p className="carregando">Nenhuma task encontrada nas issues desta versão.</p>
-            ) : null}
-            {envolvidos.length > 0 ? (
-              <IssuesPorRepositorio
-                repositorios={envolvidos}
-                issues={carregadas}
-                versao={selecionada}
-              />
-            ) : null}
-          </CartaoGrafico>
-        </div>
-      ) : null}
-
-      {selecionada ? (
-        <div className="secao-repositorios">
-          <CartaoGrafico
-            largo
-            titulo="Repositórios por issue"
-            subtitulo="Cada issue da versão com os repositórios onde ela foi desdobrada em tasks."
-          >
-            {repositorios.isLoading || issues.isLoading ? (
-              <p className="carregando">Carregando…</p>
-            ) : null}
-            {!issues.isLoading && carregadas.length === 0 ? (
-              <p className="carregando">Nenhuma issue vinculada a esta versão.</p>
-            ) : null}
-            {carregadas.length > 0 ? (
-              <RepositoriosPorIssue issues={carregadas} repositorios={envolvidos} />
-            ) : null}
-          </CartaoGrafico>
-        </div>
+        <CartaoGrafico
+          largo
+          titulo="Versões"
+          subtitulo="Cada repositório com as issues da versão que têm task nele. Uma issue aparece em todos os repositórios onde foi desdobrada."
+        >
+          {repositorios.isLoading || issues.isLoading ? (
+            <p className="carregando">Carregando…</p>
+          ) : null}
+          {!repositorios.isLoading && !repositorios.isError && envolvidos.length === 0 ? (
+            <p className="carregando">Nenhuma task encontrada nas issues desta versão.</p>
+          ) : null}
+          {envolvidos.length > 0 ? (
+            <IssuesPorRepositorio
+              repositorios={envolvidos}
+              issues={carregadas}
+              versao={selecionada}
+            />
+          ) : null}
+        </CartaoGrafico>
       ) : null}
 
       {!selecionada && listadas.length > 0 ? (

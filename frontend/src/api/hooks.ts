@@ -297,11 +297,11 @@ export function useVersoes() {
   });
 }
 
-export function useIssuesDaVersao(milestoneId: number | null) {
+export function useIssuesDaVersao(milestone: string | null) {
   return useQuery({
-    queryKey: ['issues-da-versao', milestoneId],
-    queryFn: () => api.get<IssueDaVersao[]>(`/versao/milestones/${milestoneId}/issues`),
-    enabled: milestoneId !== null,
+    queryKey: ['issues-da-versao', milestone],
+    queryFn: () => api.get<IssueDaVersao[]>(`/versao/issues${montarQuery({ milestone })}`),
+    enabled: milestone !== null,
   });
 }
 

@@ -6,6 +6,7 @@ import {
   mapearMilestone,
   ordenarVersoes,
   valorDoLabel,
+  valoresDoLabel,
   type IssueDaVersaoGitlab,
   type MilestoneGitlab,
 } from './versao-gitlab';
@@ -121,6 +122,18 @@ describe('valorDoLabel', () => {
   });
 });
 
+describe('valoresDoLabel', () => {
+  it('junta e ordena todos os labels do prefixo', () => {
+    const labels = ['type::problemas-produção', 'squad::alfa', 'type::bug'];
+
+    expect(valoresDoLabel(labels, 'type::')).toEqual(['bug', 'problemas-produção']);
+  });
+
+  it('devolve lista vazia quando nenhum label tem o prefixo', () => {
+    expect(valoresDoLabel(['squad::alfa'], 'type::')).toEqual([]);
+  });
+});
+
 describe('mapearMilestone', () => {
   it('traduz os campos do GitLab para o vocabulário da tela', () => {
     const versao = mapearMilestone(new MilestoneBuilder().build());
@@ -178,7 +191,7 @@ describe('mapearIssueDaVersao', () => {
     expect(issue).toEqual({
       id: 965,
       titulo: 'CRM2232 - Nova regra de precificação',
-      tipo: 'crm',
+      tipos: ['crm'],
       estado: 'desenvolvimento',
       sistema: 'cliqq-centralizado',
       responsavel: 'Gustavo Silva',
@@ -204,7 +217,7 @@ describe('mapearIssueDaVersao', () => {
       new IssueBuilder().comLabels([]).comResponsavel(null).build(),
     );
 
-    expect(issue.tipo).toBeNull();
+    expect(issue.tipos).toEqual([]);
     expect(issue.estado).toBeNull();
     expect(issue.sistema).toBeNull();
     expect(issue.responsavel).toBeNull();

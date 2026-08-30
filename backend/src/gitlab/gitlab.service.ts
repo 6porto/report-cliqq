@@ -19,13 +19,27 @@ export class GitlabService {
     });
   }
 
-  /** Traz milestones abertas e fechadas: o filtro por estado é feito na tela. */
+  /**
+   * Traz milestones abertas e fechadas: o filtro por estado é feito na tela.
+   * As versões ficam no grupo pai, não no projeto, daí o `include_parent_milestones`.
+   */
   async listarMilestones(): Promise<MilestoneGitlab[]> {
-    return this.paginar<MilestoneGitlab>('milestones', { state: 'all' });
+    return this.paginar<MilestoneGitlab>('milestones', {
+      state: 'all',
+      include_parent_milestones: 'true',
+    });
   }
 
-  async listarIssuesDaMilestone(milestoneId: number): Promise<IssueDaVersaoGitlab[]> {
-    return this.paginar<IssueDaVersaoGitlab>(`milestones/${milestoneId}/issues`, {});
+  /**
+   * A busca é pelo título porque `milestones/:id/issues` responde 404 para milestone
+   * herdada do grupo — e é lá que as versões ficam.
+   */
+  async listarIssuesDaMilestone(titulo: string): Promise<IssueDaVersaoGitlab[]> {
+    return this.paginar<IssueDaVersaoGitlab>('issues', {
+      milestone: titulo,
+      scope: 'all',
+      state: 'all',
+    });
   }
 
   private async paginar<T>(caminho: string, parametros: Record<string, string>): Promise<T[]> {

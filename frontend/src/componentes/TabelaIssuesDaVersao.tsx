@@ -16,7 +16,7 @@ interface Props {
 const COLUNAS: { coluna: ColunaIssue; rotulo: string }[] = [
   { coluna: 'id', rotulo: 'Issue' },
   { coluna: 'titulo', rotulo: 'Título' },
-  { coluna: 'tipo', rotulo: 'Tipo' },
+  { coluna: 'tipos', rotulo: 'Tipo' },
   { coluna: 'estado', rotulo: 'Estado' },
   { coluna: 'sistema', rotulo: 'Sistema' },
   { coluna: 'responsavel', rotulo: 'Responsável' },
@@ -70,7 +70,15 @@ export function TabelaIssuesDaVersao({ issues, ordenacao, aoOrdenar }: Props) {
                   {issue.titulo}
                 </a>
               </td>
-              <td>{issue.tipo ?? '—'}</td>
+              <td className="celula-tipos">
+                {issue.tipos.length > 0
+                  ? issue.tipos.map((tipo) => (
+                      <span key={tipo} className="selo selo-tipo">
+                        {tipo}
+                      </span>
+                    ))
+                  : '—'}
+              </td>
               <td>{issue.estado ?? '—'}</td>
               <td>{issue.sistema ?? '—'}</td>
               <td>{issue.responsavel ?? '—'}</td>

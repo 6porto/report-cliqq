@@ -46,7 +46,7 @@ export interface IssueDaVersaoGitlab {
 export interface IssueDaVersao {
   id: number;
   titulo: string;
-  tipo: string | null;
+  tipos: string[];
   estado: string | null;
   sistema: string | null;
   responsavel: string | null;
@@ -67,6 +67,14 @@ export function valorDoLabel(labels: string[], prefixo: string) {
   const label = labels.find((nome) => nome.startsWith(prefixo));
 
   return label ? label.slice(prefixo.length) : null;
+}
+
+/** Uma issue costuma carregar mais de um `type::` (bug + problemas-produção, por exemplo). */
+export function valoresDoLabel(labels: string[], prefixo: string) {
+  return labels
+    .filter((nome) => nome.startsWith(prefixo))
+    .map((nome) => nome.slice(prefixo.length))
+    .sort();
 }
 
 export function mapearMilestone(milestone: MilestoneGitlab): Versao {
@@ -108,7 +116,7 @@ export function mapearIssueDaVersao(issue: IssueDaVersaoGitlab): IssueDaVersao {
   return {
     id: Number(issue.iid),
     titulo: issue.title,
-    tipo: valorDoLabel(labels, PREFIXO_TIPO),
+    tipos: valoresDoLabel(labels, PREFIXO_TIPO),
     estado: valorDoLabel(labels, PREFIXO_ESTADO),
     sistema: valorDoLabel(labels, PREFIXO_SISTEMA),
     responsavel: issue.assignee?.name || null,

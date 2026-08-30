@@ -249,7 +249,7 @@ export interface Versao {
 export interface IssueDaVersao {
   id: number;
   titulo: string;
-  tipo: string | null;
+  tipos: string[];
   estado: string | null;
   sistema: string | null;
   responsavel: string | null;

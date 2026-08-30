@@ -1,4 +1,5 @@
-import { Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
+import { FiltroIssuesDto } from './dto/filtro-issues.dto';
 import { VersaoService } from './versao.service';
 
 @Controller('versao')
@@ -10,8 +11,8 @@ export class VersaoController {
     return this.versaoService.listarVersoes();
   }
 
-  @Get('milestones/:milestoneId/issues')
-  listarIssues(@Param('milestoneId', ParseIntPipe) milestoneId: number) {
-    return this.versaoService.listarIssues(milestoneId);
+  @Get('issues')
+  listarIssues(@Query() filtro: FiltroIssuesDto) {
+    return this.versaoService.listarIssues(filtro.milestone);
   }
 }

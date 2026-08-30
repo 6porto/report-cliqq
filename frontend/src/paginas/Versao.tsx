@@ -12,7 +12,8 @@ import {
   ehVersaoAtiva,
   filtrarIssues,
   periodoDaVersao,
-  valoresDistintos,
+  sistemasDistintos,
+  tiposDistintos,
   type ColunaIssue,
   type FiltroSituacao,
   type OrdenacaoIssues,
@@ -21,23 +22,23 @@ import {
 export function Versao() {
   const versoes = useVersoes();
   const [incluirFechadas, setIncluirFechadas] = useState(false);
-  const [versaoId, setVersaoId] = useState<number | null>(null);
+  const [versaoSelecionada, setVersaoSelecionada] = useState<string | null>(null);
   const [filtros, setFiltros] = useState(FILTROS_INICIAIS);
   const [ordenacao, setOrdenacao] = useState<OrdenacaoIssues>(ORDENACAO_PADRAO);
 
-  const issues = useIssuesDaVersao(versaoId);
+  const issues = useIssuesDaVersao(versaoSelecionada);
 
   const todasAsVersoes = versoes.data ?? [];
   const listadas = incluirFechadas ? todasAsVersoes : todasAsVersoes.filter(ehVersaoAtiva);
-  const selecionada = todasAsVersoes.find((versao) => versao.id === versaoId) ?? null;
+  const selecionada = todasAsVersoes.find((versao) => versao.titulo === versaoSelecionada) ?? null;
 
   const carregadas = useMemo(() => issues.data ?? [], [issues.data]);
   const filtradas = useMemo(() => filtrarIssues(carregadas, filtros), [carregadas, filtros]);
-  const sistemas = useMemo(() => valoresDistintos(carregadas, 'sistema'), [carregadas]);
-  const tipos = useMemo(() => valoresDistintos(carregadas, 'tipo'), [carregadas]);
+  const sistemas = useMemo(() => sistemasDistintos(carregadas), [carregadas]);
+  const tipos = useMemo(() => tiposDistintos(carregadas), [carregadas]);
 
   const trocarVersao = (valor: string) => {
-    setVersaoId(valor ? Number(valor) : null);
+    setVersaoSelecionada(valor || null);
     setFiltros(FILTROS_INICIAIS);
     setOrdenacao(ORDENACAO_PADRAO);
   };
@@ -54,14 +55,14 @@ export function Versao() {
       <div className="barra-sincronizacao">
         <div className="filtros">
           <select
-            value={versaoId ?? ''}
+            value={versaoSelecionada ?? ''}
             aria-label="Selecionar versão"
             disabled={versoes.isLoading}
             onChange={(evento) => trocarVersao(evento.target.value)}
           >
             <option value="">Selecione uma versão</option>
             {listadas.map((versao) => (
-              <option key={versao.id} value={versao.id}>
+              <option key={versao.id} value={versao.titulo}>
                 {versao.titulo}
                 {versao.estado === 'closed' ? ' (fechada)' : ''}
               </option>

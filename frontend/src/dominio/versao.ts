@@ -6,7 +6,7 @@ export const PREFIXOS_DE_VERSAO = ['feature/', 'fix/'] as const;
 export const COLUNAS_ORDENAVEIS = [
   'id',
   'titulo',
-  'tipo',
+  'tipos',
   'estado',
   'sistema',
   'responsavel',
@@ -26,7 +26,7 @@ export const ORDENACAO_PADRAO: OrdenacaoIssues = { coluna: 'id', direcao: 'asc' 
 export const DIRECAO_INICIAL: Record<ColunaIssue, 'asc' | 'desc'> = {
   id: 'asc',
   titulo: 'asc',
-  tipo: 'asc',
+  tipos: 'asc',
   estado: 'asc',
   sistema: 'asc',
   responsavel: 'asc',
@@ -76,11 +76,16 @@ export function periodoDaVersao(versao: Versao) {
   return `${formatarData(versao.dataInicio)} até ${formatarData(versao.dataFim)}`;
 }
 
-export function valoresDistintos(
-  issues: IssueDaVersao[],
-  campo: 'sistema' | 'tipo',
-): string[] {
-  return [...new Set(issues.map((issue) => issue[campo]).filter((valor): valor is string => !!valor))].sort();
+export function sistemasDistintos(issues: IssueDaVersao[]): string[] {
+  const sistemas = issues
+    .map((issue) => issue.sistema)
+    .filter((valor): valor is string => !!valor);
+
+  return [...new Set(sistemas)].sort();
+}
+
+export function tiposDistintos(issues: IssueDaVersao[]): string[] {
+  return [...new Set(issues.flatMap((issue) => issue.tipos))].sort();
 }
 
 export function filtrarIssues(issues: IssueDaVersao[], filtros: FiltrosDeIssues) {
@@ -95,7 +100,7 @@ export function filtrarIssues(issues: IssueDaVersao[], filtros: FiltrosDeIssues)
       return false;
     }
 
-    if (filtros.tipo && issue.tipo !== filtros.tipo) {
+    if (filtros.tipo && !issue.tipos.includes(filtros.tipo)) {
       return false;
     }
 
@@ -113,8 +118,8 @@ function comparar(a: IssueDaVersao, b: IssueDaVersao, coluna: ColunaIssue) {
     return a.id - b.id;
   }
 
-  const valorA = a[coluna] ?? '';
-  const valorB = b[coluna] ?? '';
+  const valorA = coluna === 'tipos' ? a.tipos.join(', ') : (a[coluna] ?? '');
+  const valorB = coluna === 'tipos' ? b.tipos.join(', ') : (b[coluna] ?? '');
 
   if (!valorA || !valorB) {
     return valorA ? -1 : valorB ? 1 : 0;

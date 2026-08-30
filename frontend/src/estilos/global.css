@@ -1051,6 +1051,13 @@ textarea {
   font-size: 12px;
 }
 
+.celula-tipos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-width: 220px;
+}
+
 .celula-datas {
   font-size: 12px;
   color: var(--tinta-secundaria);

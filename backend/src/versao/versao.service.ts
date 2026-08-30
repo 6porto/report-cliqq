@@ -10,7 +10,7 @@ export class VersaoService {
     return filtrarVersoes(await this.gitlab.listarMilestones());
   }
 
-  async listarIssues(milestoneId: number) {
-    return mapearIssuesDaVersao(await this.gitlab.listarIssuesDaMilestone(milestoneId));
+  async listarIssues(milestone: string) {
+    return mapearIssuesDaVersao(await this.gitlab.listarIssuesDaMilestone(milestone));
   }
 }

@@ -3,14 +3,16 @@ import { Dashboard } from './paginas/Dashboard';
 import { Filiais } from './paginas/Filiais';
 import { Plano } from './paginas/Plano';
 import { Priorizacao } from './paginas/Priorizacao';
+import { Versao } from './paginas/Versao';
 
-type Pagina = 'report' | 'plano' | 'lojas' | 'priorizacao';
+type Pagina = 'report' | 'plano' | 'lojas' | 'priorizacao' | 'versao';
 
 const ABAS: { pagina: Pagina; rotulo: string }[] = [
   { pagina: 'plano', rotulo: 'Plano' },
   { pagina: 'report', rotulo: 'Report' },
   { pagina: 'lojas', rotulo: 'Lojas' },
   { pagina: 'priorizacao', rotulo: 'Priorização' },
+  { pagina: 'versao', rotulo: 'Versão' },
 ];
 
 export function App() {
@@ -41,6 +43,7 @@ export function App() {
       {pagina === 'plano' ? <Plano /> : null}
       {pagina === 'lojas' ? <Filiais /> : null}
       {pagina === 'priorizacao' ? <Priorizacao /> : null}
+      {pagina === 'versao' ? <Versao /> : null}
     </main>
   );
 }

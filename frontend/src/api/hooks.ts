@@ -8,6 +8,7 @@ import type {
   Filial,
   FiltroFiliais,
   Filtros,
+  IssueDaVersao,
   GrupoRollout,
   LatenciaSemanal,
   MediaSemanal,
@@ -20,6 +21,7 @@ import type {
   ResumoSincronizacao,
   StatusPorDia,
   StatusRollout,
+  Versao,
 } from './tipos';
 
 export function useResumo() {
@@ -285,6 +287,21 @@ export function useRemoverLatenciaSemanal() {
     onSuccess: () => {
       clienteQuery.invalidateQueries({ queryKey: ['latencias-semanais'] });
     },
+  });
+}
+
+export function useVersoes() {
+  return useQuery({
+    queryKey: ['versoes'],
+    queryFn: () => api.get<Versao[]>('/versao/milestones'),
+  });
+}
+
+export function useIssuesDaVersao(milestoneId: number | null) {
+  return useQuery({
+    queryKey: ['issues-da-versao', milestoneId],
+    queryFn: () => api.get<IssueDaVersao[]>(`/versao/milestones/${milestoneId}/issues`),
+    enabled: milestoneId !== null,
   });
 }
 

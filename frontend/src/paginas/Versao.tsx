@@ -1,0 +1,192 @@
+import { useMemo, useState } from 'react';
+import { mensagemDoErro } from '../api/cliente';
+import { useIssuesDaVersao, useVersoes } from '../api/hooks';
+import { CartaoGrafico } from '../componentes/CartaoGrafico';
+import { TabelaIssuesDaVersao } from '../componentes/TabelaIssuesDaVersao';
+import {
+  DIRECAO_INICIAL,
+  FILTROS_INICIAIS,
+  ORDENACAO_PADRAO,
+  PREFIXOS_DE_VERSAO,
+  ROTULO_ESTADO_VERSAO,
+  ehVersaoAtiva,
+  filtrarIssues,
+  periodoDaVersao,
+  valoresDistintos,
+  type ColunaIssue,
+  type FiltroSituacao,
+  type OrdenacaoIssues,
+} from '../dominio/versao';
+
+export function Versao() {
+  const versoes = useVersoes();
+  const [incluirFechadas, setIncluirFechadas] = useState(false);
+  const [versaoId, setVersaoId] = useState<number | null>(null);
+  const [filtros, setFiltros] = useState(FILTROS_INICIAIS);
+  const [ordenacao, setOrdenacao] = useState<OrdenacaoIssues>(ORDENACAO_PADRAO);
+
+  const issues = useIssuesDaVersao(versaoId);
+
+  const todasAsVersoes = versoes.data ?? [];
+  const listadas = incluirFechadas ? todasAsVersoes : todasAsVersoes.filter(ehVersaoAtiva);
+  const selecionada = todasAsVersoes.find((versao) => versao.id === versaoId) ?? null;
+
+  const carregadas = useMemo(() => issues.data ?? [], [issues.data]);
+  const filtradas = useMemo(() => filtrarIssues(carregadas, filtros), [carregadas, filtros]);
+  const sistemas = useMemo(() => valoresDistintos(carregadas, 'sistema'), [carregadas]);
+  const tipos = useMemo(() => valoresDistintos(carregadas, 'tipo'), [carregadas]);
+
+  const trocarVersao = (valor: string) => {
+    setVersaoId(valor ? Number(valor) : null);
+    setFiltros(FILTROS_INICIAIS);
+    setOrdenacao(ORDENACAO_PADRAO);
+  };
+
+  const alternarOrdenacao = (coluna: ColunaIssue) =>
+    setOrdenacao((atual) =>
+      atual.coluna === coluna
+        ? { coluna, direcao: atual.direcao === 'asc' ? 'desc' : 'asc' }
+        : { coluna, direcao: DIRECAO_INICIAL[coluna] },
+    );
+
+  return (
+    <>
+      <div className="barra-sincronizacao">
+        <div className="filtros">
+          <select
+            value={versaoId ?? ''}
+            aria-label="Selecionar versão"
+            disabled={versoes.isLoading}
+            onChange={(evento) => trocarVersao(evento.target.value)}
+          >
+            <option value="">Selecione uma versão</option>
+            {listadas.map((versao) => (
+              <option key={versao.id} value={versao.id}>
+                {versao.titulo}
+                {versao.estado === 'closed' ? ' (fechada)' : ''}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            className="aba"
+            aria-pressed={incluirFechadas}
+            onClick={() => setIncluirFechadas((ligado) => !ligado)}
+          >
+            {incluirFechadas ? 'Ativas e fechadas' : 'Só ativas'}
+          </button>
+        </div>
+        <p className="subtitulo">
+          Milestones de <code>mercantil/mercantil</code> que começam com{' '}
+          <code>{PREFIXOS_DE_VERSAO[0]}</code> ou <code>{PREFIXOS_DE_VERSAO[1]}</code>
+        </p>
+      </div>
+
+      {versoes.isError ? <p className="erro">{mensagemDoErro(versoes.error)}</p> : null}
+      {issues.isError ? <p className="erro">{mensagemDoErro(issues.error)}</p> : null}
+
+      {versoes.isLoading ? <p className="carregando">Carregando as versões…</p> : null}
+      {!versoes.isLoading && !versoes.isError && listadas.length === 0 ? (
+        <p className="carregando">
+          Nenhuma milestone com esses prefixos
+          {incluirFechadas ? '' : ' entre as ativas'}.
+        </p>
+      ) : null}
+
+      {selecionada ? (
+        <CartaoGrafico
+          largo
+          titulo={selecionada.titulo}
+          subtitulo={`${ROTULO_ESTADO_VERSAO[selecionada.estado] ?? selecionada.estado} · ${periodoDaVersao(selecionada)}`}
+          acoes={
+            <a className="aba" href={selecionada.url} target="_blank" rel="noreferrer">
+              Abrir no GitLab
+            </a>
+          }
+        >
+          {selecionada.descricao ? (
+            <p className="descricao-texto">{selecionada.descricao}</p>
+          ) : (
+            <p className="carregando">Milestone sem descrição.</p>
+          )}
+
+          <div className="filtros">
+            <select
+              value={filtros.situacao}
+              aria-label="Filtrar por situação"
+              onChange={(evento) =>
+                setFiltros((atual) => ({
+                  ...atual,
+                  situacao: evento.target.value as FiltroSituacao,
+                }))
+              }
+            >
+              <option value="todas">Todas as situações</option>
+              <option value="aberta">Só abertas</option>
+              <option value="fechada">Só fechadas</option>
+            </select>
+            <select
+              value={filtros.sistema}
+              aria-label="Filtrar por sistema"
+              onChange={(evento) =>
+                setFiltros((atual) => ({ ...atual, sistema: evento.target.value }))
+              }
+            >
+              <option value="">Todos os sistemas</option>
+              {sistemas.map((sistema) => (
+                <option key={sistema} value={sistema}>
+                  {sistema}
+                </option>
+              ))}
+            </select>
+            <select
+              value={filtros.tipo}
+              aria-label="Filtrar por tipo"
+              onChange={(evento) =>
+                setFiltros((atual) => ({ ...atual, tipo: evento.target.value }))
+              }
+            >
+              <option value="">Todos os tipos</option>
+              {tipos.map((tipo) => (
+                <option key={tipo} value={tipo}>
+                  {tipo}
+                </option>
+              ))}
+            </select>
+            <input
+              type="search"
+              value={filtros.busca}
+              placeholder="Buscar por número ou título"
+              aria-label="Buscar issue"
+              onChange={(evento) =>
+                setFiltros((atual) => ({ ...atual, busca: evento.target.value }))
+              }
+            />
+            <span className="aviso-sincronizacao">
+              {filtradas.length} de {carregadas.length} issues
+            </span>
+          </div>
+
+          {issues.isLoading ? <p className="carregando">Carregando as issues…</p> : null}
+          {!issues.isLoading && carregadas.length === 0 ? (
+            <p className="carregando">Nenhuma issue vinculada a esta versão.</p>
+          ) : null}
+          {carregadas.length > 0 && filtradas.length === 0 ? (
+            <p className="carregando">Nenhuma issue com esses filtros.</p>
+          ) : null}
+          {filtradas.length > 0 ? (
+            <TabelaIssuesDaVersao
+              issues={filtradas}
+              ordenacao={ordenacao}
+              aoOrdenar={alternarOrdenacao}
+            />
+          ) : null}
+        </CartaoGrafico>
+      ) : null}
+
+      {!selecionada && listadas.length > 0 ? (
+        <p className="carregando">Selecione uma versão para ver as issues vinculadas.</p>
+      ) : null}
+    </>
+  );
+}

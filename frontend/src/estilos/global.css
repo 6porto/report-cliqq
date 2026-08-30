@@ -1050,3 +1050,13 @@ textarea {
   padding: 4px 6px;
   font-size: 12px;
 }
+
+.celula-datas {
+  font-size: 12px;
+  color: var(--tinta-secundaria);
+  white-space: nowrap;
+}
+
+.celula-datas span {
+  display: block;
+}

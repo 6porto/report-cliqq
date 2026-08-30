@@ -8,6 +8,7 @@ import { PriorizacaoModule } from './priorizacao/priorizacao.module';
 import { MediasSemanaisModule } from './medias-semanais/medias-semanais.module';
 import { LatenciasSemanaisModule } from './latencias-semanais/latencias-semanais.module';
 import { MelhoriasModule } from './melhorias/melhorias.module';
+import { VersaoModule } from './versao/versao.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { MelhoriasModule } from './melhorias/melhorias.module';
     MediasSemanaisModule,
     LatenciasSemanaisModule,
     MelhoriasModule,
+    VersaoModule,
   ],
 })
 export class AppModule {}

@@ -234,3 +234,28 @@ export interface Filtros {
   ufs: string[];
   ondas: string[];
 }
+
+export interface Versao {
+  id: number;
+  iid: number;
+  titulo: string;
+  descricao: string | null;
+  estado: string;
+  dataInicio: string | null;
+  dataFim: string | null;
+  url: string;
+}
+
+export interface IssueDaVersao {
+  id: number;
+  titulo: string;
+  tipo: string | null;
+  estado: string | null;
+  sistema: string | null;
+  responsavel: string | null;
+  situacao: 'aberta' | 'fechada';
+  url: string;
+  criadaEm: string;
+  atualizadaEm: string;
+  fechadaEm: string | null;
+}

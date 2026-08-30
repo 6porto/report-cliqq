@@ -1147,6 +1147,13 @@ button.escolha {
   margin-top: 16px;
 }
 
+.issues-da-versao {
+  border-top: 0;
+  margin-top: 0;
+  padding-top: 0;
+  font-size: 13px;
+}
+
 .numero-da-versao {
   font-size: 16px;
   font-variant-numeric: tabular-nums;

@@ -9,7 +9,6 @@ import {
 import type { IssueDaVersao, RepositorioDaVersao, VersaoPronta } from '../api/tipos';
 import {
   ESTADO_PRONTO_PARA_TAG,
-  ROTULO_ACAO,
   periodoDaVersao,
   proximaVersao,
   versaoNaDescricao,
@@ -195,11 +194,7 @@ export function AssistenteDeVersao() {
               <dd>{escolhido?.repositorio.nome}</dd>
             </div>
             <div>
-              <dt>Issues</dt>
-              <dd>{marcadas.map((id) => `#${id}`).join(', ')}</dd>
-            </div>
-            <div>
-              <dt>{naDescricao.acao ? ROTULO_ACAO[naDescricao.acao] : 'Nova versão'}</dt>
+              <dt>Nova versão</dt>
               <dd>
                 {tags.isLoading ? (
                   'calculando…'
@@ -211,6 +206,28 @@ export function AssistenteDeVersao() {
               </dd>
             </div>
           </dl>
+
+          <h3 className="titulo-secao">
+            Issues da versão · {marcadas.length}{' '}
+            {marcadas.length === 1 ? 'issue' : 'issues'}
+          </h3>
+          <ul className="escolha-issues issues-da-versao">
+            {marcadas.map((id) => {
+              const issue = porId.get(id);
+
+              return (
+                <li key={id}>
+                  <a className="issue-numero" href={issue?.url} target="_blank" rel="noreferrer">
+                    #{id}
+                  </a>
+                  <span className="issue-linha-titulo">{issue?.titulo}</span>
+                  <span className="issue-linha-dados">
+                    <span>{issue?.responsavel ?? 'sem responsável'}</span>
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
 
           <p className="aviso-sincronizacao">
             {naDescricao.acao === 'rc'

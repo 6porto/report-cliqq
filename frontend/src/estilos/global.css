@@ -1136,35 +1136,6 @@ textarea {
   margin-bottom: 4px;
 }
 
-.lista-tags {
-  display: grid;
-  gap: 6px;
-  margin: 0 0 16px;
-  padding: 0;
-  list-style: none;
-}
-
-.lista-tags li {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 4px 12px;
-  padding: 8px 10px;
-  border: 1px solid var(--borda);
-  border-radius: 8px;
-}
-
-.tag-nome {
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
-
-.tag-minor,
-.tag-data {
-  font-size: 12px;
-  color: var(--tinta-secundaria);
-}
-
 .descricao-tag {
   margin: 0;
   padding: 10px 12px;

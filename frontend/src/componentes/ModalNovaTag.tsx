@@ -1,8 +1,6 @@
 import { useEffect } from 'react';
-import { mensagemDoErro } from '../api/cliente';
-import { useTagsDoRepositorio } from '../api/hooks';
 import type { IssueDaVersao, RepositorioDaVersao, Versao } from '../api/tipos';
-import { ROTULO_ACAO, formatarData, versaoNaDescricao } from '../dominio/versao';
+import { ROTULO_ACAO, versaoNaDescricao } from '../dominio/versao';
 
 interface Props {
   repositorio: RepositorioDaVersao;
@@ -16,8 +14,6 @@ export function descricaoDaTag(issues: IssueDaVersao[]) {
 }
 
 export function ModalNovaTag({ repositorio, versao, issues, aoFechar }: Props) {
-  const tags = useTagsDoRepositorio(repositorio.caminho);
-
   useEffect(() => {
     const aoTeclar = (evento: KeyboardEvent) => {
       if (evento.key === 'Escape') {
@@ -29,7 +25,6 @@ export function ModalNovaTag({ repositorio, versao, issues, aoFechar }: Props) {
     return () => window.removeEventListener('keydown', aoTeclar);
   }, [aoFechar]);
 
-  const encontradas = tags.data ?? [];
   const naDescricao = versaoNaDescricao(versao.descricao, repositorio.nome, versao.titulo);
 
   return (
@@ -38,12 +33,12 @@ export function ModalNovaTag({ repositorio, versao, issues, aoFechar }: Props) {
         className="modal modal-largo"
         role="dialog"
         aria-modal="true"
-        aria-label={`Nova tag em ${repositorio.nome}`}
+        aria-label={`Nova versão em ${repositorio.nome}`}
         onClick={(evento) => evento.stopPropagation()}
       >
         <header className="modal-cabecalho">
           <div>
-            <h2>Nova tag · {repositorio.nome}</h2>
+            <h2>Nova versão · {repositorio.nome}</h2>
             <p className="subtitulo">{repositorio.caminho}</p>
           </div>
           <button className="aba" onClick={aoFechar} aria-label="Fechar">
@@ -76,24 +71,6 @@ export function ModalNovaTag({ repositorio, versao, issues, aoFechar }: Props) {
         ) : (
           <p className="carregando">A milestone {versao.titulo} está sem descrição no GitLab.</p>
         )}
-
-        <h3 className="titulo-secao">Últimas três minors</h3>
-        {tags.isError ? <p className="erro">{mensagemDoErro(tags.error)}</p> : null}
-        {tags.isLoading ? <p className="carregando">Carregando as tags…</p> : null}
-        {!tags.isLoading && !tags.isError && encontradas.length === 0 ? (
-          <p className="carregando">Nenhuma tag no padrão de versão neste repositório.</p>
-        ) : null}
-        {encontradas.length > 0 ? (
-          <ul className="lista-tags">
-            {encontradas.map((tag) => (
-              <li key={tag.nome}>
-                <span className="tag-nome">{tag.nome}</span>
-                <span className="tag-minor">minor {tag.minor}</span>
-                <span className="tag-data">{formatarData(tag.criadaEm)}</span>
-              </li>
-            ))}
-          </ul>
-        ) : null}
 
         <h3 className="titulo-secao">
           Descrição da tag · {issues.length} {issues.length === 1 ? 'issue' : 'issues'}

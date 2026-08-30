@@ -19,6 +19,7 @@ export interface RepositorioDaVersao {
   caminho: string;
   nome: string;
   url: string;
+  urlTags: string;
   tasks: number;
   abertas: number;
   fechadas: number;
@@ -73,10 +74,12 @@ export function agruparPorRepositorio(
         continue;
       }
 
+      const url = `${base.replace(/\/+$/, '')}/${caminho}`;
       const repositorio = porCaminho.get(caminho) ?? {
         caminho,
         nome: nomeReduzido(caminho),
-        url: `${base.replace(/\/+$/, '')}/${caminho}`,
+        url,
+        urlTags: `${url}/-/tags`,
         tasks: 0,
         abertas: 0,
         fechadas: 0,

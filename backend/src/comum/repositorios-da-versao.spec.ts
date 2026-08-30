@@ -90,6 +90,7 @@ describe('agruparPorRepositorio', () => {
         caminho: 'mercantil/cliqq/cliqq-centralizado/backend',
         nome: 'cliqq-centralizado/backend',
         url: `${BASE}/mercantil/cliqq/cliqq-centralizado/backend`,
+        urlTags: `${BASE}/mercantil/cliqq/cliqq-centralizado/backend/-/tags`,
         tasks: 3,
         abertas: 2,
         fechadas: 1,
@@ -99,6 +100,7 @@ describe('agruparPorRepositorio', () => {
         caminho: 'mercantil/qq-filiais',
         nome: 'mercantil/qq-filiais',
         url: `${BASE}/mercantil/qq-filiais`,
+        urlTags: `${BASE}/mercantil/qq-filiais/-/tags`,
         tasks: 1,
         abertas: 1,
         fechadas: 0,
@@ -155,6 +157,14 @@ describe('agruparPorRepositorio', () => {
 
     expect(agruparPorRepositorio(issues, `${BASE}/`).repositorios[0].url).toBe(
       `${BASE}/mercantil/qq-preco`,
+    );
+  });
+
+  it('monta a URL das tags a partir do caminho do repositório', () => {
+    const issues = [issue(10, [task('mercantil/qq-preco')])];
+
+    expect(agruparPorRepositorio(issues, BASE).repositorios[0].urlTags).toBe(
+      `${BASE}/mercantil/qq-preco/-/tags`,
     );
   });
 });

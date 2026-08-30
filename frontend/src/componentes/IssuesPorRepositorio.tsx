@@ -13,16 +13,21 @@ export function IssuesPorRepositorio({ repositorios, issues }: Props) {
     <div className="repositorios-detalhados">
       {repositorios.map((repositorio) => (
         <section key={repositorio.caminho} className="repositorio-detalhado">
-          <header className="repositorio-identificacao">
-            <a
-              className="repositorio-nome"
-              href={repositorio.url}
-              target="_blank"
-              rel="noreferrer"
-            >
-              {repositorio.nome}
+          <header className="repositorio-detalhado-cabecalho">
+            <div className="repositorio-identificacao">
+              <a
+                className="repositorio-nome"
+                href={repositorio.url}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {repositorio.nome}
+              </a>
+              <span className="repositorio-caminho">{repositorio.caminho}</span>
+            </div>
+            <a className="aba" href={repositorio.urlTags} target="_blank" rel="noreferrer">
+              Ver tags
             </a>
-            <span className="repositorio-caminho">{repositorio.caminho}</span>
           </header>
 
           <ul className="issues-do-repositorio">

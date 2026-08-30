@@ -250,6 +250,7 @@ export interface RepositorioDaVersao {
   caminho: string;
   nome: string;
   url: string;
+  urlTags: string;
   tasks: number;
   abertas: number;
   fechadas: number;

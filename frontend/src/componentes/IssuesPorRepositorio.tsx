@@ -12,7 +12,15 @@ interface Props {
   issues: IssueDaVersao[];
 }
 
-/** Já entram marcadas as issues que o time deixou aguardando release. */
+/** Só entram na tag as issues que o time deixou aguardando release. */
+function selecionaveis(repositorio: RepositorioDaVersao, porId: Map<number, IssueDaVersao>) {
+  return repositorio.issues.filter((id) => porId.get(id)?.estado === ESTADO_PRONTO_PARA_TAG);
+}
+
+function naoSelecionaveis(repositorio: RepositorioDaVersao, porId: Map<number, IssueDaVersao>) {
+  return repositorio.issues.filter((id) => porId.get(id)?.estado !== ESTADO_PRONTO_PARA_TAG);
+}
+
 function selecaoInicial(
   repositorios: RepositorioDaVersao[],
   porId: Map<number, IssueDaVersao>,
@@ -20,19 +28,59 @@ function selecaoInicial(
   const inicial: Record<string, number[]> = {};
 
   for (const repositorio of repositorios) {
-    inicial[repositorio.caminho] = repositorio.issues.filter(
-      (id) => porId.get(id)?.estado === ESTADO_PRONTO_PARA_TAG,
-    );
+    inicial[repositorio.caminho] = selecionaveis(repositorio, porId);
   }
 
   return inicial;
 }
 
-export function IssuesPorRepositorio({ repositorios, issues }: Props) {
-  const porId = useMemo(
-    () => new Map(issues.map((issue) => [issue.id, issue])),
-    [issues],
+interface PropsDaLinha {
+  id: number;
+  issue: IssueDaVersao | undefined;
+  selecao: { marcada: boolean; aoAlternar: () => void; rotulo: string } | null;
+}
+
+function LinhaDaIssue({ id, issue, selecao }: PropsDaLinha) {
+  const fechada = issue?.situacao === 'fechada';
+  const classes = ['issue-linha'];
+
+  if (fechada) {
+    classes.push('issue-fechada');
+  }
+
+  if (!selecao) {
+    classes.push('issue-linha-sem-selecao');
+  }
+
+  return (
+    <li className={classes.join(' ')}>
+      {selecao ? (
+        <input
+          type="checkbox"
+          checked={selecao.marcada}
+          aria-label={selecao.rotulo}
+          onChange={selecao.aoAlternar}
+        />
+      ) : null}
+      <a className="issue-numero" href={issue?.url} target="_blank" rel="noreferrer">
+        #{id}
+      </a>
+      <span className="issue-linha-titulo">{issue?.titulo ?? 'issue fora da versão'}</span>
+      {issue ? (
+        <span className="issue-linha-dados">
+          <span className={fechada ? 'selo selo-pronto' : 'selo selo-pendente'}>
+            {fechada ? '✓' : '○'} {ROTULO_SITUACAO[issue.situacao]}
+          </span>
+          <span>{issue.estado ?? 'sem estado'}</span>
+          <span>{issue.responsavel ?? 'sem responsável'}</span>
+        </span>
+      ) : null}
+    </li>
   );
+}
+
+export function IssuesPorRepositorio({ repositorios, issues }: Props) {
+  const porId = useMemo(() => new Map(issues.map((issue) => [issue.id, issue])), [issues]);
   const [selecionadas, setSelecionadas] = useState<Record<string, number[]>>({});
   const [gerandoTagEm, setGerandoTagEm] = useState<string | null>(null);
 
@@ -55,13 +103,15 @@ export function IssuesPorRepositorio({ repositorios, issues }: Props) {
     });
 
   const alternarTodas = (repositorio: RepositorioDaVersao) =>
-    setSelecionadas((atual) => ({
-      ...atual,
-      [repositorio.caminho]:
-        (atual[repositorio.caminho] ?? []).length === repositorio.issues.length
-          ? []
-          : [...repositorio.issues],
-    }));
+    setSelecionadas((atual) => {
+      const disponiveis = selecionaveis(repositorio, porId);
+
+      return {
+        ...atual,
+        [repositorio.caminho]:
+          (atual[repositorio.caminho] ?? []).length === disponiveis.length ? [] : disponiveis,
+      };
+    });
 
   const aberto = repositorios.find((repositorio) => repositorio.caminho === gerandoTagEm) ?? null;
 
@@ -70,8 +120,12 @@ export function IssuesPorRepositorio({ repositorios, issues }: Props) {
       {repositorios.map((repositorio) => {
         const semVersionamento = ehRepositorioSemVersionamento(repositorio.caminho);
         const escolhidas = marcadas(repositorio.caminho);
+        const disponiveis = semVersionamento ? [] : selecionaveis(repositorio, porId);
+        const restantes = semVersionamento
+          ? repositorio.issues
+          : naoSelecionaveis(repositorio, porId);
         const todasMarcadas =
-          repositorio.issues.length > 0 && escolhidas.length === repositorio.issues.length;
+          disponiveis.length > 0 && escolhidas.length === disponiveis.length;
 
         return (
           <section key={repositorio.caminho} className="repositorio-detalhado">
@@ -92,7 +146,12 @@ export function IssuesPorRepositorio({ repositorios, issues }: Props) {
                   <span className="aviso-sincronizacao">versiona por aplicação</span>
                 ) : (
                   <>
-                    <button type="button" className="aba" onClick={() => alternarTodas(repositorio)}>
+                    <button
+                      type="button"
+                      className="aba"
+                      disabled={disponiveis.length === 0}
+                      onClick={() => alternarTodas(repositorio)}
+                    >
                       {todasMarcadas ? 'Desmarcar todas' : 'Marcar todas'}
                     </button>
                     <button
@@ -111,45 +170,38 @@ export function IssuesPorRepositorio({ repositorios, issues }: Props) {
               </div>
             </header>
 
-            <ul className="issues-do-repositorio">
-              {repositorio.issues.map((id) => {
-                const issue = porId.get(id);
-                const fechada = issue?.situacao === 'fechada';
+            {disponiveis.length > 0 ? (
+              <ul className="issues-do-repositorio">
+                {disponiveis.map((id) => (
+                  <LinhaDaIssue
+                    key={id}
+                    id={id}
+                    issue={porId.get(id)}
+                    selecao={{
+                      marcada: escolhidas.includes(id),
+                      rotulo: `Incluir a issue ${id} na tag de ${repositorio.nome}`,
+                      aoAlternar: () => alternarIssue(repositorio.caminho, id),
+                    }}
+                  />
+                ))}
+              </ul>
+            ) : null}
 
-                return (
-                  <li key={id} className={fechada ? 'issue-linha issue-fechada' : 'issue-linha'}>
-                    {semVersionamento ? null : (
-                      <input
-                        type="checkbox"
-                        checked={escolhidas.includes(id)}
-                        aria-label={`Incluir a issue ${id} na tag de ${repositorio.nome}`}
-                        onChange={() => alternarIssue(repositorio.caminho, id)}
-                      />
-                    )}
-                    <a
-                      className="issue-numero"
-                      href={issue?.url}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      #{id}
-                    </a>
-                    <span className="issue-linha-titulo">
-                      {issue?.titulo ?? 'issue fora da versão'}
-                    </span>
-                    {issue ? (
-                      <span className="issue-linha-dados">
-                        <span className={fechada ? 'selo selo-pronto' : 'selo selo-pendente'}>
-                          {fechada ? '✓' : '○'} {ROTULO_SITUACAO[issue.situacao]}
-                        </span>
-                        <span>{issue.estado ?? 'sem estado'}</span>
-                        <span>{issue.responsavel ?? 'sem responsável'}</span>
-                      </span>
-                    ) : null}
-                  </li>
-                );
-              })}
-            </ul>
+            {restantes.length > 0 ? (
+              <>
+                {semVersionamento ? null : (
+                  <p className="aviso-sincronizacao">
+                    Fora da tag — só issues em <code>{ESTADO_PRONTO_PARA_TAG}</code> podem ser
+                    selecionadas
+                  </p>
+                )}
+                <ul className="issues-do-repositorio">
+                  {restantes.map((id) => (
+                    <LinhaDaIssue key={id} id={id} issue={porId.get(id)} selecao={null} />
+                  ))}
+                </ul>
+              </>
+            ) : null}
           </section>
         );
       })}

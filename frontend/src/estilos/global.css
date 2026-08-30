@@ -1199,6 +1199,10 @@ textarea {
   color: var(--tinta-secundaria);
 }
 
+.issue-linha-sem-selecao {
+  color: var(--tinta-secundaria);
+}
+
 .issue-linha.issue-fechada .issue-linha-titulo {
   text-decoration: line-through;
 }

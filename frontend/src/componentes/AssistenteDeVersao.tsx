@@ -10,6 +10,7 @@ import {
 import type { IssueDaVersao, RepositorioDaVersao, VersaoPronta } from '../api/tipos';
 import {
   ESTADO_PRONTO_PARA_TAG,
+  dividirVersao,
   periodoDaVersao,
   proximaVersao,
   versaoNaDescricao,
@@ -74,8 +75,8 @@ export function AssistenteDeVersao() {
   const tagBase = naDescricao.acao === 'rc' ? naDescricao.tag : (tags.data?.[0]?.nome ?? null);
   const nova = naDescricao.acao ? proximaVersao(naDescricao.acao, tagBase) : null;
   /** Em uma nova RC só o `rcN` é destacado: o resto do número não mudou. */
-  const sufixoRc =
-    naDescricao.acao === 'rc' ? (/rc\d+$/i.exec(nova ?? '')?.[0] ?? null) : null;
+  const partesDaNova =
+    naDescricao.acao && nova ? dividirVersao(naDescricao.acao, nova) : null;
 
   const mensagemDaTag = marcadas
     .map((id) => {
@@ -215,14 +216,10 @@ export function AssistenteDeVersao() {
                   'calculando…'
                 ) : nova ? (
                   <strong className="numero-da-versao">
-                    {sufixoRc ? (
-                      <>
-                        {nova.slice(0, nova.length - sufixoRc.length)}
-                        <span className="numero-destacado">{sufixoRc}</span>
-                      </>
-                    ) : (
-                      <span className="numero-destacado">{nova}</span>
-                    )}
+                    {partesDaNova?.base}
+                    <span className="numero-destacado">
+                      {partesDaNova ? partesDaNova.destaque : nova}
+                    </span>
                   </strong>
                 ) : (
                   'não foi possível calcular'

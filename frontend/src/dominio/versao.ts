@@ -87,6 +87,20 @@ export function versaoNaDescricao(
 
 const PARTES_DA_TAG = /^v?_?(\d+)\.(\d+)\.(\d+)(?:-rc(\d+))?$/i;
 
+/** Corta o número no ponto em que a ação mexe: o começo não muda, o resto sim. */
+export function dividirVersao(acao: AcaoDeVersao, versao: string) {
+  const corte =
+    acao === 'rc'
+      ? /^(.*?)(rc\d+)$/i
+      : acao === 'patch'
+        ? /^(v?_?\d+\.\d+\.)(.*)$/i
+        : /^(v?_?\d+\.)(.*)$/i;
+
+  const partes = corte.exec(versao);
+
+  return partes ? { base: partes[1], destaque: partes[2] } : { base: '', destaque: versao };
+}
+
 /**
  * Nova RC sobe o rc da própria tag; patch e minor partem da maior tag do
  * repositório e recomeçam em rc1. O nome sai sempre no formato `v_`.

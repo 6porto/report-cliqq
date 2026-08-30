@@ -35,10 +35,11 @@ export function ehTask(filho: WorkItemFilho) {
   return TIPOS_DE_TASK.includes(tipo);
 }
 
-export function nomeCurto(caminho: string) {
+/** Dois últimos segmentos: só o nome do repositório é ambíguo (vários `backend`, vários `ui`). */
+export function nomeReduzido(caminho: string) {
   const partes = caminho.split('/').filter(Boolean);
 
-  return partes[partes.length - 1] ?? caminho;
+  return partes.slice(-2).join('/') || caminho;
 }
 
 export function tasksDaIssue(issue: WorkItemDaIssue): WorkItemFilho[] {
@@ -71,7 +72,7 @@ export function agruparPorRepositorio(
 
       const repositorio = porCaminho.get(caminho) ?? {
         caminho,
-        nome: nomeCurto(caminho),
+        nome: nomeReduzido(caminho),
         url: `${base.replace(/\/+$/, '')}/${caminho}`,
         tasks: 0,
         abertas: 0,

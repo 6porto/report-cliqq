@@ -1,7 +1,7 @@
 import {
   agruparPorRepositorio,
   ehTask,
-  nomeCurto,
+  nomeReduzido,
   tasksDaIssue,
   type WorkItemDaIssue,
   type WorkItemFilho,
@@ -41,13 +41,19 @@ describe('ehTask', () => {
   });
 });
 
-describe('nomeCurto', () => {
-  it('devolve o último segmento do caminho', () => {
-    expect(nomeCurto('mercantil/cliqq/cliqq-centralizado/backend')).toBe('backend');
+describe('nomeReduzido', () => {
+  it('junta o grupo imediato com o nome do repositório', () => {
+    expect(nomeReduzido('mercantil/cliqq/cliqq-centralizado/backend')).toBe(
+      'cliqq-centralizado/backend',
+    );
+  });
+
+  it('mantém os dois segmentos quando o caminho já tem esse tamanho', () => {
+    expect(nomeReduzido('mercantil/qq-filiais')).toBe('mercantil/qq-filiais');
   });
 
   it('aceita caminho de um nível só', () => {
-    expect(nomeCurto('qq-filiais')).toBe('qq-filiais');
+    expect(nomeReduzido('qq-filiais')).toBe('qq-filiais');
   });
 });
 
@@ -82,7 +88,7 @@ describe('agruparPorRepositorio', () => {
     expect(repositorios).toEqual([
       {
         caminho: 'mercantil/cliqq/cliqq-centralizado/backend',
-        nome: 'backend',
+        nome: 'cliqq-centralizado/backend',
         url: `${BASE}/mercantil/cliqq/cliqq-centralizado/backend`,
         tasks: 3,
         abertas: 2,
@@ -90,7 +96,7 @@ describe('agruparPorRepositorio', () => {
       },
       {
         caminho: 'mercantil/qq-filiais',
-        nome: 'qq-filiais',
+        nome: 'mercantil/qq-filiais',
         url: `${BASE}/mercantil/qq-filiais`,
         tasks: 1,
         abertas: 1,
@@ -99,14 +105,18 @@ describe('agruparPorRepositorio', () => {
     ]);
   });
 
-  it('ordena pelo nome curto, não pelo caminho completo', () => {
+  it('ordena pelo nome reduzido, não pelo caminho completo', () => {
     const issues = [
-      issue(10, [task('mercantil/zz-grupo/api'), task('mercantil/aa-grupo/ui')]),
+      issue(10, [
+        task('mercantil/xx/zz-grupo/api'),
+        task('mercantil/aa/aa-grupo/ui'),
+        task('mercantil/aa/bb-grupo/api'),
+      ]),
     ];
 
     const nomes = agruparPorRepositorio(issues, BASE).repositorios.map((repo) => repo.nome);
 
-    expect(nomes).toEqual(['api', 'ui']);
+    expect(nomes).toEqual(['aa-grupo/ui', 'bb-grupo/api', 'zz-grupo/api']);
   });
 
   it('lista as issues que não têm nenhuma task', () => {

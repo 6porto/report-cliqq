@@ -210,31 +210,33 @@ export function Versao() {
       ) : null}
 
       {selecionada ? (
-        <CartaoGrafico
-          largo
-          titulo="Repositórios envolvidos"
-          subtitulo="Projetos onde as tasks das issues desta versão foram abertas. Considera todas as issues da versão, sem os filtros acima."
-        >
-          {repositorios.isError ? (
-            <p className="erro">{mensagemDoErro(repositorios.error)}</p>
-          ) : null}
-          {repositorios.isLoading ? (
-            <p className="carregando">Carregando os repositórios…</p>
-          ) : null}
-          {!repositorios.isLoading && !repositorios.isError && envolvidos.length === 0 ? (
-            <p className="carregando">Nenhuma task encontrada nas issues desta versão.</p>
-          ) : null}
-          {envolvidos.length > 0 ? (
-            <ListaRepositoriosDaVersao repositorios={envolvidos} />
-          ) : null}
-          {issuesSemTask.length > 0 ? (
-            <p className="aviso-sincronizacao">
-              {issuesSemTask.length}{' '}
-              {issuesSemTask.length === 1 ? 'issue ainda sem task' : 'issues ainda sem task'}:{' '}
-              {issuesSemTask.map((id) => `#${id}`).join(', ')}
-            </p>
-          ) : null}
-        </CartaoGrafico>
+        <div className="secao-repositorios">
+          <CartaoGrafico
+            largo
+            titulo="Repositórios envolvidos"
+            subtitulo="Projetos onde as tasks das issues desta versão foram abertas. Considera todas as issues da versão, sem os filtros acima."
+          >
+            {repositorios.isError ? (
+              <p className="erro">{mensagemDoErro(repositorios.error)}</p>
+            ) : null}
+            {repositorios.isLoading ? (
+              <p className="carregando">Carregando os repositórios…</p>
+            ) : null}
+            {!repositorios.isLoading && !repositorios.isError && envolvidos.length === 0 ? (
+              <p className="carregando">Nenhuma task encontrada nas issues desta versão.</p>
+            ) : null}
+            {envolvidos.length > 0 ? (
+              <ListaRepositoriosDaVersao repositorios={envolvidos} />
+            ) : null}
+            {issuesSemTask.length > 0 ? (
+              <p className="aviso-sincronizacao">
+                {issuesSemTask.length}{' '}
+                {issuesSemTask.length === 1 ? 'issue ainda sem task' : 'issues ainda sem task'}:{' '}
+                {issuesSemTask.map((id) => `#${id}`).join(', ')}
+              </p>
+            ) : null}
+          </CartaoGrafico>
+        </div>
       ) : null}
 
       {!selecionada && listadas.length > 0 ? (

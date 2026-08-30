@@ -1051,6 +1051,10 @@ textarea {
   font-size: 12px;
 }
 
+.secao-repositorios {
+  margin-top: 16px;
+}
+
 .lista-repositorios {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));

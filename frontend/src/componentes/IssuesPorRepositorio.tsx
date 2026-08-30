@@ -160,7 +160,7 @@ export function IssuesPorRepositorio({ repositorios, issues }: Props) {
                       disabled={escolhidas.length === 0}
                       onClick={() => setGerandoTagEm(repositorio.caminho)}
                     >
-                      Gerar nova tag
+                      Gerar versão
                     </button>
                   </>
                 )}

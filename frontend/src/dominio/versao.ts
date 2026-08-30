@@ -1,7 +1,7 @@
 import type { IssueDaVersao, Versao } from '../api/tipos';
 
 /** Espelha PREFIXOS_DE_VERSAO do backend (backend/src/comum/versao-gitlab.ts). */
-export const PREFIXOS_DE_VERSAO = ['feature/', 'fix/'] as const;
+export const PREFIXOS_DE_VERSAO = ['release/', 'fix/'] as const;
 
 export const COLUNAS_ORDENAVEIS = [
   'id',

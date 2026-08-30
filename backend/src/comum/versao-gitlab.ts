@@ -3,7 +3,7 @@ import { PROJETO_DAS_ISSUES } from './issues-gitlab';
 export { PROJETO_DAS_ISSUES };
 
 /** Só milestones cujo título começa com um destes prefixos entram na aba Versão. */
-export const PREFIXOS_DE_VERSAO = ['feature/', 'fix/'] as const;
+export const PREFIXOS_DE_VERSAO = ['release/', 'fix/'] as const;
 
 const PREFIXO_TIPO = 'type::';
 const PREFIXO_ESTADO = 'state::';

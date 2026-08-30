@@ -15,7 +15,7 @@ class MilestoneBuilder {
   private milestone: MilestoneGitlab = {
     id: 412,
     iid: 37,
-    title: 'feature/2026-09-carrossel',
+    title: 'release/2026-09-carrossel',
     description: 'Entrega do carrossel na home',
     state: 'active',
     start_date: '2026-09-01',
@@ -98,14 +98,15 @@ class IssueBuilder {
 
 describe('ehTituloDeVersao', () => {
   it.each([
-    ['feature/2026-09-carrossel', true],
+    ['release/2026-09-carrossel', true],
     ['fix/correcao-pix', true],
-    ['FEATURE/2026-09-carrossel', true],
+    ['RELEASE/2026-09-carrossel', true],
     ['Fix/Correcao-Pix', true],
-    ['  feature/com-espaco', true],
+    ['  release/com-espaco', true],
     ['feat/2026-09', false],
-    ['release/1.2.0', false],
-    ['refeature/algo', false],
+    ['feature/2026-09-carrossel', false],
+    ['hotfix/1.2.0', false],
+    ['prerelease/algo', false],
     ['sprint 42', false],
   ])('reconhece %s como versão: %s', (titulo, esperado) => {
     expect(ehTituloDeVersao(titulo)).toBe(esperado);
@@ -141,7 +142,7 @@ describe('mapearMilestone', () => {
     expect(versao).toEqual({
       id: 412,
       iid: 37,
-      titulo: 'feature/2026-09-carrossel',
+      titulo: 'release/2026-09-carrossel',
       descricao: 'Entrega do carrossel na home',
       estado: 'active',
       dataInicio: '2026-09-01',
@@ -158,14 +159,14 @@ describe('mapearMilestone', () => {
 describe('filtrarVersoes', () => {
   it('descarta milestones fora dos prefixos e mantém as fechadas', () => {
     const milestones = [
-      new MilestoneBuilder().comId(1).comTitulo('feature/nova-home').build(),
+      new MilestoneBuilder().comId(1).comTitulo('release/nova-home').build(),
       new MilestoneBuilder().comId(2).comTitulo('sprint 42').build(),
       new MilestoneBuilder().comId(3).comTitulo('fix/pix').comEstado('closed').build(),
     ];
 
     expect(filtrarVersoes(milestones).map((versao) => versao.titulo)).toEqual([
       'fix/pix',
-      'feature/nova-home',
+      'release/nova-home',
     ]);
   });
 });
@@ -174,13 +175,13 @@ describe('ordenarVersoes', () => {
   it('põe a entrega mais recente primeiro e as sem data no fim', () => {
     const milestones = [
       new MilestoneBuilder().comId(1).comTitulo('fix/antiga').comDataFim('2026-07-01').build(),
-      new MilestoneBuilder().comId(2).comTitulo('feature/sem-data').comDataFim(null).build(),
-      new MilestoneBuilder().comId(3).comTitulo('feature/nova').comDataFim('2026-10-01').build(),
+      new MilestoneBuilder().comId(2).comTitulo('release/sem-data').comDataFim(null).build(),
+      new MilestoneBuilder().comId(3).comTitulo('release/nova').comDataFim('2026-10-01').build(),
     ];
 
     const titulos = ordenarVersoes(milestones.map(mapearMilestone)).map((versao) => versao.titulo);
 
-    expect(titulos).toEqual(['feature/nova', 'fix/antiga', 'feature/sem-data']);
+    expect(titulos).toEqual(['release/nova', 'fix/antiga', 'release/sem-data']);
   });
 });
 

@@ -69,6 +69,9 @@ export function AssistenteDeVersao() {
   /** Nova RC parte da tag citada na descrição; patch e minor, da maior tag do repositório. */
   const tagBase = naDescricao.acao === 'rc' ? naDescricao.tag : (tags.data?.[0]?.nome ?? null);
   const nova = naDescricao.acao ? proximaVersao(naDescricao.acao, tagBase) : null;
+  /** Em uma nova RC só o `rcN` é destacado: o resto do número não mudou. */
+  const sufixoRc =
+    naDescricao.acao === 'rc' ? (/rc\d+$/i.exec(nova ?? '')?.[0] ?? null) : null;
   const porId = new Map(prontas.map((issue) => [issue.id, issue]));
   const carregandoEtapa2 = issues.isLoading || repositorios.isLoading;
   const erro = versoes.error ?? issues.error ?? repositorios.error;
@@ -199,7 +202,16 @@ export function AssistenteDeVersao() {
                 {tags.isLoading ? (
                   'calculando…'
                 ) : nova ? (
-                  <strong className="numero-da-versao">{nova}</strong>
+                  <strong className="numero-da-versao">
+                    {sufixoRc ? (
+                      <>
+                        {nova.slice(0, nova.length - sufixoRc.length)}
+                        <span className="numero-destacado">{sufixoRc}</span>
+                      </>
+                    ) : (
+                      <span className="numero-destacado">{nova}</span>
+                    )}
+                  </strong>
                 ) : (
                   'não foi possível calcular'
                 )}

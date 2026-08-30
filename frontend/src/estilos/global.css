@@ -1157,6 +1157,9 @@ button.escolha {
 .numero-da-versao {
   font-size: 16px;
   font-variant-numeric: tabular-nums;
+}
+
+.numero-destacado {
   color: var(--serie-1);
 }
 

@@ -34,6 +34,17 @@ export const DIRECAO_INICIAL: Record<ColunaIssue, 'asc' | 'desc'> = {
   atualizadaEm: 'desc',
 };
 
+export const ROTULO_ORDENACAO: Record<ColunaIssue, string> = {
+  id: 'Número da issue',
+  titulo: 'Título',
+  tipos: 'Tipo',
+  estado: 'Estado',
+  sistema: 'Sistema',
+  responsavel: 'Responsável',
+  situacao: 'Situação',
+  atualizadaEm: 'Última atualização',
+};
+
 export type FiltroSituacao = 'todas' | 'aberta' | 'fechada';
 
 export interface FiltrosDeIssues {

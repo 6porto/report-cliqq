@@ -2,13 +2,14 @@ import { useMemo, useState } from 'react';
 import { mensagemDoErro } from '../api/cliente';
 import { useIssuesDaVersao, useVersoes } from '../api/hooks';
 import { CartaoGrafico } from '../componentes/CartaoGrafico';
-import { TabelaIssuesDaVersao } from '../componentes/TabelaIssuesDaVersao';
+import { ListaIssuesDaVersao } from '../componentes/ListaIssuesDaVersao';
 import {
-  DIRECAO_INICIAL,
+  COLUNAS_ORDENAVEIS,
   FILTROS_INICIAIS,
   ORDENACAO_PADRAO,
   PREFIXOS_DE_VERSAO,
   ROTULO_ESTADO_VERSAO,
+  ROTULO_ORDENACAO,
   ehVersaoAtiva,
   filtrarIssues,
   periodoDaVersao,
@@ -43,12 +44,11 @@ export function Versao() {
     setOrdenacao(ORDENACAO_PADRAO);
   };
 
-  const alternarOrdenacao = (coluna: ColunaIssue) =>
-    setOrdenacao((atual) =>
-      atual.coluna === coluna
-        ? { coluna, direcao: atual.direcao === 'asc' ? 'desc' : 'asc' }
-        : { coluna, direcao: DIRECAO_INICIAL[coluna] },
-    );
+  const inverterDirecao = () =>
+    setOrdenacao((atual) => ({
+      ...atual,
+      direcao: atual.direcao === 'asc' ? 'desc' : 'asc',
+    }));
 
   return (
     <>
@@ -163,6 +163,30 @@ export function Versao() {
                 setFiltros((atual) => ({ ...atual, busca: evento.target.value }))
               }
             />
+            <select
+              value={ordenacao.coluna}
+              aria-label="Ordenar por"
+              onChange={(evento) =>
+                setOrdenacao((atual) => ({
+                  ...atual,
+                  coluna: evento.target.value as ColunaIssue,
+                }))
+              }
+            >
+              {COLUNAS_ORDENAVEIS.map((coluna) => (
+                <option key={coluna} value={coluna}>
+                  Ordenar por {ROTULO_ORDENACAO[coluna].toLowerCase()}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              className="aba"
+              onClick={inverterDirecao}
+              title="Inverter a ordem"
+            >
+              {ordenacao.direcao === 'asc' ? '▲ crescente' : '▼ decrescente'}
+            </button>
             <span className="aviso-sincronizacao">
               {filtradas.length} de {carregadas.length} issues
             </span>
@@ -176,11 +200,7 @@ export function Versao() {
             <p className="carregando">Nenhuma issue com esses filtros.</p>
           ) : null}
           {filtradas.length > 0 ? (
-            <TabelaIssuesDaVersao
-              issues={filtradas}
-              ordenacao={ordenacao}
-              aoOrdenar={alternarOrdenacao}
-            />
+            <ListaIssuesDaVersao issues={filtradas} ordenacao={ordenacao} />
           ) : null}
         </CartaoGrafico>
       ) : null}

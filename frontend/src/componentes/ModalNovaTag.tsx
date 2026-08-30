@@ -1,11 +1,12 @@
 import { useEffect } from 'react';
 import { mensagemDoErro } from '../api/cliente';
 import { useTagsDoRepositorio } from '../api/hooks';
-import type { IssueDaVersao, RepositorioDaVersao } from '../api/tipos';
+import type { IssueDaVersao, RepositorioDaVersao, Versao } from '../api/tipos';
 import { formatarData } from '../dominio/versao';
 
 interface Props {
   repositorio: RepositorioDaVersao;
+  versao: Versao;
   issues: IssueDaVersao[];
   aoFechar: () => void;
 }
@@ -14,7 +15,7 @@ export function descricaoDaTag(issues: IssueDaVersao[]) {
   return issues.map((issue) => `- [#${issue.id}](${issue.url}) ${issue.titulo}`).join('\n');
 }
 
-export function ModalNovaTag({ repositorio, issues, aoFechar }: Props) {
+export function ModalNovaTag({ repositorio, versao, issues, aoFechar }: Props) {
   const tags = useTagsDoRepositorio(repositorio.caminho);
 
   useEffect(() => {
@@ -48,6 +49,13 @@ export function ModalNovaTag({ repositorio, issues, aoFechar }: Props) {
             ✕
           </button>
         </header>
+
+        <h3 className="titulo-secao">Descrição da versão · {versao.titulo}</h3>
+        {versao.descricao ? (
+          <pre className="descricao-tag">{versao.descricao}</pre>
+        ) : (
+          <p className="carregando">A milestone {versao.titulo} está sem descrição no GitLab.</p>
+        )}
 
         <h3 className="titulo-secao">Últimas três minors</h3>
         {tags.isError ? <p className="erro">{mensagemDoErro(tags.error)}</p> : null}

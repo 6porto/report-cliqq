@@ -258,7 +258,11 @@ export function Versao() {
               <p className="carregando">Nenhuma task encontrada nas issues desta versão.</p>
             ) : null}
             {envolvidos.length > 0 ? (
-              <IssuesPorRepositorio repositorios={envolvidos} issues={carregadas} />
+              <IssuesPorRepositorio
+                repositorios={envolvidos}
+                issues={carregadas}
+                versao={selecionada}
+              />
             ) : null}
           </CartaoGrafico>
         </div>

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { IssueDaVersao, RepositorioDaVersao } from '../api/tipos';
+import type { IssueDaVersao, RepositorioDaVersao, Versao } from '../api/tipos';
 import {
   ESTADO_PRONTO_PARA_TAG,
   ROTULO_SITUACAO,
@@ -10,6 +10,7 @@ import { ModalNovaTag } from './ModalNovaTag';
 interface Props {
   repositorios: RepositorioDaVersao[];
   issues: IssueDaVersao[];
+  versao: Versao;
 }
 
 /** Só entram na tag as issues que o time deixou aguardando release. */
@@ -79,7 +80,7 @@ function LinhaDaIssue({ id, issue, selecao }: PropsDaLinha) {
   );
 }
 
-export function IssuesPorRepositorio({ repositorios, issues }: Props) {
+export function IssuesPorRepositorio({ repositorios, issues, versao }: Props) {
   const porId = useMemo(() => new Map(issues.map((issue) => [issue.id, issue])), [issues]);
   const [selecionadas, setSelecionadas] = useState<Record<string, number[]>>({});
   const [gerandoTagEm, setGerandoTagEm] = useState<string | null>(null);
@@ -209,6 +210,7 @@ export function IssuesPorRepositorio({ repositorios, issues }: Props) {
       {aberto ? (
         <ModalNovaTag
           repositorio={aberto}
+          versao={versao}
           issues={marcadas(aberto.caminho)
             .map((id) => porId.get(id))
             .filter((issue): issue is IssueDaVersao => !!issue)

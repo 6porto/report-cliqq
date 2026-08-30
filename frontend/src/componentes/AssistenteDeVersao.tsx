@@ -78,13 +78,18 @@ export function AssistenteDeVersao() {
   const partesDaNova =
     naDescricao.acao && nova ? dividirVersao(naDescricao.acao, nova) : null;
 
-  const mensagemDaTag = marcadas
-    .map((id) => {
+  /** A mensagem da tag abre com a milestone que a originou e lista as issues. */
+  const mensagemDaTag = [
+    versaoEscolhida
+      ? `Milestone: [${versaoEscolhida.titulo}](${versaoEscolhida.url})`
+      : 'Milestone: —',
+    '',
+    ...marcadas.map((id) => {
       const issue = porId.get(id);
 
       return issue ? `- [#${issue.id}](${issue.url}) ${issue.titulo}` : `- #${id}`;
-    })
-    .join('\n');
+    }),
+  ].join('\n');
   const gerada = gerar.data ?? null;
   const carregandoEtapa2 = issues.isLoading || repositorios.isLoading;
   const erro = versoes.error ?? issues.error ?? repositorios.error;

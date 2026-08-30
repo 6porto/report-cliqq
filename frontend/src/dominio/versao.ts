@@ -14,6 +14,9 @@ export function ehRepositorioSemVersionamento(caminho: string) {
   return REPOSITORIOS_SEM_VERSIONAMENTO.includes(caminho);
 }
 
+/** Issues nesse estado já entram marcadas na geração de tag. */
+export const ESTADO_PRONTO_PARA_TAG = 'aguardando-release';
+
 export const COLUNAS_ORDENAVEIS = [
   'id',
   'titulo',

@@ -1,6 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { IssueDaVersao, RepositorioDaVersao } from '../api/tipos';
-import { ROTULO_SITUACAO, ehRepositorioSemVersionamento } from '../dominio/versao';
+import {
+  ESTADO_PRONTO_PARA_TAG,
+  ROTULO_SITUACAO,
+  ehRepositorioSemVersionamento,
+} from '../dominio/versao';
 import { ModalNovaTag } from './ModalNovaTag';
 
 interface Props {
@@ -8,10 +12,33 @@ interface Props {
   issues: IssueDaVersao[];
 }
 
+/** Já entram marcadas as issues que o time deixou aguardando release. */
+function selecaoInicial(
+  repositorios: RepositorioDaVersao[],
+  porId: Map<number, IssueDaVersao>,
+): Record<string, number[]> {
+  const inicial: Record<string, number[]> = {};
+
+  for (const repositorio of repositorios) {
+    inicial[repositorio.caminho] = repositorio.issues.filter(
+      (id) => porId.get(id)?.estado === ESTADO_PRONTO_PARA_TAG,
+    );
+  }
+
+  return inicial;
+}
+
 export function IssuesPorRepositorio({ repositorios, issues }: Props) {
-  const porId = new Map(issues.map((issue) => [issue.id, issue]));
+  const porId = useMemo(
+    () => new Map(issues.map((issue) => [issue.id, issue])),
+    [issues],
+  );
   const [selecionadas, setSelecionadas] = useState<Record<string, number[]>>({});
   const [gerandoTagEm, setGerandoTagEm] = useState<string | null>(null);
+
+  useEffect(() => {
+    setSelecionadas(selecaoInicial(repositorios, porId));
+  }, [repositorios, porId]);
 
   const marcadas = (caminho: string) => selecionadas[caminho] ?? [];
 

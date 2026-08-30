@@ -38,7 +38,10 @@ export function Versao() {
   const selecionada = todasAsVersoes.find((versao) => versao.titulo === versaoSelecionada) ?? null;
 
   const carregadas = useMemo(() => issues.data ?? [], [issues.data]);
-  const envolvidos = repositorios.data?.repositorios ?? [];
+  const envolvidos = useMemo(
+    () => repositorios.data?.repositorios ?? [],
+    [repositorios.data],
+  );
   const issuesSemTask = repositorios.data?.issuesSemTask ?? [];
   const filtradas = useMemo(() => filtrarIssues(carregadas, filtros), [carregadas, filtros]);
   const sistemas = useMemo(() => sistemasDistintos(carregadas), [carregadas]);

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { mensagemDoErro } from '../api/cliente';
 import { useIssuesDaVersao, useRepositoriosDaVersao, useVersoes } from '../api/hooks';
 import { CartaoGrafico } from '../componentes/CartaoGrafico';
+import { IssuesPorRepositorio } from '../componentes/IssuesPorRepositorio';
 import { ListaIssuesDaVersao } from '../componentes/ListaIssuesDaVersao';
 import { ListaRepositoriosDaVersao } from '../componentes/ListaRepositoriosDaVersao';
 import {
@@ -234,6 +235,26 @@ export function Versao() {
                 {issuesSemTask.length === 1 ? 'issue ainda sem task' : 'issues ainda sem task'}:{' '}
                 {issuesSemTask.map((id) => `#${id}`).join(', ')}
               </p>
+            ) : null}
+          </CartaoGrafico>
+        </div>
+      ) : null}
+
+      {selecionada ? (
+        <div className="secao-repositorios">
+          <CartaoGrafico
+            largo
+            titulo="Versões"
+            subtitulo="Cada repositório com as issues da versão que têm task nele. Uma issue aparece em todos os repositórios onde foi desdobrada."
+          >
+            {repositorios.isLoading || issues.isLoading ? (
+              <p className="carregando">Carregando…</p>
+            ) : null}
+            {!repositorios.isLoading && !repositorios.isError && envolvidos.length === 0 ? (
+              <p className="carregando">Nenhuma task encontrada nas issues desta versão.</p>
+            ) : null}
+            {envolvidos.length > 0 ? (
+              <IssuesPorRepositorio repositorios={envolvidos} issues={carregadas} />
             ) : null}
           </CartaoGrafico>
         </div>

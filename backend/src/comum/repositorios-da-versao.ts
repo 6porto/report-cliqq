@@ -22,6 +22,8 @@ export interface RepositorioDaVersao {
   tasks: number;
   abertas: number;
   fechadas: number;
+  /** Issues de `mercantil/mercantil` que têm ao menos uma task neste repositório. */
+  issues: number[];
 }
 
 export interface RepositoriosDaVersao {
@@ -53,6 +55,7 @@ export function agruparPorRepositorio(
   base: string,
 ): RepositoriosDaVersao {
   const porCaminho = new Map<string, RepositorioDaVersao>();
+  const issuesPorCaminho = new Map<string, Set<number>>();
   const issuesSemTask: number[] = [];
 
   for (const issue of issues) {
@@ -77,9 +80,14 @@ export function agruparPorRepositorio(
         tasks: 0,
         abertas: 0,
         fechadas: 0,
+        issues: [],
       };
 
       repositorio.tasks += 1;
+
+      const vinculadas = issuesPorCaminho.get(caminho) ?? new Set<number>();
+      vinculadas.add(Number(issue.iid));
+      issuesPorCaminho.set(caminho, vinculadas);
 
       if (task.state === 'CLOSED' || task.state === 'closed') {
         repositorio.fechadas += 1;
@@ -89,6 +97,12 @@ export function agruparPorRepositorio(
 
       porCaminho.set(caminho, repositorio);
     }
+  }
+
+  for (const repositorio of porCaminho.values()) {
+    repositorio.issues = [...(issuesPorCaminho.get(repositorio.caminho) ?? [])].sort(
+      (a, b) => a - b,
+    );
   }
 
   const repositorios = [...porCaminho.values()].sort(

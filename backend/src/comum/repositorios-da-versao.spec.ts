@@ -93,6 +93,7 @@ describe('agruparPorRepositorio', () => {
         tasks: 3,
         abertas: 2,
         fechadas: 1,
+        issues: [10, 11],
       },
       {
         caminho: 'mercantil/qq-filiais',
@@ -101,8 +102,26 @@ describe('agruparPorRepositorio', () => {
         tasks: 1,
         abertas: 1,
         fechadas: 0,
+        issues: [10],
       },
     ]);
+  });
+
+  it('lista as issues de cada repositório sem repetir e em ordem numérica', () => {
+    const issues = [
+      issue(30, [task('mercantil/qq-preco'), task('mercantil/qq-preco')]),
+      issue(7, [task('mercantil/qq-preco')]),
+    ];
+
+    expect(agruparPorRepositorio(issues, BASE).repositorios[0].issues).toEqual([7, 30]);
+  });
+
+  it('repete a issue em cada repositório onde ela tem task', () => {
+    const issues = [issue(42, [task('mercantil/aa/backend'), task('mercantil/aa/ui')])];
+
+    const repositorios = agruparPorRepositorio(issues, BASE).repositorios;
+
+    expect(repositorios.map((repo) => repo.issues)).toEqual([[42], [42]]);
   });
 
   it('ordena pelo nome reduzido, não pelo caminho completo', () => {

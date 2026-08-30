@@ -253,6 +253,7 @@ export interface RepositorioDaVersao {
   tasks: number;
   abertas: number;
   fechadas: number;
+  issues: number[];
 }
 
 export interface RepositoriosDaVersao {

@@ -1102,6 +1102,53 @@ textarea {
   color: var(--tinta-secundaria);
 }
 
+.repositorios-detalhados {
+  display: grid;
+  gap: 12px;
+}
+
+.repositorio-detalhado {
+  padding: 12px 14px;
+  border: 1px solid var(--borda);
+  border-radius: 12px;
+  background: var(--fundo-cartao);
+}
+
+.issues-do-repositorio {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+}
+
+.issue-linha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  padding-top: 6px;
+  border-top: 1px solid var(--borda);
+}
+
+.issue-linha-titulo {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+.issue-linha-dados {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  font-size: 12px;
+  color: var(--tinta-secundaria);
+}
+
+.issue-linha.issue-fechada .issue-linha-titulo {
+  text-decoration: line-through;
+}
+
 .lista-issues {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));

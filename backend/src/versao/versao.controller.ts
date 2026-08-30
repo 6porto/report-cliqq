@@ -12,6 +12,11 @@ export class VersaoController {
     return this.versaoService.listarVersoes();
   }
 
+  @Get('prontas')
+  listarVersoesProntas() {
+    return this.versaoService.listarVersoesProntas();
+  }
+
   @Get('issues')
   listarIssues(@Query() filtro: FiltroIssuesDto) {
     return this.versaoService.listarIssues(filtro.milestone);

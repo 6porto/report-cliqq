@@ -246,6 +246,10 @@ export interface Versao {
   url: string;
 }
 
+export interface VersaoPronta extends Versao {
+  issuesNoEstado: number;
+}
+
 export interface RepositorioDaVersao {
   caminho: string;
   nome: string;

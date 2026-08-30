@@ -43,6 +43,11 @@ export class GitlabService {
     });
   }
 
+  /** Issues abertas com um label específico; cada uma já traz a milestone embutida. */
+  async listarIssuesPorLabel<T>(label: string): Promise<T[]> {
+    return this.paginar<T>('issues', { labels: label, state: 'opened', scope: 'all' });
+  }
+
   async listarTags(caminhoDoProjeto: string): Promise<TagGitlab[]> {
     const token = this.token();
     const projeto = encodeURIComponent(caminhoDoProjeto);

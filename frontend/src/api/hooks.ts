@@ -23,6 +23,7 @@ import type {
   StatusPorDia,
   StatusRollout,
   Versao,
+  VersaoPronta,
 } from './tipos';
 
 export function useResumo() {
@@ -295,6 +296,13 @@ export function useVersoes() {
   return useQuery({
     queryKey: ['versoes'],
     queryFn: () => api.get<Versao[]>('/versao/milestones'),
+  });
+}
+
+export function useVersoesProntas() {
+  return useQuery({
+    queryKey: ['versoes-prontas'],
+    queryFn: () => api.get<VersaoPronta[]>('/versao/prontas'),
   });
 }
 

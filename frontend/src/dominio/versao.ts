@@ -19,6 +19,18 @@ export function ehVersaoAtiva(versao: Versao) {
   return versao.estado !== 'closed';
 }
 
+export function formatarData(valor: string | null) {
+  return valor ? new Date(valor).toLocaleDateString('pt-BR') : '—';
+}
+
+export function periodoDaVersao(versao: Versao) {
+  if (!versao.dataInicio && !versao.dataFim) {
+    return 'sem período definido';
+  }
+
+  return `${formatarData(versao.dataInicio)} até ${formatarData(versao.dataFim)}`;
+}
+
 export function ehRepositorioSemVersionamento(caminho: string) {
   return REPOSITORIOS_SEM_VERSIONAMENTO.includes(caminho);
 }

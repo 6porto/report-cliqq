@@ -5,7 +5,14 @@ import {
   type WorkItemDaIssue,
 } from '../comum/repositorios-da-versao';
 import { ehRepositorioSemVersionamento, ultimasMinors } from '../comum/tags-gitlab';
-import { PROJETO_DAS_ISSUES, filtrarVersoes, mapearIssuesDaVersao } from '../comum/versao-gitlab';
+import {
+  ESTADO_PRONTO_PARA_RELEASE,
+  PROJETO_DAS_ISSUES,
+  filtrarVersoes,
+  mapearIssuesDaVersao,
+  versoesProntas,
+  type IssueComMilestone,
+} from '../comum/versao-gitlab';
 import { GitlabService } from '../gitlab/gitlab.service';
 
 const CONSULTA_DAS_TASKS = `
@@ -43,6 +50,15 @@ export class VersaoService {
 
   async listarVersoes() {
     return filtrarVersoes(await this.gitlab.listarMilestones());
+  }
+
+  /** Primeira etapa do wizard: versões com pelo menos uma issue pronta para release. */
+  async listarVersoesProntas() {
+    const issues = await this.gitlab.listarIssuesPorLabel<IssueComMilestone>(
+      `state::${ESTADO_PRONTO_PARA_RELEASE}`,
+    );
+
+    return versoesProntas(issues);
   }
 
   async listarIssues(milestone: string) {

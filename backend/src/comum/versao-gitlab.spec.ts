@@ -7,6 +7,7 @@ import {
   ordenarVersoes,
   valorDoLabel,
   valoresDoLabel,
+  versoesProntas,
   type IssueDaVersaoGitlab,
   type MilestoneGitlab,
 } from './versao-gitlab';
@@ -182,6 +183,45 @@ describe('ordenarVersoes', () => {
     const titulos = ordenarVersoes(milestones.map(mapearMilestone)).map((versao) => versao.titulo);
 
     expect(titulos).toEqual(['release/nova', 'fix/antiga', 'release/sem-data']);
+  });
+});
+
+describe('versoesProntas', () => {
+  it('agrupa as issues por milestone e conta quantas estão prontas', () => {
+    const fix = new MilestoneBuilder()
+      .comId(1)
+      .comTitulo('fix/001')
+      .comDataFim('2026-09-01')
+      .build();
+    const release = new MilestoneBuilder()
+      .comId(2)
+      .comTitulo('release/001')
+      .comDataFim('2026-09-04')
+      .build();
+
+    const prontas = versoesProntas([
+      { iid: 10, milestone: fix },
+      { iid: 11, milestone: release },
+      { iid: 12, milestone: fix },
+    ]);
+
+    expect(prontas.map((versao) => [versao.titulo, versao.issuesNoEstado])).toEqual([
+      ['release/001', 1],
+      ['fix/001', 2],
+    ]);
+  });
+
+  it('descarta issue sem milestone, milestone fechada e título fora dos prefixos', () => {
+    const fechada = new MilestoneBuilder().comId(3).comTitulo('fix/002').comEstado('closed').build();
+    const sprint = new MilestoneBuilder().comId(4).comTitulo('sprint::2026-abr').build();
+
+    const prontas = versoesProntas([
+      { iid: 20, milestone: null },
+      { iid: 21, milestone: fechada },
+      { iid: 22, milestone: sprint },
+    ]);
+
+    expect(prontas).toEqual([]);
   });
 });
 

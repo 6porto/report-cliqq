@@ -31,6 +31,45 @@ export interface Versao {
   url: string;
 }
 
+/** Estado em que a issue está pronta para entrar em uma nova versão. */
+export const ESTADO_PRONTO_PARA_RELEASE = 'aguardando-release';
+
+export interface VersaoPronta extends Versao {
+  issuesNoEstado: number;
+}
+
+export interface IssueComMilestone {
+  iid: number | string;
+  milestone: MilestoneGitlab | null;
+}
+
+/**
+ * Agrupa pela milestone as issues já filtradas pelo label de estado: sobram as
+ * versões ativas que têm ao menos uma issue pronta.
+ */
+export function versoesProntas(issues: IssueComMilestone[]): VersaoPronta[] {
+  const porId = new Map<number, VersaoPronta>();
+
+  for (const issue of issues) {
+    const milestone = issue.milestone;
+
+    if (!milestone || milestone.state === 'closed' || !ehTituloDeVersao(milestone.title)) {
+      continue;
+    }
+
+    const conhecida = porId.get(milestone.id);
+
+    if (conhecida) {
+      conhecida.issuesNoEstado += 1;
+      continue;
+    }
+
+    porId.set(milestone.id, { ...mapearMilestone(milestone), issuesNoEstado: 1 });
+  }
+
+  return ordenarVersoes([...porId.values()]) as VersaoPronta[];
+}
+
 export interface IssueDaVersaoGitlab {
   iid: number | string;
   title: string;

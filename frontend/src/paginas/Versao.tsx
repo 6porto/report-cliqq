@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { mensagemDoErro } from '../api/cliente';
 import { useIssuesDaVersao, useRepositoriosDaVersao, useVersoes } from '../api/hooks';
+import { AssistenteDeVersao } from '../componentes/AssistenteDeVersao';
 import { CartaoGrafico } from '../componentes/CartaoGrafico';
 import { IssuesPorRepositorio } from '../componentes/IssuesPorRepositorio';
 import { PREFIXOS_DE_VERSAO, ehVersaoAtiva } from '../dominio/versao';
@@ -22,6 +23,8 @@ export function Versao() {
 
   return (
     <>
+      <AssistenteDeVersao />
+
       <div className="barra-sincronizacao">
         <div className="filtros">
           <select

@@ -309,7 +309,7 @@ export function useGerarVersao() {
       milestone: string;
       repositorio: string;
       tag: string;
-      mensagem: string;
+      issues: number[];
     }) => api.post<VersaoGerada>('/versao/gerar', variaveis),
     onSuccess: () => {
       clienteQuery.invalidateQueries({ queryKey: ['versoes-prontas'] });

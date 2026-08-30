@@ -79,18 +79,6 @@ export function AssistenteDeVersao() {
   const partesDaNova =
     naDescricao.acao && nova ? dividirVersao(naDescricao.acao, nova) : null;
 
-  /** A mensagem da tag abre com a milestone que a originou e lista as issues. */
-  const mensagemDaTag = [
-    versaoEscolhida
-      ? `Milestone: [${versaoEscolhida.titulo}](${versaoEscolhida.url})`
-      : 'Milestone: —',
-    '',
-    ...marcadas.map((id) => {
-      const issue = porId.get(id);
-
-      return issue ? `- [#${issue.id}](${issue.url}) ${issue.titulo}` : `- #${id}`;
-    }),
-  ].join('\n');
   const gerada = gerar.data ?? null;
   const carregandoEtapa2 = issues.isLoading || repositorios.isLoading;
   const erro = versoes.error ?? issues.error ?? repositorios.error;
@@ -303,6 +291,14 @@ export function AssistenteDeVersao() {
               </dd>
             </div>
             <div>
+              <dt>Lançamento</dt>
+              <dd>
+                <a href={gerada.urlRelease} target="_blank" rel="noreferrer">
+                  {gerada.tag}
+                </a>
+              </dd>
+            </div>
+            <div>
               <dt>Milestone</dt>
               <dd>
                 <a href={gerada.urlMilestone} target="_blank" rel="noreferrer">
@@ -396,8 +392,9 @@ export function AssistenteDeVersao() {
             <p>
               A tag <strong>{nova}</strong> será criada em{' '}
               <strong>{escolhido.repositorio.nome}</strong> a partir da branch{' '}
-              <code>{versaoEscolhida.titulo}</code>, e a descrição da milestone{' '}
-              <strong>{versaoEscolhida.titulo}</strong> será atualizada com essa versão.
+              <code>{versaoEscolhida.titulo}</code>, com um lançamento de mesmo nome, e a
+              descrição da milestone <strong>{versaoEscolhida.titulo}</strong> será atualizada com
+              essa versão.
             </p>
             <div className="assistente-acoes">
               <button type="button" className="aba" onClick={() => setConfirmando(false)}>
@@ -413,7 +410,7 @@ export function AssistenteDeVersao() {
                       milestone: versaoEscolhida.titulo,
                       repositorio: escolhido.repositorio.caminho,
                       tag: nova,
-                      mensagem: mensagemDaTag,
+                      issues: marcadas,
                     },
                     { onSuccess: () => setEtapa(ETAPA_RESUMO) },
                   );

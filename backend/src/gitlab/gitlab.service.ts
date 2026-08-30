@@ -1,6 +1,7 @@
 import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PROJETO_DAS_ISSUES, type IssueGitlab } from '../comum/issues-gitlab';
+import type { ReleaseGitlab } from '../comum/release-gitlab';
 import type { TagGitlab } from '../comum/tags-gitlab';
 import type { IssueDaVersaoGitlab, MilestoneGitlab } from '../comum/versao-gitlab';
 
@@ -71,6 +72,36 @@ export class GitlabService {
     }
 
     return tags;
+  }
+
+  async listarReleases(caminhoDoProjeto: string): Promise<ReleaseGitlab[]> {
+    const projeto = encodeURIComponent(caminhoDoProjeto);
+    const busca = new URLSearchParams({ per_page: String(POR_PAGINA) });
+
+    return this.buscar<ReleaseGitlab>(
+      `${this.base()}/api/v4/projects/${projeto}/releases?${busca}`,
+      this.token(),
+    );
+  }
+
+  async criarRelease(
+    caminhoDoProjeto: string,
+    tag: string,
+    descricao: string,
+    lancadoEm: string,
+  ) {
+    const projeto = encodeURIComponent(caminhoDoProjeto);
+    const busca = new URLSearchParams({
+      name: tag,
+      tag_name: tag,
+      description: descricao,
+      released_at: lancadoEm,
+    });
+
+    return this.escrever<{ tag_name: string; _links?: { self?: string } }>(
+      `${this.base()}/api/v4/projects/${projeto}/releases?${busca}`,
+      'POST',
+    );
   }
 
   async criarTag(caminhoDoProjeto: string, tag: string, ref: string, mensagem: string) {

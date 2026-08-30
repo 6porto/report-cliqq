@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { atualizarLinhaDoRepositorio } from '../comum/descricao-milestone';
+import { montarDescricaoDoRelease, releaseAnterior } from '../comum/release-gitlab';
 import { GerarVersaoDto } from './dto/gerar-versao.dto';
 import {
   agruparPorRepositorio,
@@ -81,11 +82,29 @@ export class VersaoService {
       throw new NotFoundException(`Milestone ${dto.milestone} não encontrada`);
     }
 
-    const tag = await this.gitlab.criarTag(
+    const todas = await this.listarIssues(dto.milestone);
+    const issues = dto.issues
+      .map((id) => todas.find((issue) => issue.id === id))
+      .filter((issue): issue is (typeof todas)[number] => issue !== undefined);
+
+    const mensagem = [
+      `Milestone: [${versao.titulo}](${versao.url})`,
+      '',
+      ...issues.map((issue) => `- [#${issue.id}](${issue.url}) ${issue.titulo}`),
+    ].join('\n');
+
+    const tag = await this.gitlab.criarTag(dto.repositorio, dto.tag, dto.milestone, mensagem);
+
+    const anterior = releaseAnterior(
+      await this.gitlab.listarReleases(dto.repositorio),
+      tag.name,
+    );
+
+    await this.gitlab.criarRelease(
       dto.repositorio,
-      dto.tag,
-      dto.milestone,
-      dto.mensagem,
+      tag.name,
+      montarDescricaoDoRelease(anterior?.description ?? null, issues),
+      new Date().toISOString(),
     );
 
     const base = this.gitlab.base().replace(/\/+$/, '');
@@ -103,6 +122,7 @@ export class VersaoService {
     return {
       tag: tag.name,
       urlTag,
+      urlRelease: `${base}/${dto.repositorio}/-/releases/${encodeURIComponent(tag.name)}`,
       milestone: versao.titulo,
       urlMilestone: versao.url,
       descricao,

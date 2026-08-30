@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, Matches } from 'class-validator';
+import { ArrayNotEmpty, IsArray, IsInt, IsNotEmpty, IsString, Matches } from 'class-validator';
 
 export class GerarVersaoDto {
   /** Título da milestone; é também o nome da branch de onde a tag sai. */
@@ -19,6 +19,9 @@ export class GerarVersaoDto {
   })
   tag!: string;
 
-  @IsString()
-  mensagem!: string;
+  /** iids das issues que entram na versão; título e URL vêm do GitLab. */
+  @IsArray()
+  @ArrayNotEmpty()
+  @IsInt({ each: true })
+  issues!: number[];
 }

@@ -5,6 +5,7 @@ import { CartaoGrafico } from '../componentes/CartaoGrafico';
 import { IssuesPorRepositorio } from '../componentes/IssuesPorRepositorio';
 import { ListaIssuesDaVersao } from '../componentes/ListaIssuesDaVersao';
 import { ListaRepositoriosDaVersao } from '../componentes/ListaRepositoriosDaVersao';
+import { RepositoriosPorIssue } from '../componentes/RepositoriosPorIssue';
 import {
   COLUNAS_ORDENAVEIS,
   FILTROS_INICIAIS,
@@ -255,6 +256,26 @@ export function Versao() {
             ) : null}
             {envolvidos.length > 0 ? (
               <IssuesPorRepositorio repositorios={envolvidos} issues={carregadas} />
+            ) : null}
+          </CartaoGrafico>
+        </div>
+      ) : null}
+
+      {selecionada ? (
+        <div className="secao-repositorios">
+          <CartaoGrafico
+            largo
+            titulo="Repositórios por issue"
+            subtitulo="Cada issue da versão com os repositórios onde ela foi desdobrada em tasks. Considera todas as issues da versão, sem os filtros acima."
+          >
+            {repositorios.isLoading || issues.isLoading ? (
+              <p className="carregando">Carregando…</p>
+            ) : null}
+            {!issues.isLoading && carregadas.length === 0 ? (
+              <p className="carregando">Nenhuma issue vinculada a esta versão.</p>
+            ) : null}
+            {carregadas.length > 0 ? (
+              <RepositoriosPorIssue issues={carregadas} repositorios={envolvidos} />
             ) : null}
           </CartaoGrafico>
         </div>

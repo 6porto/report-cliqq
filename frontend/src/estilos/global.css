@@ -1149,6 +1149,35 @@ textarea {
   text-decoration: line-through;
 }
 
+.issues-detalhadas {
+  display: grid;
+  gap: 12px;
+}
+
+.issue-detalhada {
+  padding: 12px 14px;
+  border: 1px solid var(--borda);
+  border-radius: 12px;
+  background: var(--fundo-cartao);
+}
+
+.issue-detalhada-cabecalho {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+}
+
+.repositorios-da-issue {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 10px 0 0;
+  border-top: 1px solid var(--borda);
+  list-style: none;
+}
+
 .lista-issues {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));

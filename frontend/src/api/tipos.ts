@@ -246,6 +246,12 @@ export interface Versao {
   url: string;
 }
 
+export interface TagDeVersao {
+  nome: string;
+  minor: string;
+  criadaEm: string | null;
+}
+
 export interface VersaoPronta extends Versao {
   issuesNoEstado: number;
 }

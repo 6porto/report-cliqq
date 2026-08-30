@@ -22,6 +22,7 @@ import type {
   ResumoSincronizacao,
   StatusPorDia,
   StatusRollout,
+  TagDeVersao,
   Versao,
   VersaoPronta,
 } from './tipos';
@@ -296,6 +297,14 @@ export function useVersoes() {
   return useQuery({
     queryKey: ['versoes'],
     queryFn: () => api.get<Versao[]>('/versao/milestones'),
+  });
+}
+
+export function useTagsDoRepositorio(repositorio: string | null) {
+  return useQuery({
+    queryKey: ['tags-do-repositorio', repositorio],
+    queryFn: () => api.get<TagDeVersao[]>(`/versao/tags${montarQuery({ repositorio })}`),
+    enabled: repositorio !== null,
   });
 }
 

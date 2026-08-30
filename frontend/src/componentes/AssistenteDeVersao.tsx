@@ -1,8 +1,19 @@
 import { useMemo, useState } from 'react';
 import { mensagemDoErro } from '../api/cliente';
-import { useIssuesDaVersao, useRepositoriosDaVersao, useVersoesProntas } from '../api/hooks';
+import {
+  useIssuesDaVersao,
+  useRepositoriosDaVersao,
+  useTagsDoRepositorio,
+  useVersoesProntas,
+} from '../api/hooks';
 import type { IssueDaVersao, RepositorioDaVersao, VersaoPronta } from '../api/tipos';
-import { ESTADO_PRONTO_PARA_TAG, periodoDaVersao } from '../dominio/versao';
+import {
+  ESTADO_PRONTO_PARA_TAG,
+  ROTULO_ACAO,
+  periodoDaVersao,
+  proximaVersao,
+  versaoNaDescricao,
+} from '../dominio/versao';
 
 const ETAPAS = ['Versão', 'Repositório', 'Gerar'];
 
@@ -44,8 +55,21 @@ export function AssistenteDeVersao() {
     (item) => item.repositorio.caminho === repositorioEscolhido,
   );
 
+  const tags = useTagsDoRepositorio(
+    etapa === 2 ? (escolhido?.repositorio.caminho ?? null) : null,
+  );
+
   /** Escolher o repositório já leva todas as issues prontas dele. */
   const marcadas = escolhido?.issues ?? [];
+
+  const naDescricao = versaoNaDescricao(
+    versaoEscolhida?.descricao ?? null,
+    escolhido?.repositorio.nome ?? '',
+    versaoEscolhida?.titulo ?? '',
+  );
+  /** Nova RC parte da tag citada na descrição; patch e minor, da maior tag do repositório. */
+  const tagBase = naDescricao.acao === 'rc' ? naDescricao.tag : (tags.data?.[0]?.nome ?? null);
+  const nova = naDescricao.acao ? proximaVersao(naDescricao.acao, tagBase) : null;
   const porId = new Map(prontas.map((issue) => [issue.id, issue]));
   const carregandoEtapa2 = issues.isLoading || repositorios.isLoading;
   const erro = versoes.error ?? issues.error ?? repositorios.error;
@@ -174,7 +198,39 @@ export function AssistenteDeVersao() {
               <dt>Issues</dt>
               <dd>{marcadas.map((id) => `#${id}`).join(', ')}</dd>
             </div>
+            <div>
+              <dt>{naDescricao.acao ? ROTULO_ACAO[naDescricao.acao] : 'Nova versão'}</dt>
+              <dd>
+                {tags.isLoading ? (
+                  'calculando…'
+                ) : nova ? (
+                  <strong className="numero-da-versao">{nova}</strong>
+                ) : (
+                  'não foi possível calcular'
+                )}
+              </dd>
+            </div>
           </dl>
+
+          <p className="aviso-sincronizacao">
+            {naDescricao.acao === 'rc'
+              ? `A descrição de ${versaoEscolhida?.titulo} aponta ${naDescricao.tag} para este repositório.`
+              : `${escolhido?.repositorio.nome} não aparece na descrição de ${versaoEscolhida?.titulo}; a base é a maior tag do repositório${tagBase ? ` (${tagBase})` : ''}.`}
+          </p>
+
+          {naDescricao.malformada ? (
+            <p className="aviso">
+              A descrição de {versaoEscolhida?.titulo} cita {escolhido?.repositorio.nome}, mas sem
+              nenhuma versão legível na linha.
+            </p>
+          ) : null}
+          {!nova && !tags.isLoading && !naDescricao.malformada ? (
+            <p className="aviso">
+              O repositório não tem tag anterior no padrão de versão, então o número não pode ser
+              calculado.
+            </p>
+          ) : null}
+
           <p className="aviso">A geração da versão ainda será implementada.</p>
         </div>
       ) : null}

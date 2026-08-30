@@ -84,3 +84,32 @@ export function versaoNaDescricao(
 
   return { tag: encontrada[0], acao: 'rc', malformada: false };
 }
+
+const PARTES_DA_TAG = /^v?_?(\d+)\.(\d+)\.(\d+)(?:-rc(\d+))?$/i;
+
+/**
+ * Nova RC sobe o rc da própria tag; patch e minor partem da maior tag do
+ * repositório e recomeçam em rc1. O nome sai sempre no formato `v_`.
+ */
+export function proximaVersao(acao: AcaoDeVersao, tagBase: string | null): string | null {
+  const partes = tagBase ? PARTES_DA_TAG.exec(tagBase.trim()) : null;
+
+  if (!partes) {
+    return null;
+  }
+
+  const major = Number(partes[1]);
+  const minor = Number(partes[2]);
+  const patch = Number(partes[3]);
+  const rc = partes[4] === undefined ? 0 : Number(partes[4]);
+
+  if (acao === 'rc') {
+    return `v_${major}.${minor}.${patch}-rc${rc + 1}`;
+  }
+
+  if (acao === 'patch') {
+    return `v_${major}.${minor}.${patch + 1}-rc1`;
+  }
+
+  return `v_${major}.${minor + 1}.0-rc1`;
+}

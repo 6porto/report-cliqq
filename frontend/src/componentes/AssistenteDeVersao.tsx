@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { mensagemDoErro } from '../api/cliente';
 import { useIssuesDaVersao, useRepositoriosDaVersao, useVersoesProntas } from '../api/hooks';
 import type { IssueDaVersao, RepositorioDaVersao, VersaoPronta } from '../api/tipos';
@@ -30,7 +30,6 @@ export function AssistenteDeVersao() {
   const [etapa, setEtapa] = useState(0);
   const [versaoEscolhida, setVersaoEscolhida] = useState<VersaoPronta | null>(null);
   const [repositorioEscolhido, setRepositorioEscolhido] = useState<string | null>(null);
-  const [marcadas, setMarcadas] = useState<number[]>([]);
 
   const milestone = versaoEscolhida?.titulo ?? null;
   const issues = useIssuesDaVersao(etapa >= 1 ? milestone : null);
@@ -45,27 +44,19 @@ export function AssistenteDeVersao() {
     (item) => item.repositorio.caminho === repositorioEscolhido,
   );
 
-  useEffect(() => {
-    setMarcadas(escolhido ? escolhido.issues : []);
-  }, [escolhido]);
-
+  /** Escolher o repositório já leva todas as issues prontas dele. */
+  const marcadas = escolhido?.issues ?? [];
   const porId = new Map(prontas.map((issue) => [issue.id, issue]));
   const carregandoEtapa2 = issues.isLoading || repositorios.isLoading;
   const erro = versoes.error ?? issues.error ?? repositorios.error;
 
   const podeAvancar =
-    (etapa === 0 && versaoEscolhida !== null) || (etapa === 1 && marcadas.length > 0);
+    (etapa === 0 && versaoEscolhida !== null) || (etapa === 1 && escolhido !== undefined);
 
   const escolherVersao = (versao: VersaoPronta) => {
     setVersaoEscolhida(versao);
     setRepositorioEscolhido(null);
-    setMarcadas([]);
   };
-
-  const alternarIssue = (id: number) =>
-    setMarcadas((atual) =>
-      atual.includes(id) ? atual.filter((marcada) => marcada !== id) : [...atual, id],
-    );
 
   return (
     <section className="cartao cartao-largo assistente">
@@ -146,14 +137,6 @@ export function AssistenteDeVersao() {
 
                       return (
                         <li key={id}>
-                          {selecionado ? (
-                            <input
-                              type="checkbox"
-                              checked={marcadas.includes(id)}
-                              aria-label={`Incluir a issue ${id} na versão`}
-                              onChange={() => alternarIssue(id)}
-                            />
-                          ) : null}
                           <a
                             className="issue-numero"
                             href={issue?.url}

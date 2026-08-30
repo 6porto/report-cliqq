@@ -3,6 +3,17 @@ import type { IssueDaVersao, Versao } from '../api/tipos';
 /** Espelha PREFIXOS_DE_VERSAO do backend (backend/src/comum/versao-gitlab.ts). */
 export const PREFIXOS_DE_VERSAO = ['release/', 'fix/'] as const;
 
+/** Espelha REPOSITORIOS_SEM_VERSIONAMENTO do backend (backend/src/comum/tags-gitlab.ts). */
+export const REPOSITORIOS_SEM_VERSIONAMENTO = [
+  'mercantil/kubernetes/dev-config',
+  'mercantil/kubernetes/qas-config',
+  'mercantil/kubernetes/prd-config',
+];
+
+export function ehRepositorioSemVersionamento(caminho: string) {
+  return REPOSITORIOS_SEM_VERSIONAMENTO.includes(caminho);
+}
+
 export const COLUNAS_ORDENAVEIS = [
   'id',
   'titulo',

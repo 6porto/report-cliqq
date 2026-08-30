@@ -1,6 +1,7 @@
 import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PROJETO_DAS_ISSUES, type IssueGitlab } from '../comum/issues-gitlab';
+import type { TagGitlab } from '../comum/tags-gitlab';
 import type { IssueDaVersaoGitlab, MilestoneGitlab } from '../comum/versao-gitlab';
 
 const POR_PAGINA = 100;
@@ -40,6 +41,31 @@ export class GitlabService {
       scope: 'all',
       state: 'all',
     });
+  }
+
+  async listarTags(caminhoDoProjeto: string): Promise<TagGitlab[]> {
+    const token = this.token();
+    const projeto = encodeURIComponent(caminhoDoProjeto);
+    const tags: TagGitlab[] = [];
+
+    for (let pagina = 1; pagina <= MAXIMO_DE_PAGINAS; pagina += 1) {
+      const busca = new URLSearchParams({
+        per_page: String(POR_PAGINA),
+        page: String(pagina),
+      });
+
+      const lote = await this.buscar<TagGitlab>(
+        `${this.base()}/api/v4/projects/${projeto}/repository/tags?${busca}`,
+        token,
+      );
+      tags.push(...lote);
+
+      if (lote.length < POR_PAGINA) {
+        break;
+      }
+    }
+
+    return tags;
   }
 
   /** A hierarquia de work items (as tasks dentro da issue) só existe no GraphQL. */

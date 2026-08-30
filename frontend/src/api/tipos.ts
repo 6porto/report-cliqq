@@ -257,6 +257,12 @@ export interface RepositorioDaVersao {
   issues: number[];
 }
 
+export interface TagDeVersao {
+  nome: string;
+  minor: string;
+  criadaEm: string | null;
+}
+
 export interface RepositoriosDaVersao {
   repositorios: RepositorioDaVersao[];
   issuesSemTask: number[];

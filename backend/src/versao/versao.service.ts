@@ -4,6 +4,7 @@ import {
   type RepositoriosDaVersao,
   type WorkItemDaIssue,
 } from '../comum/repositorios-da-versao';
+import { ehRepositorioSemVersionamento, ultimasMinors } from '../comum/tags-gitlab';
 import { PROJETO_DAS_ISSUES, filtrarVersoes, mapearIssuesDaVersao } from '../comum/versao-gitlab';
 import { GitlabService } from '../gitlab/gitlab.service';
 
@@ -46,6 +47,14 @@ export class VersaoService {
 
   async listarIssues(milestone: string) {
     return mapearIssuesDaVersao(await this.gitlab.listarIssuesDaMilestone(milestone));
+  }
+
+  async listarTags(repositorio: string) {
+    if (ehRepositorioSemVersionamento(repositorio)) {
+      return [];
+    }
+
+    return ultimasMinors(await this.gitlab.listarTags(repositorio));
   }
 
   /** Os repositórios saem das tasks: cada task da issue vive no projeto onde o código muda. */

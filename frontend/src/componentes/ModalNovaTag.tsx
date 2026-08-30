@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { mensagemDoErro } from '../api/cliente';
 import { useTagsDoRepositorio } from '../api/hooks';
 import type { IssueDaVersao, RepositorioDaVersao, Versao } from '../api/tipos';
-import { formatarData } from '../dominio/versao';
+import { ROTULO_ACAO, formatarData, versaoNaDescricao } from '../dominio/versao';
 
 interface Props {
   repositorio: RepositorioDaVersao;
@@ -30,6 +30,7 @@ export function ModalNovaTag({ repositorio, versao, issues, aoFechar }: Props) {
   }, [aoFechar]);
 
   const encontradas = tags.data ?? [];
+  const naDescricao = versaoNaDescricao(versao.descricao, repositorio.nome, versao.titulo);
 
   return (
     <div className="modal-fundo" onClick={aoFechar}>
@@ -49,6 +50,25 @@ export function ModalNovaTag({ repositorio, versao, issues, aoFechar }: Props) {
             ✕
           </button>
         </header>
+
+        <div className="acao-da-versao">
+          {naDescricao.tag ? (
+            <span className="aviso-sincronizacao">
+              Na descrição de {versao.titulo}: <strong>{naDescricao.tag}</strong>
+            </span>
+          ) : null}
+          {naDescricao.malformada ? (
+            <span className="aviso">
+              A descrição de {versao.titulo} cita {repositorio.nome}, mas sem nenhuma versão
+              legível na linha.
+            </span>
+          ) : null}
+          {naDescricao.acao ? (
+            <button type="button" className="aba primario" onClick={aoFechar}>
+              {ROTULO_ACAO[naDescricao.acao]}
+            </button>
+          ) : null}
+        </div>
 
         <h3 className="titulo-secao">Descrição da versão · {versao.titulo}</h3>
         {versao.descricao ? (

@@ -1,13 +1,14 @@
 /**
- * Uma linha por repositório, no formato `- nome-reduzido tag`. Gerar a versão
- * troca a tag da linha existente ou acrescenta a linha no fim da descrição.
+ * Uma linha por repositório, no formato `- nome-reduzido [tag](url)`. Gerar a
+ * versão troca a tag da linha existente ou acrescenta a linha no fim.
  */
 export function atualizarLinhaDoRepositorio(
   descricao: string | null,
   nomeDoRepositorio: string,
   tag: string,
+  urlDaTag: string,
 ): string {
-  const linhaNova = `- ${nomeDoRepositorio} ${tag}`;
+  const linhaNova = `- ${nomeDoRepositorio} [${tag}](${urlDaTag})`;
   const texto = descricao ?? '';
 
   if (texto.trim() === '') {

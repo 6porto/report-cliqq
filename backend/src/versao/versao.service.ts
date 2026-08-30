@@ -88,19 +88,21 @@ export class VersaoService {
       dto.mensagem,
     );
 
+    const base = this.gitlab.base().replace(/\/+$/, '');
+    const urlTag = `${base}/${dto.repositorio}/-/tags/${encodeURIComponent(tag.name)}`;
+
     const descricao = atualizarLinhaDoRepositorio(
       versao.descricao,
       nomeReduzido(dto.repositorio),
-      dto.tag,
+      tag.name,
+      urlTag,
     );
 
     await this.gitlab.atualizarDescricaoDaMilestone(versao.id, versao.grupoId, descricao);
 
-    const base = this.gitlab.base().replace(/\/+$/, '');
-
     return {
       tag: tag.name,
-      urlTag: `${base}/${dto.repositorio}/-/tags/${encodeURIComponent(tag.name)}`,
+      urlTag,
       milestone: versao.titulo,
       urlMilestone: versao.url,
       descricao,

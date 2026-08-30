@@ -96,7 +96,15 @@ export class VersaoService {
 
     await this.gitlab.atualizarDescricaoDaMilestone(versao.id, versao.grupoId, descricao);
 
-    return { tag: tag.name, milestone: versao.titulo, descricao };
+    const base = this.gitlab.base().replace(/\/+$/, '');
+
+    return {
+      tag: tag.name,
+      urlTag: `${base}/${dto.repositorio}/-/tags/${encodeURIComponent(tag.name)}`,
+      milestone: versao.titulo,
+      urlMilestone: versao.url,
+      descricao,
+    };
   }
 
   async listarTags(repositorio: string) {

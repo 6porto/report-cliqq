@@ -274,8 +274,16 @@ export function AssistenteDeVersao() {
             <div className="aviso-salvo">
               <p>
                 Tag <strong>{gerada.tag}</strong> criada e descrição de {gerada.milestone}{' '}
-                atualizada:
+                atualizada.
               </p>
+              <div className="assistente-acoes">
+                <a className="aba" href={gerada.urlTag} target="_blank" rel="noreferrer">
+                  Ver a tag {gerada.tag}
+                </a>
+                <a className="aba" href={gerada.urlMilestone} target="_blank" rel="noreferrer">
+                  Ver a milestone {gerada.milestone}
+                </a>
+              </div>
               <pre className="descricao-tag">{gerada.descricao}</pre>
             </div>
           ) : null}

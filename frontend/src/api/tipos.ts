@@ -249,7 +249,9 @@ export interface Versao {
 
 export interface VersaoGerada {
   tag: string;
+  urlTag: string;
   milestone: string;
+  urlMilestone: string;
   descricao: string;
 }
 

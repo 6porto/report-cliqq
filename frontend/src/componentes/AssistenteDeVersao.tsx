@@ -53,9 +53,11 @@ export function AssistenteDeVersao() {
   const podeAvancar =
     (etapa === 0 && versaoEscolhida !== null) || (etapa === 1 && escolhido !== undefined);
 
+  /** Escolher a versão já leva para a etapa do repositório. */
   const escolherVersao = (versao: VersaoPronta) => {
     setVersaoEscolhida(versao);
     setRepositorioEscolhido(null);
+    setEtapa(1);
   };
 
   return (

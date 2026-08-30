@@ -63,6 +63,7 @@ export function AssistenteDeVersao() {
 
   /** Escolher o repositório já leva todas as issues prontas dele. */
   const marcadas = escolhido?.issues ?? [];
+  const porId = new Map(prontas.map((issue) => [issue.id, issue]));
 
   const naDescricao = versaoNaDescricao(
     versaoEscolhida?.descricao ?? null,
@@ -84,7 +85,6 @@ export function AssistenteDeVersao() {
     })
     .join('\n');
   const gerada = gerar.data ?? null;
-  const porId = new Map(prontas.map((issue) => [issue.id, issue]));
   const carregandoEtapa2 = issues.isLoading || repositorios.isLoading;
   const erro = versoes.error ?? issues.error ?? repositorios.error;
 

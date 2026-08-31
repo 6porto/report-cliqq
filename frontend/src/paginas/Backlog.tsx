@@ -41,6 +41,9 @@ const RESPOSTA_VAZIA: RespostaPriorizacao = {
 /** A triagem começa por aqui: o que já foi priorizado e o que ainda espera priorização. */
 const ESTADOS_PADRAO = ['priorizado', 'pendente-priorizacao'];
 
+/** Tipos que não entram marcados de saída. */
+const TIPOS_FORA_DO_PADRAO = ['bug'];
+
 /** Quantas linhas aparecem antes do "ver mais" — o backlog inteiro passa de 190. */
 const POR_VEZ = 50;
 
@@ -62,8 +65,8 @@ function formatarData(valor: string) {
 export function Backlog() {
   const [dias, setDias] = useState<number | null>(7);
   const [visiveis, setVisiveis] = useState(POR_VEZ);
-  /** Vazio mostra todos; marcar tipos restringe a lista. */
-  const [tiposEscolhidos, setTiposEscolhidos] = useState<string[]>([]);
+  /** `null` mantém o padrão: todos os tipos menos bug. */
+  const [escolhaDeTipos, setEscolhaDeTipos] = useState<string[] | null>(null);
   /**
    * `null` significa que a escolha ainda é a padrão; a partir do primeiro
    * clique vira a lista do usuário, e uma lista vazia mostra todos os estados.
@@ -83,6 +86,12 @@ export function Backlog() {
 
     return temSemTipo ? [...comTipo, ''] : comTipo;
   }, [issues]);
+
+  /** Bug fica de fora do padrão: a triagem começa pelo que ainda vira demanda. */
+  const tiposEscolhidos = useMemo(
+    () => escolhaDeTipos ?? tipos.filter((tipo) => !TIPOS_FORA_DO_PADRAO.includes(tipo)),
+    [escolhaDeTipos, tipos],
+  );
 
   const combinaComTipo = (issue: IssueDaVersao) =>
     tiposEscolhidos.length === 0 ||
@@ -146,8 +155,10 @@ export function Backlog() {
     );
 
   const alternarTipo = (valor: string) =>
-    setTiposEscolhidos((atual) =>
-      atual.includes(valor) ? atual.filter((item) => item !== valor) : [...atual, valor],
+    setEscolhaDeTipos(
+      tiposEscolhidos.includes(valor)
+        ? tiposEscolhidos.filter((item) => item !== valor)
+        : [...tiposEscolhidos, valor],
     );
 
   const ordenadas = ordenarIssuesPor(filtradas, ordenacao);
@@ -156,7 +167,7 @@ export function Backlog() {
   const trocarPeriodo = (novo: number | null) => {
     setDias(novo);
     setVisiveis(POR_VEZ);
-    setTiposEscolhidos([]);
+    setEscolhaDeTipos(null);
     setEscolhaDeEstados(null);
   };
 
@@ -233,7 +244,7 @@ export function Backlog() {
               <button
                 type="button"
                 className="ligacao"
-                onClick={() => setTiposEscolhidos([...tipos])}
+                onClick={() => setEscolhaDeTipos([...tipos])}
               >
                 marcar todos
               </button>

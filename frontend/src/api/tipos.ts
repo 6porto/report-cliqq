@@ -284,6 +284,21 @@ export interface RepositoriosDaVersao {
   issuesSemTask: number[];
 }
 
+export interface TagDaMilestone {
+  repositorio: string;
+  tag: string;
+  url: string | null;
+}
+
+/** Milestone aberta com as issues dentro — o que a aba Desenvolvimento lista. */
+export interface MilestoneEmDesenvolvimento extends Versao {
+  total: number;
+  abertas: number;
+  fechadas: number;
+  tags: TagDaMilestone[];
+  issues: IssueDaVersao[];
+}
+
 export interface IssueDaVersao {
   id: number;
   titulo: string;

@@ -63,7 +63,13 @@ export function Backlog() {
 
   const issues = useMemo(() => backlog.data?.issues ?? [], [backlog.data]);
   const tipos = useMemo(() => tiposDistintos(issues), [issues]);
-  const estados = useMemo(() => valoresDistintos(issues, 'estado'), [issues]);
+  /** Issue sem `state::` também é uma opção: entra como '' no fim da lista. */
+  const estados = useMemo(() => {
+    const comEstado = valoresDistintos(issues, 'estado');
+    const temSemEstado = issues.some((issue) => !issue.estado);
+
+    return temSemEstado ? [...comEstado, ''] : comEstado;
+  }, [issues]);
 
   /** Só entram no padrão os estados que existem na janela carregada. */
   const estadosEscolhidos = useMemo(
@@ -172,7 +178,10 @@ export function Backlog() {
 
       {issues.length > 0 ? (
         <fieldset className="filtro-estados estados-do-backlog">
-          <legend>Estados {estadosEscolhidos.length > 0 ? '· clique para tirar' : ''}</legend>
+          <legend>
+            Estados{' '}
+            {estadosEscolhidos.length === 0 ? '· nenhum marcado mostra todos' : '· clique para tirar'}
+          </legend>
           <div className="opcoes">
             {estados.map((valor) => {
               const marcado = estadosEscolhidos.includes(valor);
@@ -185,14 +194,18 @@ export function Backlog() {
                   aria-pressed={marcado}
                   onClick={() => alternarEstado(valor)}
                 >
-                  <span>{valor}</span>
+                  <span>{valor || 'sem estado'}</span>
                   <span className="opcao-pontos">{contagemPorEstado.get(valor) ?? 0}</span>
                 </button>
               );
             })}
-            {estadosEscolhidos.length > 0 ? (
-              <button type="button" className="ligacao" onClick={() => setEscolhaDeEstados([])}>
-                mostrar todos
+            {estadosEscolhidos.length < estados.length ? (
+              <button
+                type="button"
+                className="ligacao"
+                onClick={() => setEscolhaDeEstados([...estados])}
+              >
+                marcar todos
               </button>
             ) : null}
           </div>

@@ -191,23 +191,26 @@ export function Backlog() {
       largo
       titulo="Sem criticidade definida"
       subtitulo="Issues abertas que passaram pela triagem sem receber criticidade::"
-      acoes={
-        <div className="filtros">
+    >
+      {backlog.isError ? <p className="erro">{mensagemDoErro(backlog.error)}</p> : null}
+
+      <fieldset className="filtro-estados estados-do-backlog">
+        <legend>Aberta nos últimos</legend>
+        <div className="opcoes">
           {PERIODOS.map((periodo) => (
             <button
               key={periodo.rotulo}
               type="button"
-              className={dias === periodo.dias ? 'aba primario' : 'aba'}
+              className={dias === periodo.dias ? 'opcao opcao-marcada' : 'opcao'}
               aria-pressed={dias === periodo.dias}
               onClick={() => trocarPeriodo(periodo.dias)}
             >
-              {periodo.rotulo}
+              <span>{periodo.rotulo}</span>
             </button>
           ))}
         </div>
-      }
-    >
-      {backlog.isError ? <p className="erro">{mensagemDoErro(backlog.error)}</p> : null}
+      </fieldset>
+
       {backlog.isLoading ? <p className="carregando">Carregando o backlog…</p> : null}
 
       {backlog.data ? (

@@ -97,6 +97,8 @@ export function AssistenteDeVersao() {
   const carregandoEtapa2 = issues.isLoading || repositorios.isLoading;
   const erro = versoes.error ?? issues.error ?? repositorios.error;
   const tipo = versaoEscolhida ? tipoDaVersao(versaoEscolhida.titulo) : 'release';
+  /** Na primeira etapa nada foi escolhido ainda: o cabeçalho volta ao convite. */
+  const emEscolha = etapa === 0 || !versaoEscolhida;
 
   /** Uma issue em dois repositórios da leva aparece uma vez só. */
   const issuesDaLeva = [...new Set(escolhidos.flatMap((item) => item.issues))].sort(
@@ -108,6 +110,18 @@ export function AssistenteDeVersao() {
     setVersaoEscolhida(null);
     setSelecionados([]);
     setEtapa(0);
+  };
+
+  /** Voltar para a primeira etapa desfaz a escolha: a tela recomeça em branco. */
+  const voltar = () => {
+    const anterior = etapa - 1;
+
+    if (anterior === 0) {
+      setVersaoEscolhida(null);
+      setSelecionados([]);
+    }
+
+    setEtapa(anterior);
   };
 
   /** Escolher a versão já leva para a etapa do repositório. */
@@ -158,10 +172,10 @@ export function AssistenteDeVersao() {
         <div>
           <p className="assistente-eixo">Liberação de versão</p>
           <h2>
-            {versaoEscolhida ? versaoEscolhida.titulo : 'Escolha o que vai ser liberado'}
-            {versaoEscolhida ? (
+            {emEscolha ? 'Escolha o que vai ser liberado' : versaoEscolhida?.titulo}
+            {emEscolha ? null : (
               <span className="selo-tipo-versao">{ROTULO_TIPO_DE_VERSAO[tipo]}</span>
-            ) : null}
+            )}
           </h2>
         </div>
         {gerada ? null : (
@@ -422,7 +436,7 @@ export function AssistenteDeVersao() {
               type="button"
               className="aba"
               disabled={etapa === 0 || gerar.isPending}
-              onClick={() => setEtapa((atual) => atual - 1)}
+              onClick={voltar}
             >
               Voltar
             </button>

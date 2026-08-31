@@ -84,20 +84,20 @@ describe('ordenarPorCriacao', () => {
 });
 
 describe('labels de criticidade', () => {
-  it('monta o label em minúsculo', () => {
-    expect(labelDaCriticidade('P2')).toBe('criticidade::p2');
+  it('monta o label na grafia do grupo, com o P maiúsculo', () => {
+    expect(labelDaCriticidade('P2')).toBe('criticidade::P2');
   });
 
   it('lista as duas grafias, para limpar a criticidade anterior', () => {
     expect(labelsDeCriticidade()).toEqual([
-      'criticidade::p1',
       'criticidade::P1',
-      'criticidade::p2',
+      'criticidade::p1',
       'criticidade::P2',
-      'criticidade::p3',
+      'criticidade::p2',
       'criticidade::P3',
-      'criticidade::p4',
+      'criticidade::p3',
       'criticidade::P4',
+      'criticidade::p4',
     ]);
   });
 

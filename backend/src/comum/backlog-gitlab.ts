@@ -10,19 +10,22 @@ export function temCriticidade(labels: string[]) {
   return labels.some((label) => label.startsWith(PREFIXO_CRITICIDADE));
 }
 
+/**
+ * Grafia exata do label do grupo `mercantil`, que o projeto herda. Nome que não
+ * bate letra por letra faz o GitLab criar um label novo, só do projeto.
+ */
 export function labelDaCriticidade(criticidade: Criticidade) {
-  return `${PREFIXO_CRITICIDADE}${criticidade.toLowerCase()}`;
+  return `${PREFIXO_CRITICIDADE}${criticidade}`;
 }
 
 /**
- * Escopo inteiro, para tirar a criticidade anterior seja ela qual for. Vai nas
- * duas grafias: as issues antigas foram marcadas com `P` maiúsculo e o label
- * novo é minúsculo, então remover só uma delas deixaria as duas na issue.
+ * Escopo inteiro, para tirar a criticidade anterior seja ela qual for. A grafia
+ * minúscula entra junto para recolher issue que tenha recebido essa variante.
  */
 export function labelsDeCriticidade() {
   return CRITICIDADES.flatMap((criticidade) => [
     labelDaCriticidade(criticidade),
-    `${PREFIXO_CRITICIDADE}${criticidade}`,
+    `${PREFIXO_CRITICIDADE}${criticidade.toLowerCase()}`,
   ]);
 }
 

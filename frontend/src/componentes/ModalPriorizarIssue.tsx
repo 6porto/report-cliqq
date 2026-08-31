@@ -284,7 +284,7 @@ export function ModalPriorizarIssue({
           <div className="veredito-acoes">
             <p>
               {marcada
-                ? `Aplicar grava o label criticidade::${marcada.toLowerCase()} na issue e a tira do backlog.`
+                ? `Aplicar grava o label criticidade::${marcada} na issue e a tira do backlog.`
                 : 'As respostas ficam só nesta tela até você aplicar a criticidade.'}
             </p>
             <div className="veredito-botoes">

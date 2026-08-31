@@ -16,6 +16,8 @@ const CLASSE_POR_TIPO: Record<string, string> = {
   refatoracao: 'tipo-refatoracao',
   analise: 'tipo-analise',
   'análise': 'tipo-analise',
+  'débito-técnico': 'tipo-debito',
+  'debito-tecnico': 'tipo-debito',
 };
 
 export function classeDoTipo(tipo: string) {

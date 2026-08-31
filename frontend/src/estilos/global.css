@@ -54,6 +54,7 @@
   --tipo-performance: #6b3fb5;
   --tipo-refatoracao: #9a6f00;
   --tipo-analise: #6b7280;
+  --tipo-debito: #8a1f42;
 
   --raio: 10px;
   --fonte: system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -107,6 +108,7 @@
     --tipo-performance: #a996f2;
     --tipo-refatoracao: #d9b04a;
     --tipo-analise: #9aa3af;
+    --tipo-debito: #e2879f;
   }
 }
 
@@ -156,6 +158,7 @@
   --tipo-performance: #a996f2;
   --tipo-refatoracao: #d9b04a;
   --tipo-analise: #9aa3af;
+  --tipo-debito: #e2879f;
 }
 
 * {
@@ -1973,6 +1976,7 @@ button.cartao-escolha:hover {
 .issue-marcador.tipo-crm,
 .issue-marcador.tipo-producao,
 .issue-marcador.tipo-performance,
+.issue-marcador.tipo-debito,
 .issue-marcador.tipo-analise,
 .issue-marcador.tipo-refatoracao {
   background: none;
@@ -2006,6 +2010,10 @@ button.cartao-escolha:hover {
 
 .tipo-analise {
   color: var(--tipo-analise);
+}
+
+.tipo-debito {
+  color: var(--tipo-debito);
 }
 /* Estado escolhido no Backlog: mesmo preenchimento do seletor de período. */
 

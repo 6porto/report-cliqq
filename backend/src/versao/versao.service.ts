@@ -8,7 +8,11 @@ import {
   type RepositoriosDaVersao,
   type WorkItemDaIssue,
 } from '../comum/repositorios-da-versao';
-import { ehRepositorioSemVersionamento, ultimasMinors } from '../comum/tags-gitlab';
+import {
+  ehRepositorioSemVersionamento,
+  interpretarTag,
+  ultimasMinors,
+} from '../comum/tags-gitlab';
 import {
   ESTADO_APOS_RELEASE,
   ESTADO_PRONTO_PARA_RELEASE,
@@ -186,12 +190,21 @@ export class VersaoService {
     };
   }
 
+  /**
+   * As minors servem de opção de base; os nomes completos deixam a tela saber
+   * se a versão calculada já existe antes de tentar criar.
+   */
   async listarTags(repositorio: string) {
     if (ehRepositorioSemVersionamento(repositorio)) {
-      return [];
+      return { minors: [], nomes: [] };
     }
 
-    return ultimasMinors(await this.gitlab.listarTags(repositorio));
+    const tags = await this.gitlab.listarTags(repositorio);
+
+    return {
+      minors: ultimasMinors(tags),
+      nomes: tags.filter((tag) => interpretarTag(tag.name)).map((tag) => tag.name),
+    };
   }
 
   /** Os repositórios saem das tasks: cada task da issue vive no projeto onde o código muda. */

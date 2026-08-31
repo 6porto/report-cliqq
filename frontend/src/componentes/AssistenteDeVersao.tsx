@@ -53,6 +53,9 @@ export function AssistenteDeVersao() {
   const [versaoEscolhida, setVersaoEscolhida] = useState<VersaoPronta | null>(null);
   const [selecionados, setSelecionados] = useState<string[]>([]);
   const [confirmando, setConfirmando] = useState(false);
+  /** Base escolhida à mão, por repositório; vazio significa "usa a sugerida". */
+  const [basesTrocadas, setBasesTrocadas] = useState<Record<string, string>>({});
+  const [trocando, setTrocando] = useState<string | null>(null);
   const gerar = useGerarVersao();
 
   const milestone = versaoEscolhida?.titulo ?? null;
@@ -79,20 +82,33 @@ export function AssistenteDeVersao() {
       item.repositorio.nome,
       versaoEscolhida?.titulo ?? '',
     );
-    const tagBase =
-      naDescricao.acao === 'rc'
-        ? naDescricao.tag
-        : (tags.porRepositorio[item.repositorio.caminho]?.[0]?.nome ?? null);
+    const doRepositorio = tags.porRepositorio[item.repositorio.caminho] ?? {
+      minors: [],
+      nomes: [],
+    };
+    const sugerida =
+      naDescricao.acao === 'rc' ? naDescricao.tag : (doRepositorio.minors[0]?.nome ?? null);
+    /* Com o repositório citado na descrição da milestone a base é a de lá:
+       trocar mudaria a RC que o time combinou. */
+    const podeTrocar = naDescricao.acao !== 'rc' && doRepositorio.minors.length > 1;
+    const escolhida = basesTrocadas[item.repositorio.caminho];
+    const tagBase = podeTrocar && escolhida ? escolhida : sugerida;
+    const nova = naDescricao.acao ? proximaVersao(naDescricao.acao, tagBase) : null;
 
     return {
       item,
       naDescricao,
+      sugerida,
+      podeTrocar,
+      opcoes: doRepositorio.minors,
       tagBase,
-      nova: naDescricao.acao ? proximaVersao(naDescricao.acao, tagBase) : null,
+      nova,
+      jaExiste: nova !== null && doRepositorio.nomes.includes(nova),
     };
   });
 
-  const prontoParaGerar = planos.length > 0 && planos.every((plano) => plano.nova !== null);
+  const prontoParaGerar =
+    planos.length > 0 && planos.every((plano) => plano.nova !== null && !plano.jaExiste);
   const gerada = gerar.data ?? null;
   const carregandoEtapa2 = issues.isLoading || repositorios.isLoading;
   const erro = versoes.error ?? issues.error ?? repositorios.error;
@@ -313,7 +329,7 @@ export function AssistenteDeVersao() {
         <div className="painel">
           {tags.carregando ? <p className="carregando">Calculando as próximas versões…</p> : null}
 
-          {planos.map(({ item, naDescricao, tagBase, nova }) => (
+          {planos.map(({ item, naDescricao, tagBase, nova, podeTrocar, opcoes, sugerida, jaExiste }) => (
             <div key={item.repositorio.caminho} className="plano">
               <header className="plano-topo">
                 <strong>{item.repositorio.nome}</strong>
@@ -322,6 +338,52 @@ export function AssistenteDeVersao() {
 
               {nova && naDescricao.acao ? (
                 <SaltoDeVersao base={tagBase} nova={nova} acao={naDescricao.acao} />
+              ) : null}
+
+              {podeTrocar ? (
+                trocando === item.repositorio.caminho ? (
+                  <fieldset className="bases">
+                    <legend>Partir de qual tag</legend>
+                    {opcoes.map((opcao) => (
+                      <label key={opcao.nome} className="base">
+                        <input
+                          type="radio"
+                          name={`base-${item.repositorio.caminho}`}
+                          checked={tagBase === opcao.nome}
+                          onChange={() => {
+                            setBasesTrocadas((atual) => ({
+                              ...atual,
+                              [item.repositorio.caminho]: opcao.nome,
+                            }));
+                            setTrocando(null);
+                          }}
+                        />
+                        <span className="base-nome">{opcao.nome}</span>
+                        <span className="cartao-apoio">
+                          minor {opcao.minor}
+                          {opcao.nome === sugerida ? ' · sugerida' : ''}
+                        </span>
+                      </label>
+                    ))}
+                  </fieldset>
+                ) : (
+                  <p className="assistente-apoio">
+                    <button
+                      type="button"
+                      className="ligacao"
+                      onClick={() => setTrocando(item.repositorio.caminho)}
+                    >
+                      trocar a tag de partida
+                    </button>
+                    {tagBase === sugerida ? '' : ' · base trocada'}
+                  </p>
+                )
+              ) : null}
+
+              {jaExiste ? (
+                <p className="aviso">
+                  {nova} já existe em {item.repositorio.nome}. Escolha outra tag de partida.
+                </p>
               ) : null}
 
               {naDescricao.malformada ? (

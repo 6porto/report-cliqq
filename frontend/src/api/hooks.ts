@@ -23,7 +23,7 @@ import type {
   ResumoSincronizacao,
   StatusPorDia,
   StatusRollout,
-  TagDeVersao,
+  TagsDoRepositorio,
   VersaoGerada,
   VersaoPronta,
 } from './tipos';
@@ -314,13 +314,16 @@ export function useTagsDeVarios(repositorios: string[]) {
   return useQueries({
     queries: repositorios.map((repositorio) => ({
       queryKey: ['tags-do-repositorio', repositorio],
-      queryFn: () => api.get<TagDeVersao[]>(`/versao/tags${montarQuery({ repositorio })}`),
+      queryFn: () => api.get<TagsDoRepositorio>(`/versao/tags${montarQuery({ repositorio })}`),
     })),
     combine: (respostas) => ({
       carregando: respostas.some((resposta) => resposta.isLoading),
       porRepositorio: Object.fromEntries(
-        repositorios.map((repositorio, indice) => [repositorio, respostas[indice]?.data ?? []]),
-      ) as Record<string, TagDeVersao[]>,
+        repositorios.map((repositorio, indice) => [
+          repositorio,
+          respostas[indice]?.data ?? { minors: [], nomes: [] },
+        ]),
+      ) as Record<string, TagsDoRepositorio>,
     }),
   });
 }

@@ -41,17 +41,17 @@ export class BacklogService {
    * de aplicar os labels novos, então serve tanto para definir quanto para
    * trocar.
    */
-  async definirCriticidade(iid: number, criticidade: Criticidade, esforco: number) {
-    const doEsforco = labelDoEsforco(esforco);
+  async definirCriticidade(iid: number, criticidade: Criticidade, esforco?: number) {
+    const doEsforco = esforco === undefined ? null : labelDoEsforco(esforco);
 
-    if (!doEsforco) {
+    if (esforco !== undefined && !doEsforco) {
       throw new BadRequestException(`Esforço fora da escala: ${esforco}`);
     }
 
-    const escolhidos = [labelDaCriticidade(criticidade), doEsforco];
-    const anteriores = [...labelsDeCriticidade(), ...labelsDeEsforco()].filter(
-      (label) => !escolhidos.includes(label),
-    );
+    const escolhidos = [labelDaCriticidade(criticidade), ...(doEsforco ? [doEsforco] : [])];
+    /** Sem esforço respondido, o escopo `esforco::` da issue fica como está. */
+    const escopos = [...labelsDeCriticidade(), ...(doEsforco ? labelsDeEsforco() : [])];
+    const anteriores = escopos.filter((label) => !escolhidos.includes(label));
 
     const issue = await this.gitlab.trocarLabelDaIssue<IssueDaVersaoGitlab>(
       iid,

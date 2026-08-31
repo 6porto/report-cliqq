@@ -360,7 +360,7 @@ export function useDefinirCriticidade() {
     }: {
       iid: number;
       criticidade: string;
-      esforco: number;
+      esforco?: number;
     }) =>
       api.put<{ criticidade: string; esforco: string; issue: IssueDaVersao }>(
         `/backlog/issues/${iid}/criticidade`,

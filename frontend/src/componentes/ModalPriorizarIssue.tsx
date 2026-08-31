@@ -23,7 +23,8 @@ interface Props {
   erroAoSalvar: string | null;
   aoResponder: (campo: keyof RespostaPriorizacao, pontos: number) => void;
   aoEscolherCriticidade: (criticidade: Criticidade) => void;
-  aoAplicar: (criticidade: Criticidade, esforco: number) => void;
+  /** `esforco` vai nulo quando a pergunta 6 ficou sem resposta. */
+  aoAplicar: (criticidade: Criticidade, esforco: number | null) => void;
   aoFechar: () => void;
 }
 
@@ -115,7 +116,9 @@ export function ModalPriorizarIssue({
   const escolhaFoiTrocada = criticidade !== null && sugerida !== null && criticidade !== sugerida;
   const resumoMarcado =
     FAIXAS_DE_CRITICIDADE.find((faixa) => faixa.criticidade === marcada)?.resumo ?? null;
-  const etiqueta = etiquetaDoEsforco(esforco);
+  /** O esforço do score só existe com tudo respondido; aqui vale a pergunta 6 sozinha. */
+  const esforcoRespondido = resposta?.[CRITERIO_DE_ESFORCO.chave] ?? null;
+  const etiqueta = etiquetaDoEsforco(esforcoRespondido);
 
   const botaoDaOpcao = (
     chave: CampoResposta,
@@ -241,53 +244,52 @@ export function ModalPriorizarIssue({
         <footer className="veredito">
           {score === null ? (
             <p className="veredito-pendente">
-              Faltam {PERGUNTAS.length - feitas} de {PERGUNTAS.length} respostas para fechar o
-              score e sugerir a criticidade.
+              {feitas === 0
+                ? 'Escolha a criticidade direto ou responda as perguntas para o sistema sugerir uma.'
+                : `Faltam ${PERGUNTAS.length - feitas} de ${PERGUNTAS.length} respostas para o sistema sugerir a criticidade.`}
             </p>
           ) : (
-            <>
-              <div className="veredito-score">
-                <strong>{score}</strong>
-                <span>
-                  valor {valor} + esforço {esforco}
-                </span>
-              </div>
-
-              <fieldset className="veredito-criticidades">
-                <legend>
-                  Criticidade
-                  {escolhaFoiTrocada ? <em> — sugerida era {sugerida}</em> : null}
-                </legend>
-                <div className="criticidades">
-                  {FAIXAS_DE_CRITICIDADE.map((faixa) => (
-                    <button
-                      key={faixa.criticidade}
-                      type="button"
-                      className="criticidade"
-                      data-criticidade={faixa.criticidade}
-                      aria-pressed={marcada === faixa.criticidade}
-                      disabled={salvando}
-                      onClick={() => aoEscolherCriticidade(faixa.criticidade)}
-                    >
-                      <span className="criticidade-nome">{faixa.criticidade}</span>
-                      <span className="criticidade-faixa">
-                        {faixa.minimo}–{faixa.maximo}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-                {resumoMarcado ? <p className="criticidade-resumo">{resumoMarcado}</p> : null}
-              </fieldset>
-            </>
+            <div className="veredito-score">
+              <strong>{score}</strong>
+              <span>
+                valor {valor} + esforço {esforco}
+              </span>
+            </div>
           )}
+
+          <fieldset className="veredito-criticidades">
+            <legend>
+              Criticidade
+              {escolhaFoiTrocada ? <em> — sugerida era {sugerida}</em> : null}
+            </legend>
+            <div className="criticidades">
+              {FAIXAS_DE_CRITICIDADE.map((faixa) => (
+                <button
+                  key={faixa.criticidade}
+                  type="button"
+                  className="criticidade"
+                  data-criticidade={faixa.criticidade}
+                  aria-pressed={marcada === faixa.criticidade}
+                  disabled={salvando}
+                  onClick={() => aoEscolherCriticidade(faixa.criticidade)}
+                >
+                  <span className="criticidade-nome">{faixa.criticidade}</span>
+                  <span className="criticidade-faixa">
+                    {faixa.minimo}–{faixa.maximo}
+                  </span>
+                </button>
+              ))}
+            </div>
+            {resumoMarcado ? <p className="criticidade-resumo">{resumoMarcado}</p> : null}
+          </fieldset>
 
           {erroAoSalvar ? <p className="veredito-erro">{erroAoSalvar}</p> : null}
 
           <div className="veredito-acoes">
             <p>
-              {marcada && etiqueta
-                ? `Aplicar grava criticidade::${marcada} e esforco::${etiqueta} na issue, e a tira do backlog.`
-                : 'As respostas ficam só nesta tela até você aplicar a criticidade.'}
+              {marcada
+                ? `Aplicar grava criticidade::${marcada}${etiqueta ? ` e esforco::${etiqueta}` : ''} na issue, e a tira do backlog.`
+                : 'Escolha uma criticidade para poder aplicar.'}
             </p>
             <div className="veredito-botoes">
               <button type="button" className="aba" onClick={aoFechar} disabled={salvando}>
@@ -296,8 +298,8 @@ export function ModalPriorizarIssue({
               <button
                 type="button"
                 className="aba primario"
-                disabled={!marcada || esforco === null || salvando}
-                onClick={() => marcada && esforco !== null && aoAplicar(marcada, esforco)}
+                disabled={!marcada || salvando}
+                onClick={() => marcada && aoAplicar(marcada, esforcoRespondido)}
               >
                 {salvando ? 'Aplicando…' : marcada ? `Aplicar ${marcada}` : 'Aplicar'}
               </button>

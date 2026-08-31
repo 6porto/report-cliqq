@@ -420,7 +420,7 @@ export function Backlog() {
           }
           aoAplicar={(criticidade, esforco) =>
             definirCriticidade.mutate(
-              { iid: aberta.id, criticidade, esforco },
+              { iid: aberta.id, criticidade, esforco: esforco ?? undefined },
               { onSuccess: () => setPriorizando(null) },
             )
           }

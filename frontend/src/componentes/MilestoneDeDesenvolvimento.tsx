@@ -1,3 +1,4 @@
+import { useId, useState } from 'react';
 import type { IssueDaVersao, MilestoneEmDesenvolvimento } from '../api/tipos';
 import { corDoEstado, rotuloDoEstado, type PaletaDeEstados } from '../dominio/estados';
 import { ROTULO_TIPO_DE_VERSAO, periodoDaVersao, tipoDaVersao } from '../dominio/versao';
@@ -34,6 +35,8 @@ export function MilestoneDeDesenvolvimento({
 }) {
   const tipo = tipoDaVersao(milestone.titulo);
   const concluido = milestone.total === 0 ? 0 : (milestone.fechadas / milestone.total) * 100;
+  const [aberta, setAberta] = useState(true);
+  const idDoCorpo = useId();
 
   return (
     <section className={`milestone milestone-${tipo}`}>
@@ -61,34 +64,47 @@ export function MilestoneDeDesenvolvimento({
             <span style={{ width: `${concluido}%` }} />
           </div>
         </div>
+
+        <button
+          type="button"
+          className="milestone-alternar"
+          aria-expanded={aberta}
+          aria-controls={idDoCorpo}
+          onClick={() => setAberta((atual) => !atual)}
+        >
+          <span aria-hidden>{aberta ? '▾' : '▸'}</span>
+          {aberta ? 'Recolher' : `Ver ${milestone.total === 1 ? 'a issue' : 'as issues'}`}
+        </button>
       </header>
 
-      {milestone.tags.length > 0 ? (
-        <ul className="milestone-tags">
-          {milestone.tags.map((tag) => (
-            <li key={`${tag.repositorio}-${tag.tag}`}>
-              <span className="milestone-repo">{tag.repositorio}</span>
-              {tag.url ? (
-                <a href={tag.url} target="_blank" rel="noreferrer">
-                  {tag.tag}
-                </a>
-              ) : (
-                <span>{tag.tag}</span>
-              )}
-            </li>
-          ))}
-        </ul>
-      ) : null}
+      <div id={idDoCorpo} hidden={!aberta}>
+        {milestone.tags.length > 0 ? (
+          <ul className="milestone-tags">
+            {milestone.tags.map((tag) => (
+              <li key={`${tag.repositorio}-${tag.tag}`}>
+                <span className="milestone-repo">{tag.repositorio}</span>
+                {tag.url ? (
+                  <a href={tag.url} target="_blank" rel="noreferrer">
+                    {tag.tag}
+                  </a>
+                ) : (
+                  <span>{tag.tag}</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        ) : null}
 
-      {milestone.issues.length === 0 ? (
-        <p className="milestone-vazia">Milestone aberta, mas ainda sem issues.</p>
-      ) : (
-        <ul className="issues">
-          {milestone.issues.map((issue) => (
-            <LinhaDaIssue key={issue.id} issue={issue} paleta={paleta} />
-          ))}
-        </ul>
-      )}
+        {milestone.issues.length === 0 ? (
+          <p className="milestone-vazia">Milestone aberta, mas ainda sem issues.</p>
+        ) : (
+          <ul className="issues">
+            {milestone.issues.map((issue) => (
+              <LinhaDaIssue key={issue.id} issue={issue} paleta={paleta} />
+            ))}
+          </ul>
+        )}
+      </div>
     </section>
   );
 }

@@ -43,6 +43,8 @@
   --estado-6: #c0397e;
   --estado-7: #2f8fa3;
   --estado-8: #7a6a58;
+  --estado-9: #6b6bd6;
+  --estado-10: #8a8f1f;
 
   --raio: 10px;
   --fonte: system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -86,6 +88,8 @@
     --estado-6: #ef7fb4;
     --estado-7: #62c3d6;
     --estado-8: #b8a48c;
+    --estado-9: #a3a3f2;
+    --estado-10: #c2c95a;
   }
 }
 
@@ -125,6 +129,8 @@
   --estado-6: #ef7fb4;
   --estado-7: #62c3d6;
   --estado-8: #b8a48c;
+  --estado-9: #a3a3f2;
+  --estado-10: #c2c95a;
 }
 
 * {
@@ -1701,6 +1707,15 @@ button.cartao-escolha:hover {
 .desenvolvimento {
   display: grid;
   gap: 16px;
+}
+
+.legenda-estados {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
 }
 
 .milestone {

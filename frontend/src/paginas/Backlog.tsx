@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react';
 import { mensagemDoErro } from '../api/cliente';
 import { useBacklogSemCriticidade } from '../api/hooks';
+import type { RespostaPriorizacao } from '../api/tipos';
 import { CartaoGrafico } from '../componentes/CartaoGrafico';
+import { ModalPriorizarIssue, pontuacao } from '../componentes/ModalPriorizarIssue';
 import {
   ordenarIssuesPor,
   tiposDistintos,
@@ -27,6 +29,14 @@ const COLUNAS: { chave: ColunaDeIssue; rotulo: string }[] = [
   { chave: 'responsavel', rotulo: 'Responsável' },
   { chave: 'criadaEm', rotulo: 'Criada há' },
 ];
+
+const RESPOSTA_VAZIA: RespostaPriorizacao = {
+  beneficiados: null,
+  tipoDeGanho: null,
+  frequencia: null,
+  riscoDeAdiar: null,
+  esforco: null,
+};
 
 /** A triagem começa por aqui: o que já foi priorizado e o que ainda espera priorização. */
 const ESTADOS_PADRAO = ['priorizado', 'pendente-priorizacao'];
@@ -59,6 +69,9 @@ export function Backlog() {
    */
   const [escolhaDeEstados, setEscolhaDeEstados] = useState<string[] | null>(null);
   const [ordenacao, setOrdenacao] = useState<OrdenacaoDeIssues | null>(null);
+  /** Respostas por issue; vivem só nesta tela até haver onde gravar. */
+  const [respostas, setRespostas] = useState<Record<number, RespostaPriorizacao>>({});
+  const [priorizando, setPriorizando] = useState<number | null>(null);
   const backlog = useBacklogSemCriticidade(dias);
 
   const issues = useMemo(() => backlog.data?.issues ?? [], [backlog.data]);
@@ -120,6 +133,14 @@ export function Backlog() {
     setTipo('');
     setEscolhaDeEstados(null);
   };
+
+  const responder = (id: number, campo: keyof RespostaPriorizacao, pontos: number) =>
+    setRespostas((atual) => ({
+      ...atual,
+      [id]: { ...(atual[id] ?? RESPOSTA_VAZIA), [campo]: pontos },
+    }));
+
+  const aberta = mostradas.find((issue) => issue.id === priorizando) ?? null;
 
   const alternarOrdem = (coluna: ColunaDeIssue) =>
     setOrdenacao((atual) =>
@@ -255,6 +276,7 @@ export function Backlog() {
                       </th>
                     );
                   })}
+                  <th>Priorização</th>
                 </tr>
               </thead>
               <tbody>
@@ -284,6 +306,17 @@ export function Backlog() {
                     <td title={`aberta em ${formatarData(issue.criadaEm)}`}>
                       {diasEmAberto(issue.criadaEm)}
                     </td>
+                    <td>
+                      <button
+                        type="button"
+                        className="aba"
+                        onClick={() => setPriorizando(issue.id)}
+                      >
+                        {pontuacao(respostas[issue.id] ?? null).score === null
+                          ? 'Priorizar'
+                          : `Score ${pontuacao(respostas[issue.id] ?? null).score}`}
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -301,6 +334,15 @@ export function Backlog() {
             </button>
           ) : null}
         </>
+      ) : null}
+
+      {aberta ? (
+        <ModalPriorizarIssue
+          issue={aberta}
+          resposta={respostas[aberta.id] ?? null}
+          aoResponder={(campo, pontos) => responder(aberta.id, campo, pontos)}
+          aoFechar={() => setPriorizando(null)}
+        />
       ) : null}
     </CartaoGrafico>
   );

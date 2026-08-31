@@ -353,10 +353,18 @@ export function useDefinirCriticidade() {
   const clienteQuery = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ iid, criticidade }: { iid: number; criticidade: string }) =>
-      api.put<{ criticidade: string; issue: IssueDaVersao }>(
+    mutationFn: ({
+      iid,
+      criticidade,
+      esforco,
+    }: {
+      iid: number;
+      criticidade: string;
+      esforco: number;
+    }) =>
+      api.put<{ criticidade: string; esforco: string; issue: IssueDaVersao }>(
         `/backlog/issues/${iid}/criticidade`,
-        { criticidade },
+        { criticidade, esforco },
       ),
     onSuccess: () => {
       clienteQuery.invalidateQueries({ queryKey: ['backlog-sem-criticidade'] });

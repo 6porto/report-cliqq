@@ -71,15 +71,19 @@ export type CriterioDeValor = (typeof CRITERIOS_DE_VALOR)[number]['chave'];
 
 export const PERGUNTA_DE_ESFORCO = 'Qual o esforço estimado para o desenvolvimento?';
 
-/** `dias` são dias úteis (5 por semana, 22 por mês) e alimentam o KPI de esforço. */
+/**
+ * `dias` são dias úteis (5 por semana, 22 por mês) e alimentam o KPI de esforço.
+ * `etiqueta` é o sufixo do label `esforco::` no GitLab e conta dias corridos —
+ * é prazo de calendário, por isso 1 semana vira 7 e não 5.
+ */
 export const OPCOES_DE_ESFORCO = [
-  { pontos: 20, rotulo: '1 dia', dias: 1, posicao: 0 },
-  { pontos: 17, rotulo: '2 dias', dias: 2, posicao: 1 },
-  { pontos: 14, rotulo: '1 semana', dias: 5, posicao: 2 },
-  { pontos: 11, rotulo: '2 semanas', dias: 10, posicao: 3 },
-  { pontos: 8, rotulo: '1 mês', dias: 22, posicao: 4 },
-  { pontos: 5, rotulo: '2 meses', dias: 44, posicao: 5 },
-  { pontos: 2, rotulo: 'mais de 2 meses', dias: 66, posicao: 6 },
+  { pontos: 20, rotulo: '1 dia', dias: 1, posicao: 0, etiqueta: '1' },
+  { pontos: 17, rotulo: '2 dias', dias: 2, posicao: 1, etiqueta: '2' },
+  { pontos: 14, rotulo: '1 semana', dias: 5, posicao: 2, etiqueta: '7' },
+  { pontos: 11, rotulo: '2 semanas', dias: 10, posicao: 3, etiqueta: '14' },
+  { pontos: 8, rotulo: '1 mês', dias: 22, posicao: 4, etiqueta: '30' },
+  { pontos: 5, rotulo: '2 meses', dias: 44, posicao: 5, etiqueta: '60' },
+  { pontos: 2, rotulo: 'mais de 2 meses', dias: 66, posicao: 6, etiqueta: '60+' },
 ] as const;
 
 export const PONTOS_DE_ESFORCO = OPCOES_DE_ESFORCO.map((opcao) => opcao.pontos);

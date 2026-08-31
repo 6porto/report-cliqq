@@ -1,10 +1,13 @@
 import {
   inicioDoPeriodo,
   labelDaCriticidade,
+  labelDoEsforco,
   labelsDeCriticidade,
+  labelsDeEsforco,
   ordenarPorCriacao,
   temCriticidade,
 } from './backlog-gitlab';
+import { esforcoPorPontos } from './priorizacao';
 import type { IssueDaVersao } from './versao-gitlab';
 
 function issue(id: number, criadaEm: string): IssueDaVersao {
@@ -103,5 +106,40 @@ describe('labels de criticidade', () => {
 
   it('reconhece como classificada a issue que acabou de receber o label', () => {
     expect(temCriticidade([labelDaCriticidade('P4')])).toBe(true);
+  });
+});
+
+describe('labels de esforço', () => {
+  it.each([
+    [20, 'esforco::1'],
+    [17, 'esforco::2'],
+    [14, 'esforco::7'],
+    [11, 'esforco::14'],
+    [8, 'esforco::30'],
+    [5, 'esforco::60'],
+    [2, 'esforco::60+'],
+  ])('converte %s pontos no label %s', (pontos, esperado) => {
+    expect(labelDoEsforco(pontos)).toBe(esperado);
+  });
+
+  it('conta dias corridos, não os dias úteis do KPI', () => {
+    expect(labelDoEsforco(14)).toBe('esforco::7');
+    expect(esforcoPorPontos(14)?.dias).toBe(5);
+  });
+
+  it('não devolve label para pontuação fora da escala', () => {
+    expect(labelDoEsforco(10)).toBeNull();
+  });
+
+  it('lista o escopo inteiro, para limpar o esforço anterior', () => {
+    expect(labelsDeEsforco()).toEqual([
+      'esforco::1',
+      'esforco::2',
+      'esforco::7',
+      'esforco::14',
+      'esforco::30',
+      'esforco::60',
+      'esforco::60+',
+    ]);
   });
 });

@@ -17,6 +17,6 @@ export class BacklogController {
     @Param('iid', ParseIntPipe) iid: number,
     @Body() corpo: DefinirCriticidadeDto,
   ) {
-    return this.backlogService.definirCriticidade(iid, corpo.criticidade);
+    return this.backlogService.definirCriticidade(iid, corpo.criticidade, corpo.esforco);
   }
 }

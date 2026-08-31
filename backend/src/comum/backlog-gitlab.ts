@@ -1,7 +1,13 @@
-import { CRITICIDADES, type Criticidade } from './priorizacao';
+import {
+  CRITICIDADES,
+  OPCOES_DE_ESFORCO,
+  esforcoPorPontos,
+  type Criticidade,
+} from './priorizacao';
 import type { IssueDaVersao } from './versao-gitlab';
 
 const PREFIXO_CRITICIDADE = 'criticidade::';
+const PREFIXO_ESFORCO = 'esforco::';
 
 /** Períodos que a tela oferece; `null` traz o backlog inteiro. */
 export const PERIODOS_EM_DIAS = [7, 15, 30] as const;
@@ -27,6 +33,17 @@ export function labelsDeCriticidade() {
     labelDaCriticidade(criticidade),
     `${PREFIXO_CRITICIDADE}${criticidade.toLowerCase()}`,
   ]);
+}
+
+/** Prazo em dias corridos, tirado da `etiqueta` da opção de esforço. */
+export function labelDoEsforco(pontos: number) {
+  const opcao = esforcoPorPontos(pontos);
+
+  return opcao ? `${PREFIXO_ESFORCO}${opcao.etiqueta}` : null;
+}
+
+export function labelsDeEsforco() {
+  return OPCOES_DE_ESFORCO.map((opcao) => `${PREFIXO_ESFORCO}${opcao.etiqueta}`);
 }
 
 /** Data limite no formato que o GitLab espera em `created_after`. */

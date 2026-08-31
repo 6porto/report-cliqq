@@ -5,6 +5,7 @@ import {
   CRITERIO_DE_ESFORCO,
   FAIXAS_DE_CRITICIDADE,
   PERGUNTAS,
+  etiquetaDoEsforco,
   respondidas,
   sugerirCriticidade,
   type CampoResposta,
@@ -22,7 +23,7 @@ interface Props {
   erroAoSalvar: string | null;
   aoResponder: (campo: keyof RespostaPriorizacao, pontos: number) => void;
   aoEscolherCriticidade: (criticidade: Criticidade) => void;
-  aoAplicar: (criticidade: Criticidade) => void;
+  aoAplicar: (criticidade: Criticidade, esforco: number) => void;
   aoFechar: () => void;
 }
 
@@ -114,6 +115,7 @@ export function ModalPriorizarIssue({
   const escolhaFoiTrocada = criticidade !== null && sugerida !== null && criticidade !== sugerida;
   const resumoMarcado =
     FAIXAS_DE_CRITICIDADE.find((faixa) => faixa.criticidade === marcada)?.resumo ?? null;
+  const etiqueta = etiquetaDoEsforco(esforco);
 
   const botaoDaOpcao = (
     chave: CampoResposta,
@@ -283,8 +285,8 @@ export function ModalPriorizarIssue({
 
           <div className="veredito-acoes">
             <p>
-              {marcada
-                ? `Aplicar grava o label criticidade::${marcada} na issue e a tira do backlog.`
+              {marcada && etiqueta
+                ? `Aplicar grava criticidade::${marcada} e esforco::${etiqueta} na issue, e a tira do backlog.`
                 : 'As respostas ficam só nesta tela até você aplicar a criticidade.'}
             </p>
             <div className="veredito-botoes">
@@ -294,8 +296,8 @@ export function ModalPriorizarIssue({
               <button
                 type="button"
                 className="aba primario"
-                disabled={!marcada || salvando}
-                onClick={() => marcada && aoAplicar(marcada)}
+                disabled={!marcada || esforco === null || salvando}
+                onClick={() => marcada && esforco !== null && aoAplicar(marcada, esforco)}
               >
                 {salvando ? 'Aplicando…' : marcada ? `Aplicar ${marcada}` : 'Aplicar'}
               </button>

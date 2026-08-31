@@ -417,9 +417,9 @@ export function Backlog() {
           aoEscolherCriticidade={(criticidade) =>
             setCriticidades((atual) => ({ ...atual, [aberta.id]: criticidade }))
           }
-          aoAplicar={(criticidade) =>
+          aoAplicar={(criticidade, esforco) =>
             definirCriticidade.mutate(
-              { iid: aberta.id, criticidade },
+              { iid: aberta.id, criticidade, esforco },
               { onSuccess: () => setPriorizando(null) },
             )
           }

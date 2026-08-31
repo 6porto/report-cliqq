@@ -65,19 +65,24 @@ export const CRITERIOS_DE_VALOR = [
   },
 ] as const;
 
+/** `etiqueta` é o sufixo do label `esforco::` e conta dias corridos. */
 export const CRITERIO_DE_ESFORCO = {
   chave: 'esforco',
   pergunta: 'Qual o esforço estimado para o desenvolvimento?',
   opcoes: [
-    { pontos: 20, rotulo: '1 dia' },
-    { pontos: 17, rotulo: '2 dias' },
-    { pontos: 14, rotulo: '1 semana' },
-    { pontos: 11, rotulo: '2 semanas' },
-    { pontos: 8, rotulo: '1 mês' },
-    { pontos: 5, rotulo: '2 meses' },
-    { pontos: 2, rotulo: 'mais de 2 meses' },
+    { pontos: 20, rotulo: '1 dia', etiqueta: '1' },
+    { pontos: 17, rotulo: '2 dias', etiqueta: '2' },
+    { pontos: 14, rotulo: '1 semana', etiqueta: '7' },
+    { pontos: 11, rotulo: '2 semanas', etiqueta: '14' },
+    { pontos: 8, rotulo: '1 mês', etiqueta: '30' },
+    { pontos: 5, rotulo: '2 meses', etiqueta: '60' },
+    { pontos: 2, rotulo: 'mais de 2 meses', etiqueta: '60+' },
   ],
 } as const;
+
+export function etiquetaDoEsforco(pontos: number | null) {
+  return CRITERIO_DE_ESFORCO.opcoes.find((opcao) => opcao.pontos === pontos)?.etiqueta ?? null;
+}
 
 export type CampoResposta = keyof RespostaPriorizacao;
 

@@ -1,8 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import {
   inicioDoPeriodo,
   labelDaCriticidade,
+  labelDoEsforco,
   labelsDeCriticidade,
+  labelsDeEsforco,
   ordenarPorCriacao,
   temCriticidade,
 } from '../comum/backlog-gitlab';
@@ -33,19 +35,28 @@ export class BacklogService {
   }
 
   /**
-   * Grava a criticidade na issue. Remove o escopo inteiro antes de aplicar o
-   * novo label, então serve tanto para definir quanto para trocar.
+   * Grava criticidade e esforço na issue. Remove os dois escopos inteiros antes
+   * de aplicar os labels novos, então serve tanto para definir quanto para
+   * trocar.
    */
-  async definirCriticidade(iid: number, criticidade: Criticidade) {
-    const escolhido = labelDaCriticidade(criticidade);
-    const anteriores = labelsDeCriticidade().filter((label) => label !== escolhido);
+  async definirCriticidade(iid: number, criticidade: Criticidade, esforco: number) {
+    const doEsforco = labelDoEsforco(esforco);
+
+    if (!doEsforco) {
+      throw new BadRequestException(`Esforço fora da escala: ${esforco}`);
+    }
+
+    const escolhidos = [labelDaCriticidade(criticidade), doEsforco];
+    const anteriores = [...labelsDeCriticidade(), ...labelsDeEsforco()].filter(
+      (label) => !escolhidos.includes(label),
+    );
 
     const issue = await this.gitlab.trocarLabelDaIssue<IssueDaVersaoGitlab>(
       iid,
       anteriores.join(','),
-      escolhido,
+      escolhidos.join(','),
     );
 
-    return { criticidade, issue: mapearIssueDaVersao(issue) };
+    return { criticidade, esforco: doEsforco, issue: mapearIssueDaVersao(issue) };
   }
 }

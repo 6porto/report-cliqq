@@ -1999,3 +1999,15 @@ button.cartao-escolha:hover {
 .tipo-refatoracao {
   color: var(--tipo-refatoracao);
 }
+/* Estado escolhido no Backlog: mesmo preenchimento do seletor de período. */
+
+.estados-do-backlog .opcao-marcada {
+  background: var(--serie-1);
+  border-color: var(--serie-1);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.estados-do-backlog .opcao-marcada .opcao-pontos {
+  color: #ffffff;
+}

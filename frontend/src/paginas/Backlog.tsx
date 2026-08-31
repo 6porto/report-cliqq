@@ -1,7 +1,14 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { mensagemDoErro } from '../api/cliente';
 import { useBacklogSemCriticidade } from '../api/hooks';
 import { CartaoGrafico } from '../componentes/CartaoGrafico';
+import {
+  ordenarIssuesPor,
+  tiposDistintos,
+  valoresDistintos,
+  type ColunaDeIssue,
+  type OrdenacaoDeIssues,
+} from '../dominio/ordenacao-de-issues';
 import { classeDoTipo } from '../dominio/tipos-de-issue';
 
 const PERIODOS: { rotulo: string; dias: number | null }[] = [
@@ -9,6 +16,16 @@ const PERIODOS: { rotulo: string; dias: number | null }[] = [
   { rotulo: '15 dias', dias: 15 },
   { rotulo: '30 dias', dias: 30 },
   { rotulo: 'Tudo', dias: null },
+];
+
+const COLUNAS: { chave: ColunaDeIssue; rotulo: string }[] = [
+  { chave: 'id', rotulo: 'Issue' },
+  { chave: 'titulo', rotulo: 'Título' },
+  { chave: 'tipos', rotulo: 'Tipo' },
+  { chave: 'sistema', rotulo: 'Sistema' },
+  { chave: 'estado', rotulo: 'Estado' },
+  { chave: 'responsavel', rotulo: 'Responsável' },
+  { chave: 'criadaEm', rotulo: 'Criada em' },
 ];
 
 /** Quantas linhas aparecem antes do "ver mais" — o backlog inteiro passa de 190. */
@@ -21,15 +38,64 @@ function formatarData(valor: string) {
 export function Backlog() {
   const [dias, setDias] = useState<number | null>(7);
   const [visiveis, setVisiveis] = useState(POR_VEZ);
+  const [tipo, setTipo] = useState('');
+  /** Vazio significa todos os estados; marcar um ou mais restringe a lista. */
+  const [estadosEscolhidos, setEstadosEscolhidos] = useState<string[]>([]);
+  const [ordenacao, setOrdenacao] = useState<OrdenacaoDeIssues | null>(null);
   const backlog = useBacklogSemCriticidade(dias);
 
-  const issues = backlog.data?.issues ?? [];
-  const mostradas = issues.slice(0, visiveis);
+  const issues = useMemo(() => backlog.data?.issues ?? [], [backlog.data]);
+  const tipos = useMemo(() => tiposDistintos(issues), [issues]);
+  const estados = useMemo(() => valoresDistintos(issues, 'estado'), [issues]);
+
+  const filtradas = useMemo(
+    () =>
+      issues.filter(
+        (issue) =>
+          (!tipo || issue.tipos.includes(tipo)) &&
+          (estadosEscolhidos.length === 0 ||
+            estadosEscolhidos.includes(issue.estado ?? '')),
+      ),
+    [issues, tipo, estadosEscolhidos],
+  );
+
+  /** Contagem por estado dentro do que o filtro de tipo já deixou passar. */
+  const contagemPorEstado = useMemo(() => {
+    const contagem = new Map<string, number>();
+
+    for (const issue of issues) {
+      if (tipo && !issue.tipos.includes(tipo)) {
+        continue;
+      }
+
+      const chave = issue.estado ?? '';
+      contagem.set(chave, (contagem.get(chave) ?? 0) + 1);
+    }
+
+    return contagem;
+  }, [issues, tipo]);
+
+  const alternarEstado = (valor: string) =>
+    setEstadosEscolhidos((atual) =>
+      atual.includes(valor) ? atual.filter((item) => item !== valor) : [...atual, valor],
+    );
+
+  const ordenadas = ordenarIssuesPor(filtradas, ordenacao);
+  const mostradas = ordenadas.slice(0, visiveis);
 
   const trocarPeriodo = (novo: number | null) => {
     setDias(novo);
     setVisiveis(POR_VEZ);
+    setTipo('');
+    setEstadosEscolhidos([]);
   };
+
+  const alternarOrdem = (coluna: ColunaDeIssue) =>
+    setOrdenacao((atual) =>
+      atual?.coluna === coluna
+        ? { coluna, direcao: atual.direcao === 'asc' ? 'desc' : 'asc' }
+        : { coluna, direcao: 'asc' },
+    );
 
   return (
     <CartaoGrafico
@@ -62,25 +128,95 @@ export function Backlog() {
         </p>
       ) : null}
 
+      {issues.length > 0 ? (
+        <div className="filtros">
+          <select value={tipo} onChange={(evento) => setTipo(evento.target.value)} aria-label="Filtrar por tipo">
+            <option value="">Todos os tipos</option>
+            {tipos.map((valor) => (
+              <option key={valor} value={valor}>
+                {valor}
+              </option>
+            ))}
+          </select>
+
+          <span className="assistente-apoio">
+            {filtradas.length} de {issues.length} listadas
+          </span>
+        </div>
+      ) : null}
+
+      {issues.length > 0 ? (
+        <fieldset className="filtro-estados estados-do-backlog">
+          <legend>Estados {estadosEscolhidos.length > 0 ? '· clique para tirar' : ''}</legend>
+          <div className="opcoes">
+            {estados.map((valor) => {
+              const marcado = estadosEscolhidos.includes(valor);
+
+              return (
+                <button
+                  key={valor}
+                  type="button"
+                  className={marcado ? 'opcao opcao-marcada' : 'opcao'}
+                  aria-pressed={marcado}
+                  onClick={() => alternarEstado(valor)}
+                >
+                  <span>{valor}</span>
+                  <span className="opcao-pontos">{contagemPorEstado.get(valor) ?? 0}</span>
+                </button>
+              );
+            })}
+            {estadosEscolhidos.length > 0 ? (
+              <button type="button" className="ligacao" onClick={() => setEstadosEscolhidos([])}>
+                mostrar todos
+              </button>
+            ) : null}
+          </div>
+        </fieldset>
+      ) : null}
+
       {backlog.data && issues.length === 0 ? (
         <p className="carregando">
           Todas as issues do período já têm criticidade — nada para triar aqui.
         </p>
       ) : null}
 
-      {issues.length > 0 ? (
+      {issues.length > 0 && filtradas.length === 0 ? (
+        <p className="carregando">Nenhuma issue com esses filtros.</p>
+      ) : null}
+
+      {filtradas.length > 0 ? (
         <>
           <div className="tabela-envolucro">
             <table>
               <thead>
                 <tr>
-                  <th>Issue</th>
-                  <th>Título</th>
-                  <th>Tipo</th>
-                  <th>Sistema</th>
-                  <th>Estado</th>
-                  <th>Responsável</th>
-                  <th>Criada em</th>
+                  {COLUNAS.map((coluna) => {
+                    const ativa = ordenacao?.coluna === coluna.chave;
+
+                    return (
+                      <th
+                        key={coluna.chave}
+                        aria-sort={
+                          ativa
+                            ? ordenacao.direcao === 'asc'
+                              ? 'ascending'
+                              : 'descending'
+                            : 'none'
+                        }
+                      >
+                        <button
+                          type="button"
+                          className={ativa ? 'ordenar ordenar-ativa' : 'ordenar'}
+                          onClick={() => alternarOrdem(coluna.chave)}
+                        >
+                          {coluna.rotulo}
+                          <span aria-hidden>
+                            {ativa ? (ordenacao.direcao === 'asc' ? '▲' : '▼') : '↕'}
+                          </span>
+                        </button>
+                      </th>
+                    );
+                  })}
                 </tr>
               </thead>
               <tbody>
@@ -94,12 +230,12 @@ export function Backlog() {
                     <td className="celula-titulo">{issue.titulo}</td>
                     <td>
                       {issue.tipos.length > 0
-                        ? issue.tipos.map((tipo) => (
+                        ? issue.tipos.map((valor) => (
                             <span
-                              className={`issue-marcador ${classeDoTipo(tipo)}`.trim()}
-                              key={tipo}
+                              className={`issue-marcador ${classeDoTipo(valor)}`.trim()}
+                              key={valor}
                             >
-                              {tipo}
+                              {valor}
                             </span>
                           ))
                         : '—'}
@@ -114,14 +250,14 @@ export function Backlog() {
             </table>
           </div>
 
-          {issues.length > mostradas.length ? (
+          {filtradas.length > mostradas.length ? (
             <button
               type="button"
               className="aba"
               onClick={() => setVisiveis((atual) => atual + POR_VEZ)}
             >
-              Ver mais {Math.min(POR_VEZ, issues.length - mostradas.length)} de{' '}
-              {issues.length - mostradas.length} restantes
+              Ver mais {Math.min(POR_VEZ, filtradas.length - mostradas.length)} de{' '}
+              {filtradas.length - mostradas.length} restantes
             </button>
           ) : null}
         </>

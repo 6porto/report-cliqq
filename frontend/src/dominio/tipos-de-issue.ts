@@ -14,6 +14,8 @@ const CLASSE_POR_TIPO: Record<string, string> = {
   refactor: 'tipo-refatoracao',
   refatoração: 'tipo-refatoracao',
   refatoracao: 'tipo-refatoracao',
+  analise: 'tipo-analise',
+  'análise': 'tipo-analise',
 };
 
 export function classeDoTipo(tipo: string) {

@@ -26,7 +26,6 @@ const COLUNAS: { chave: ColunaDeIssue; rotulo: string }[] = [
   { chave: 'tipos', rotulo: 'Tipo' },
   { chave: 'estado', rotulo: 'Estado' },
   { chave: 'autor', rotulo: 'Autor' },
-  { chave: 'responsavel', rotulo: 'Responsável' },
   { chave: 'criadaEm', rotulo: 'Criada há' },
 ];
 
@@ -370,7 +369,6 @@ export function Backlog() {
                     </td>
                     <td>{issue.estado ?? '—'}</td>
                     <td>{issue.autor ?? '—'}</td>
-                    <td>{issue.responsavel ?? '—'}</td>
                     <td title={`aberta em ${formatarData(issue.criadaEm)}`}>
                       {diasEmAberto(issue.criadaEm)}
                     </td>

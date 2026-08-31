@@ -1,9 +1,12 @@
+import type { ReactNode } from 'react';
 import { dividirVersao, type AcaoDeVersao } from '../dominio/versao';
 
 interface Props {
   base: string | null;
   nova: string;
   acao: AcaoDeVersao;
+  /** Ação de trocar a base, logo abaixo da tag de hoje. */
+  troca?: ReactNode;
 }
 
 const EXPLICACAO: Record<AcaoDeVersao, string> = {
@@ -13,7 +16,7 @@ const EXPLICACAO: Record<AcaoDeVersao, string> = {
 };
 
 /** O salto entre a tag atual e a nova, com só o trecho alterado em cor. */
-export function SaltoDeVersao({ base, nova, acao }: Props) {
+export function SaltoDeVersao({ base, nova, acao, troca }: Props) {
   const partes = dividirVersao(acao, nova);
 
   return (
@@ -21,6 +24,7 @@ export function SaltoDeVersao({ base, nova, acao }: Props) {
       <div className="salto-lado">
         <span className="salto-eixo">Hoje</span>
         <span className="salto-base">{base ?? 'sem tag anterior'}</span>
+        {troca}
       </div>
 
       <span className="salto-seta" aria-hidden>

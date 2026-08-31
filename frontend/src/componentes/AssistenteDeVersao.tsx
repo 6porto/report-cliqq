@@ -337,7 +337,25 @@ export function AssistenteDeVersao() {
               </header>
 
               {nova && naDescricao.acao ? (
-                <SaltoDeVersao base={tagBase} nova={nova} acao={naDescricao.acao} />
+                <SaltoDeVersao
+                  base={tagBase}
+                  nova={nova}
+                  acao={naDescricao.acao}
+                  troca={
+                    podeTrocar && trocando !== item.repositorio.caminho ? (
+                      <span className="salto-troca">
+                        <button
+                          type="button"
+                          className="ligacao"
+                          onClick={() => setTrocando(item.repositorio.caminho)}
+                        >
+                          trocar
+                        </button>
+                        {tagBase === sugerida ? null : <span> · base trocada</span>}
+                      </span>
+                    ) : null
+                  }
+                />
               ) : null}
 
               {podeTrocar ? (
@@ -366,18 +384,7 @@ export function AssistenteDeVersao() {
                       </label>
                     ))}
                   </fieldset>
-                ) : (
-                  <p className="assistente-apoio">
-                    <button
-                      type="button"
-                      className="ligacao"
-                      onClick={() => setTrocando(item.repositorio.caminho)}
-                    >
-                      trocar a tag de partida
-                    </button>
-                    {tagBase === sugerida ? '' : ' · base trocada'}
-                  </p>
-                )
+                ) : null
               ) : null}
 
               {jaExiste ? (

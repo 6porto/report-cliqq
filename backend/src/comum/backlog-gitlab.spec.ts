@@ -112,7 +112,7 @@ describe('labels de criticidade', () => {
 describe('labels de esforço', () => {
   it.each([
     [20, 'esforco::1'],
-    [17, 'esforco::2'],
+    [17, 'esforco::3'],
     [14, 'esforco::7'],
     [11, 'esforco::14'],
     [8, 'esforco::30'],
@@ -135,16 +135,17 @@ describe('labels de esforço', () => {
     expect(labelDoEsforco(10)).toBeNull();
   });
 
-  it('lista o escopo inteiro, para limpar o esforço anterior', () => {
+  it('lista o escopo inteiro, incluindo a etiqueta aposentada', () => {
     expect(labelsDeEsforco()).toEqual([
       'esforco::1',
-      'esforco::2',
+      'esforco::3',
       'esforco::7',
       'esforco::14',
       'esforco::30',
       'esforco::60',
       'esforco::60+',
       'esforco::?',
+      'esforco::2',
     ]);
   });
 });

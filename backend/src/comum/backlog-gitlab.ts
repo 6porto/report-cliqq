@@ -44,10 +44,16 @@ export function labelDoEsforco(pontos: number) {
   return opcao ? `${PREFIXO_ESFORCO}${opcao.etiqueta}` : null;
 }
 
+/** `esforco::2` saiu quando a faixa virou 3 dias; ainda há issue marcada com ele. */
+const ETIQUETAS_DE_ESFORCO_APOSENTADAS = ['2'];
+
 export function labelsDeEsforco() {
-  return [...OPCOES_DE_ESFORCO, ESFORCO_INDEFINIDO].map(
-    (opcao) => `${PREFIXO_ESFORCO}${opcao.etiqueta}`,
-  );
+  return [
+    ...[...OPCOES_DE_ESFORCO, ESFORCO_INDEFINIDO].map(
+      (opcao) => `${PREFIXO_ESFORCO}${opcao.etiqueta}`,
+    ),
+    ...ETIQUETAS_DE_ESFORCO_APOSENTADAS.map((etiqueta) => `${PREFIXO_ESFORCO}${etiqueta}`),
+  ];
 }
 
 /** Data limite no formato que o GitLab espera em `created_after`. */

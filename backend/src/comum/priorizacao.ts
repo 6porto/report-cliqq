@@ -77,12 +77,12 @@ export const PERGUNTA_DE_ESFORCO = 'Qual o esforço estimado para o desenvolvime
  * é prazo de calendário, por isso 1 semana vira 7 e não 5.
  */
 export const OPCOES_DE_ESFORCO = [
-  { pontos: 20, rotulo: '1 dia', dias: 1, posicao: 0, etiqueta: '1' },
-  { pontos: 17, rotulo: '2 dias', dias: 2, posicao: 1, etiqueta: '2' },
-  { pontos: 14, rotulo: '1 semana', dias: 5, posicao: 2, etiqueta: '7' },
-  { pontos: 11, rotulo: '2 semanas', dias: 10, posicao: 3, etiqueta: '14' },
-  { pontos: 8, rotulo: '1 mês', dias: 22, posicao: 4, etiqueta: '30' },
-  { pontos: 5, rotulo: '2 meses', dias: 44, posicao: 5, etiqueta: '60' },
+  { pontos: 20, rotulo: 'até 1 dia', dias: 1, posicao: 0, etiqueta: '1' },
+  { pontos: 17, rotulo: 'até 3 dias', dias: 3, posicao: 1, etiqueta: '3' },
+  { pontos: 14, rotulo: 'até 1 semana', dias: 5, posicao: 2, etiqueta: '7' },
+  { pontos: 11, rotulo: 'até 2 semanas', dias: 10, posicao: 3, etiqueta: '14' },
+  { pontos: 8, rotulo: 'até 1 mês', dias: 22, posicao: 4, etiqueta: '30' },
+  { pontos: 5, rotulo: 'até 2 meses', dias: 44, posicao: 5, etiqueta: '60' },
   { pontos: 2, rotulo: 'mais de 2 meses', dias: 66, posicao: 6, etiqueta: '60+' },
 ] as const;
 
@@ -100,7 +100,7 @@ export const ESFORCO_INDEFINIDO = {
   etiqueta: '?',
 } as const;
 
-/** Ganho rápido: valor alto e esforço de até 2 dias. */
+/** Ganho rápido: valor alto e esforço de até 3 dias. */
 export const POSICAO_MAXIMA_DE_GANHO_RAPIDO = 1;
 
 export const PONTUACAO_VALOR_MINIMA = CRITERIOS_DE_VALOR.length * 5;

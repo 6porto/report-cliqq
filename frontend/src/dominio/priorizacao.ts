@@ -70,12 +70,12 @@ export const CRITERIO_DE_ESFORCO = {
   chave: 'esforco',
   pergunta: 'Qual o esforço estimado para o desenvolvimento?',
   opcoes: [
-    { pontos: 20, rotulo: '1 dia', etiqueta: '1' },
-    { pontos: 17, rotulo: '2 dias', etiqueta: '2' },
-    { pontos: 14, rotulo: '1 semana', etiqueta: '7' },
-    { pontos: 11, rotulo: '2 semanas', etiqueta: '14' },
-    { pontos: 8, rotulo: '1 mês', etiqueta: '30' },
-    { pontos: 5, rotulo: '2 meses', etiqueta: '60' },
+    { pontos: 20, rotulo: 'até 1 dia', etiqueta: '1' },
+    { pontos: 17, rotulo: 'até 3 dias', etiqueta: '3' },
+    { pontos: 14, rotulo: 'até 1 semana', etiqueta: '7' },
+    { pontos: 11, rotulo: 'até 2 semanas', etiqueta: '14' },
+    { pontos: 8, rotulo: 'até 1 mês', etiqueta: '30' },
+    { pontos: 5, rotulo: 'até 2 meses', etiqueta: '60' },
     { pontos: 2, rotulo: 'mais de 2 meses', etiqueta: '60+' },
   ],
 } as const;
@@ -114,7 +114,7 @@ export const PERGUNTAS: Pergunta[] = [...CRITERIOS_DE_VALOR, CRITERIO_DE_ESFORCO
 /** Eixo X do gráfico: tempo de desenvolvimento crescendo da esquerda para a direita. */
 export const POSICOES_DE_ESFORCO = CRITERIO_DE_ESFORCO.opcoes.map((opcao) => opcao.rotulo);
 
-/** Ganho rápido: valor alto e esforço de até 2 dias. */
+/** Ganho rápido: valor alto e esforço de até 3 dias. */
 export const POSICAO_MAXIMA_DE_GANHO_RAPIDO = 1;
 
 export const PONTUACAO_VALOR_MINIMA = CRITERIOS_DE_VALOR.length * 5;

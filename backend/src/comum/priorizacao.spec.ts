@@ -37,12 +37,12 @@ describe('calcularPriorizacao', () => {
   });
 
   it.each([
-    [20, 0, '1 dia', 1],
-    [17, 1, '2 dias', 2],
-    [14, 2, '1 semana', 5],
-    [11, 3, '2 semanas', 10],
-    [8, 4, '1 mês', 22],
-    [5, 5, '2 meses', 44],
+    [20, 0, 'até 1 dia', 1],
+    [17, 1, 'até 3 dias', 3],
+    [14, 2, 'até 1 semana', 5],
+    [11, 3, 'até 2 semanas', 10],
+    [8, 4, 'até 1 mês', 22],
+    [5, 5, 'até 2 meses', 44],
     [2, 6, 'mais de 2 meses', 66],
   ])(
     'esforço de %i pontos fica na posição %i do eixo (%s)',

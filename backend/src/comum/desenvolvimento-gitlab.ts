@@ -30,11 +30,21 @@ export interface MilestoneEmDesenvolvimento extends Versao {
 }
 
 /**
+ * Ordem das seções da aba: pelo título da milestone. `numeric` mantém
+ * `release/9` antes de `release/10`, que a ordem alfabética pura inverteria.
+ */
+export function ordenarPorTitulo(versoes: Versao[]): Versao[] {
+  return [...versoes].sort((a, b) =>
+    a.titulo.localeCompare(b.titulo, 'pt-BR', { numeric: true, sensitivity: 'base' }),
+  );
+}
+
+/**
  * A aba Desenvolvimento só olha para o que está em andamento: milestone `fix/`
  * ou `release/` que ainda não foi encerrada no GitLab.
  */
 export function milestonesAbertas(milestones: MilestoneGitlab[]): Versao[] {
-  return ordenarVersoes(
+  return ordenarPorTitulo(
     milestones
       .filter(
         (milestone) =>

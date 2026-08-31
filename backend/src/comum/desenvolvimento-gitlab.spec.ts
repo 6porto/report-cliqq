@@ -46,17 +46,35 @@ describe('milestonesAbertas', () => {
       milestone({ id: 4, title: 'Planejamento 2026' }),
     ]);
 
-    expect(abertas.map((versao) => versao.id)).toEqual([1, 2]);
+    expect(abertas.map((versao) => versao.id)).toEqual([2, 1]);
   });
 
-  it('ordena as mais recentes primeiro e joga as sem data para o fim', () => {
+  it('ordena pelo título, sem olhar a data de entrega', () => {
     const abertas = milestonesAbertas([
-      milestone({ id: 1, title: 'fix/sem-data', due_date: null }),
-      milestone({ id: 2, title: 'release/agosto', due_date: '2026-08-31' }),
-      milestone({ id: 3, title: 'release/setembro', due_date: '2026-09-30' }),
+      milestone({ id: 1, title: 'release/setembro', due_date: '2026-09-30' }),
+      milestone({ id: 2, title: 'fix/sem-data', due_date: null }),
+      milestone({ id: 3, title: 'release/agosto', due_date: '2026-08-31' }),
     ]);
 
-    expect(abertas.map((versao) => versao.id)).toEqual([3, 2, 1]);
+    expect(abertas.map((versao) => versao.titulo)).toEqual([
+      'fix/sem-data',
+      'release/agosto',
+      'release/setembro',
+    ]);
+  });
+
+  it('compara números pelo valor, não caractere a caractere', () => {
+    const abertas = milestonesAbertas([
+      milestone({ id: 1, title: 'release/10' }),
+      milestone({ id: 2, title: 'release/9' }),
+      milestone({ id: 3, title: 'release/2' }),
+    ]);
+
+    expect(abertas.map((versao) => versao.titulo)).toEqual([
+      'release/2',
+      'release/9',
+      'release/10',
+    ]);
   });
 });
 

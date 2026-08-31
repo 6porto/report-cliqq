@@ -23,7 +23,6 @@ import type {
   StatusPorDia,
   StatusRollout,
   TagDeVersao,
-  Versao,
   VersaoGerada,
   VersaoPronta,
 } from './tipos';
@@ -294,13 +293,6 @@ export function useRemoverLatenciaSemanal() {
   });
 }
 
-export function useVersoes() {
-  return useQuery({
-    queryKey: ['versoes'],
-    queryFn: () => api.get<Versao[]>('/versao/milestones'),
-  });
-}
-
 export function useGerarVersao() {
   const clienteQuery = useQueryClient();
 
@@ -313,7 +305,6 @@ export function useGerarVersao() {
     }) => api.post<VersaoGerada>('/versao/gerar', variaveis),
     onSuccess: () => {
       clienteQuery.invalidateQueries({ queryKey: ['versoes-prontas'] });
-      clienteQuery.invalidateQueries({ queryKey: ['versoes'] });
       clienteQuery.invalidateQueries({ queryKey: ['tags-do-repositorio'] });
     },
   });

@@ -1,25 +1,12 @@
-import type { IssueDaVersao, Versao } from '../api/tipos';
+import type { Versao } from '../api/tipos';
 
-/** Espelha PREFIXOS_DE_VERSAO do backend (backend/src/comum/versao-gitlab.ts). */
-export const PREFIXOS_DE_VERSAO = ['release/', 'fix/'] as const;
+/** Issues nesse estado entram na geração de uma nova versão. */
+export const ESTADO_PRONTO_PARA_TAG = 'aguardando-release';
 
-/** Espelha REPOSITORIOS_SEM_VERSIONAMENTO do backend (backend/src/comum/tags-gitlab.ts). */
-export const REPOSITORIOS_SEM_VERSIONAMENTO = [
-  'mercantil/kubernetes/dev-config',
-  'mercantil/kubernetes/qas-config',
-  'mercantil/kubernetes/prd-config',
-];
+const VERSAO_NA_LINHA = /\bv?_?\d+\.\d+\.\d+(?:-rc\d+)?\b/i;
+const PARTES_DA_TAG = /^v?_?(\d+)\.(\d+)\.(\d+)(?:-rc(\d+))?$/i;
 
-export const ROTULO_SITUACAO: Record<IssueDaVersao['situacao'], string> = {
-  aberta: 'Aberta',
-  fechada: 'Fechada',
-};
-
-export function ehVersaoAtiva(versao: Versao) {
-  return versao.estado !== 'closed';
-}
-
-export function formatarData(valor: string | null) {
+function formatarData(valor: string | null) {
   return valor ? new Date(valor).toLocaleDateString('pt-BR') : '—';
 }
 
@@ -31,22 +18,7 @@ export function periodoDaVersao(versao: Versao) {
   return `${formatarData(versao.dataInicio)} até ${formatarData(versao.dataFim)}`;
 }
 
-export function ehRepositorioSemVersionamento(caminho: string) {
-  return REPOSITORIOS_SEM_VERSIONAMENTO.includes(caminho);
-}
-
-/** Issues nesse estado já entram marcadas na geração de tag. */
-export const ESTADO_PRONTO_PARA_TAG = 'aguardando-release';
-
-const VERSAO_NA_LINHA = /\bv?_?\d+\.\d+\.\d+(?:-rc\d+)?\b/i;
-
 export type AcaoDeVersao = 'rc' | 'patch' | 'minor';
-
-export const ROTULO_ACAO: Record<AcaoDeVersao, string> = {
-  rc: 'Nova RC',
-  patch: 'Nova patch',
-  minor: 'Nova minor',
-};
 
 export interface VersaoNaDescricao {
   tag: string | null;
@@ -84,8 +56,6 @@ export function versaoNaDescricao(
 
   return { tag: encontrada[0], acao: 'rc', malformada: false };
 }
-
-const PARTES_DA_TAG = /^v?_?(\d+)\.(\d+)\.(\d+)(?:-rc(\d+))?$/i;
 
 /** Corta o número no ponto em que a ação mexe: o começo não muda, o resto sim. */
 export function dividirVersao(acao: AcaoDeVersao, versao: string) {

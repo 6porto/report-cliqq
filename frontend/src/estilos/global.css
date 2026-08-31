@@ -1051,23 +1051,6 @@ textarea {
   font-size: 12px;
 }
 
-.repositorio-identificacao {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.repositorio-nome {
-  font-weight: 600;
-}
-
-.repositorio-caminho {
-  font-size: 11px;
-  color: var(--tinta-mutada);
-  overflow-wrap: anywhere;
-}
-
 .assistente {
   margin-bottom: 16px;
 }
@@ -1188,40 +1171,6 @@ button.escolha {
   font-size: 13px;
 }
 
-.repositorios-detalhados {
-  display: grid;
-  gap: 12px;
-}
-
-.repositorio-detalhado {
-  padding: 12px 14px;
-  border: 1px solid var(--borda);
-  border-radius: 12px;
-  background: var(--fundo-cartao);
-}
-
-.repositorio-detalhado-cabecalho {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.repositorio-acoes {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-}
-
-.acao-da-versao {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 12px;
-  margin-bottom: 4px;
-}
-
 .descricao-tag {
   margin: 0;
   padding: 10px 12px;
@@ -1231,23 +1180,6 @@ button.escolha {
   font-size: 12px;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-}
-
-.issues-do-repositorio {
-  margin: 10px 0 0;
-  padding: 0;
-  list-style: none;
-  display: grid;
-  gap: 6px;
-}
-
-.issue-linha {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 4px 10px;
-  padding-top: 6px;
-  border-top: 1px solid var(--borda);
 }
 
 .issue-linha-titulo {
@@ -1262,18 +1194,6 @@ button.escolha {
   gap: 4px 10px;
   font-size: 12px;
   color: var(--tinta-secundaria);
-}
-
-.issue-linha-sem-selecao {
-  color: var(--tinta-secundaria);
-}
-
-.issue-linha.issue-fechada .issue-linha-titulo {
-  text-decoration: line-through;
-}
-
-.issue-fechada {
-  opacity: 0.72;
 }
 
 .issue-numero {

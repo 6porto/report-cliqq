@@ -246,7 +246,7 @@ export function AssistenteDeVersao() {
               Nenhum repositório tem task das issues prontas de {versaoEscolhida?.titulo}.
             </p>
           ) : null}
-          <p className="assistente-apoio">
+          <p className="assistente-apoio nota-da-etapa">
             Repositórios que dividem uma issue são liberados juntos: marcar um marca o grupo.
           </p>
           <div className="cartoes">

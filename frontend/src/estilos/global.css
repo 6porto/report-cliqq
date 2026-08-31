@@ -1203,6 +1203,11 @@ textarea {
   margin-bottom: 4px;
 }
 
+/* Nota que explica a etapa; precisa respirar antes dos cartões. */
+.nota-da-etapa {
+  margin-bottom: 14px;
+}
+
 .cartao-escolha {
   display: flex;
   flex-direction: column;

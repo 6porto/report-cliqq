@@ -1,6 +1,7 @@
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, montarQuery } from './cliente';
 import type {
+  BacklogSemCriticidade,
   CoberturaOnda,
   DatasPorStatus,
   DemandaPriorizada,
@@ -333,6 +334,17 @@ export function useMilestonesEmDesenvolvimento() {
   return useQuery({
     queryKey: ['milestones-em-desenvolvimento'],
     queryFn: () => api.get<MilestoneEmDesenvolvimento[]>('/desenvolvimento/milestones'),
+  });
+}
+
+/** `dias` nulo traz o backlog inteiro. */
+export function useBacklogSemCriticidade(dias: number | null) {
+  return useQuery({
+    queryKey: ['backlog-sem-criticidade', dias],
+    queryFn: () =>
+      api.get<BacklogSemCriticidade>(
+        `/backlog/sem-criticidade${montarQuery({ dias: dias ?? undefined })}`,
+      ),
   });
 }
 

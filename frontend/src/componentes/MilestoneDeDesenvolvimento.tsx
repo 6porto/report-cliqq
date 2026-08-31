@@ -3,28 +3,94 @@ import { mensagemDoErro } from '../api/cliente';
 import { useFecharMilestone } from '../api/hooks';
 import type { IssueDaVersao, MilestoneEmDesenvolvimento } from '../api/tipos';
 import { corDoEstado, rotuloDoEstado, type PaletaDeEstados } from '../dominio/estados';
+import { classeDoTipo } from '../dominio/tipos-de-issue';
 import { ROTULO_TIPO_DE_VERSAO, periodoDaVersao, tipoDaVersao } from '../dominio/versao';
+
+const COLUNAS = [
+  { chave: 'id', rotulo: 'Issue' },
+  { chave: 'titulo', rotulo: 'Título' },
+  { chave: 'tipos', rotulo: 'Tipo' },
+  { chave: 'sistema', rotulo: 'Sistema' },
+  { chave: 'estado', rotulo: 'Estado' },
+  { chave: 'responsavel', rotulo: 'Responsável' },
+  { chave: 'situacao', rotulo: 'Situação' },
+] as const;
+
+type ColunaDaIssue = (typeof COLUNAS)[number]['chave'];
+
+interface Ordenacao {
+  coluna: ColunaDaIssue;
+  direcao: 'asc' | 'desc';
+}
+
+function valorDaColuna(issue: IssueDaVersao, coluna: ColunaDaIssue) {
+  if (coluna === 'tipos') {
+    return issue.tipos.join(', ');
+  }
+
+  const valor = issue[coluna];
+
+  return valor === null ? '' : String(valor);
+}
+
+/** Vazio sempre por último, independentemente da direção. */
+function ordenarIssues(issues: IssueDaVersao[], ordenacao: Ordenacao | null) {
+  if (!ordenacao) {
+    return issues;
+  }
+
+  const sinal = ordenacao.direcao === 'asc' ? 1 : -1;
+
+  return [...issues].sort((a, b) => {
+    if (ordenacao.coluna === 'id') {
+      return (a.id - b.id) * sinal;
+    }
+
+    const valorA = valorDaColuna(a, ordenacao.coluna);
+    const valorB = valorDaColuna(b, ordenacao.coluna);
+
+    if (!valorA || !valorB) {
+      return valorA ? -1 : valorB ? 1 : 0;
+    }
+
+    return (valorA.localeCompare(valorB, 'pt-BR') || a.id - b.id) * sinal;
+  });
+}
 
 function LinhaDaIssue({ issue, paleta }: { issue: IssueDaVersao; paleta: PaletaDeEstados }) {
   return (
-    <li className="issue">
-      <a className="issue-id" href={issue.url} target="_blank" rel="noreferrer">
-        #{issue.id}
-      </a>
-      <span className="issue-titulo">{issue.titulo}</span>
-      {issue.tipos.map((tipo) => (
-        <span className="issue-marcador" key={tipo}>
-          {tipo}
+    <tr className={issue.situacao === 'fechada' ? 'linha-fechada' : undefined}>
+      <td>
+        <a className="issue-id" href={issue.url} target="_blank" rel="noreferrer">
+          #{issue.id}
+        </a>
+      </td>
+      <td className="celula-titulo">{issue.titulo}</td>
+      <td>
+        {issue.tipos.length > 0
+          ? issue.tipos.map((tipo) => (
+              <span className={`issue-marcador ${classeDoTipo(tipo)}`.trim()} key={tipo}>
+                {tipo}
+              </span>
+            ))
+          : '—'}
+      </td>
+      <td>{issue.sistema ?? '—'}</td>
+      <td>
+        <span className="issue-estado badge">
+          <span className="marca" style={{ background: corDoEstado(paleta, issue.estado) }} />
+          {rotuloDoEstado(issue.estado)}
         </span>
-      ))}
-      {issue.sistema ? <span className="issue-marcador">{issue.sistema}</span> : null}
-      <span className="issue-estado badge">
-        <span className="marca" style={{ background: corDoEstado(paleta, issue.estado) }} />
-        {rotuloDoEstado(issue.estado)}
-      </span>
-      <span className="issue-responsavel">{issue.responsavel ?? '—'}</span>
-      {issue.situacao === 'fechada' ? <span className="issue-fechada">fechada</span> : null}
-    </li>
+      </td>
+      <td>{issue.responsavel ?? '—'}</td>
+      <td>
+        {issue.situacao === 'fechada' ? (
+          <span className="issue-fechada">fechada</span>
+        ) : (
+          <span className="cartao-apoio">aberta</span>
+        )}
+      </td>
+    </tr>
   );
 }
 
@@ -39,8 +105,18 @@ export function MilestoneDeDesenvolvimento({
   const concluido = milestone.total === 0 ? 0 : (milestone.fechadas / milestone.total) * 100;
   const [aberta, setAberta] = useState(true);
   const [confirmando, setConfirmando] = useState(false);
+  const [ordenacao, setOrdenacao] = useState<Ordenacao | null>(null);
   const idDoCorpo = useId();
   const fechar = useFecharMilestone();
+
+  const ordenadas = ordenarIssues(milestone.issues, ordenacao);
+
+  const alternarOrdem = (coluna: ColunaDaIssue) =>
+    setOrdenacao((atual) =>
+      atual?.coluna === coluna
+        ? { coluna, direcao: atual.direcao === 'asc' ? 'desc' : 'asc' }
+        : { coluna, direcao: 'asc' },
+    );
 
   /** Só dá para encerrar a milestone quando nenhuma issue ficou para trás. */
   const podeFechar = milestone.total > 0 && milestone.abertas === 0;
@@ -123,11 +199,46 @@ export function MilestoneDeDesenvolvimento({
         {milestone.issues.length === 0 ? (
           <p className="milestone-vazia">Milestone aberta, mas ainda sem issues.</p>
         ) : (
-          <ul className="issues">
-            {milestone.issues.map((issue) => (
-              <LinhaDaIssue key={issue.id} issue={issue} paleta={paleta} />
-            ))}
-          </ul>
+          <div className="tabela-envolucro">
+            <table>
+              <thead>
+                <tr>
+                  {COLUNAS.map((coluna) => {
+                    const ativa = ordenacao?.coluna === coluna.chave;
+
+                    return (
+                      <th
+                        key={coluna.chave}
+                        aria-sort={
+                          ativa
+                            ? ordenacao.direcao === 'asc'
+                              ? 'ascending'
+                              : 'descending'
+                            : 'none'
+                        }
+                      >
+                        <button
+                          type="button"
+                          className={ativa ? 'ordenar ordenar-ativa' : 'ordenar'}
+                          onClick={() => alternarOrdem(coluna.chave)}
+                        >
+                          {coluna.rotulo}
+                          <span aria-hidden>
+                            {ativa ? (ordenacao.direcao === 'asc' ? '▲' : '▼') : '↕'}
+                          </span>
+                        </button>
+                      </th>
+                    );
+                  })}
+                </tr>
+              </thead>
+              <tbody>
+                {ordenadas.map((issue) => (
+                  <LinhaDaIssue key={issue.id} issue={issue} paleta={paleta} />
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 

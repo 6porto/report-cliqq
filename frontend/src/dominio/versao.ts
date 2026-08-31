@@ -3,6 +3,18 @@ import type { Versao } from '../api/tipos';
 /** Issues nesse estado entram na geração de uma nova versão. */
 export const ESTADO_PRONTO_PARA_TAG = 'aguardando-release';
 
+export type TipoDeVersao = 'fix' | 'release';
+
+/** O prefixo da milestone separa correção de entrega — e é o que colore a tela. */
+export function tipoDaVersao(titulo: string): TipoDeVersao {
+  return titulo.trim().toLowerCase().startsWith('fix/') ? 'fix' : 'release';
+}
+
+export const ROTULO_TIPO_DE_VERSAO: Record<TipoDeVersao, string> = {
+  fix: 'Correção',
+  release: 'Entrega',
+};
+
 const VERSAO_NA_LINHA = /\bv?_?\d+\.\d+\.\d+(?:-rc\d+)?\b/i;
 const PARTES_DA_TAG = /^v?_?(\d+)\.(\d+)\.(\d+)(?:-rc(\d+))?$/i;
 

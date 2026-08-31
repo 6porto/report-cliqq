@@ -1,8 +1,8 @@
 import type { IssueDaVersao, MilestoneEmDesenvolvimento } from '../api/tipos';
-import { corDoEstado, rotuloDoEstado } from '../dominio/estados';
+import { corDoEstado, rotuloDoEstado, type PaletaDeEstados } from '../dominio/estados';
 import { ROTULO_TIPO_DE_VERSAO, periodoDaVersao, tipoDaVersao } from '../dominio/versao';
 
-function LinhaDaIssue({ issue }: { issue: IssueDaVersao }) {
+function LinhaDaIssue({ issue, paleta }: { issue: IssueDaVersao; paleta: PaletaDeEstados }) {
   return (
     <li className="issue">
       <a className="issue-id" href={issue.url} target="_blank" rel="noreferrer">
@@ -16,7 +16,7 @@ function LinhaDaIssue({ issue }: { issue: IssueDaVersao }) {
       ))}
       {issue.sistema ? <span className="issue-marcador">{issue.sistema}</span> : null}
       <span className="issue-estado badge">
-        <span className="marca" style={{ background: corDoEstado(issue.estado) }} />
+        <span className="marca" style={{ background: corDoEstado(paleta, issue.estado) }} />
         {rotuloDoEstado(issue.estado)}
       </span>
       <span className="issue-responsavel">{issue.responsavel ?? '—'}</span>
@@ -27,8 +27,10 @@ function LinhaDaIssue({ issue }: { issue: IssueDaVersao }) {
 
 export function MilestoneDeDesenvolvimento({
   milestone,
+  paleta,
 }: {
   milestone: MilestoneEmDesenvolvimento;
+  paleta: PaletaDeEstados;
 }) {
   const tipo = tipoDaVersao(milestone.titulo);
   const concluido = milestone.total === 0 ? 0 : (milestone.fechadas / milestone.total) * 100;
@@ -83,7 +85,7 @@ export function MilestoneDeDesenvolvimento({
       ) : (
         <ul className="issues">
           {milestone.issues.map((issue) => (
-            <LinhaDaIssue key={issue.id} issue={issue} />
+            <LinhaDaIssue key={issue.id} issue={issue} paleta={paleta} />
           ))}
         </ul>
       )}

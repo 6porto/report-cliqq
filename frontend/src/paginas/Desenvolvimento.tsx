@@ -1,11 +1,20 @@
+import { useMemo } from 'react';
 import { mensagemDoErro } from '../api/cliente';
 import { useMilestonesEmDesenvolvimento } from '../api/hooks';
 import { MilestoneDeDesenvolvimento } from '../componentes/MilestoneDeDesenvolvimento';
+import { montarPaletaDeEstados, rotuloDoEstado } from '../dominio/estados';
 
 export function Desenvolvimento() {
   const milestones = useMilestonesEmDesenvolvimento();
   const lista = milestones.data ?? [];
   const issues = lista.reduce((soma, milestone) => soma + milestone.total, 0);
+
+  /* A paleta sai de todas as milestones juntas: o mesmo estado tem a mesma cor
+     na tela inteira, não uma cor por seção. */
+  const paleta = useMemo(
+    () => montarPaletaDeEstados(lista.flatMap((milestone) => milestone.issues.map((i) => i.estado))),
+    [lista],
+  );
 
   return (
     <>
@@ -38,9 +47,20 @@ export function Desenvolvimento() {
         <p className="carregando">Nenhuma milestone aberta com prefixo fix/ ou release/.</p>
       ) : null}
 
+      {paleta.size > 0 ? (
+        <ul className="legenda-estados">
+          {[...paleta].map(([estado, cor]) => (
+            <li className="badge" key={estado}>
+              <span className="marca" style={{ background: cor }} />
+              {rotuloDoEstado(estado)}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
       <div className="desenvolvimento">
         {lista.map((milestone) => (
-          <MilestoneDeDesenvolvimento key={milestone.id} milestone={milestone} />
+          <MilestoneDeDesenvolvimento key={milestone.id} milestone={milestone} paleta={paleta} />
         ))}
       </div>
     </>

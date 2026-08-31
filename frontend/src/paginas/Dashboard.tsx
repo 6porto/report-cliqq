@@ -21,6 +21,7 @@ import { GraficoLatenciaSemanal } from '../componentes/GraficoLatenciaSemanal';
 import { GraficoMediaSemanal } from '../componentes/GraficoMediaSemanal';
 import { RoscaProporcao } from '../componentes/RoscaProporcao';
 import { ListaProximasMelhorias } from '../componentes/ListaProximasMelhorias';
+import { MosaicoDaRede } from '../componentes/MosaicoDaRede';
 import { ModalDescricoesDeBugs } from '../componentes/ModalDescricoesDeBugs';
 import { ModalMelhorias } from '../componentes/ModalMelhorias';
 import { ModalLancamentosSemanais } from '../componentes/ModalLancamentosSemanais';
@@ -215,41 +216,15 @@ export function Dashboard() {
         </button>
       </div>
 
+      <MosaicoDaRede
+        resumo={dados}
+        operando={lojasOperando}
+        variacao={variacaoDeLojasOperando}
+      />
+
       <h2 className="titulo-secao">Evolução das lojas</h2>
 
       <div className="grade-secao">
-        <CartaoGrafico
-          titulo="Lojas Operando no Centralizado"
-          subtitulo="Lojas que já entraram no rollout, fora as não iniciadas e bloqueadas"
-        >
-          <RoscaProporcao
-            fatias={[
-              {
-                chave: 'operando',
-                rotulo: 'Operando',
-                icone: ICONE_STATUS.EM_OPERACAO,
-                valor: lojasOperando,
-                cor: 'var(--serie-1)',
-              },
-              {
-                chave: 'fora',
-                rotulo: 'Não iniciadas ou bloqueadas',
-                valor: dados.total - lojasOperando,
-                cor: 'var(--neutro)',
-              },
-            ]}
-            destaque={
-              dados.total === 0
-                ? '—'
-                : `${Number(((lojasOperando / dados.total) * 100).toFixed(1)).toLocaleString('pt-BR')}%`
-            }
-            legendaDoDestaque="da rede"
-            variacao={variacaoDeLojasOperando}
-            unidade="Lojas"
-            vazio="Nenhuma loja cadastrada."
-          />
-        </CartaoGrafico>
-
         <CartaoGrafico titulo="Situação das lojas" subtitulo="Distribuição da base por status">
           <GraficoStatus resumo={dados} />
         </CartaoGrafico>
@@ -352,7 +327,7 @@ export function Dashboard() {
 
       </div>
 
-      <h2 className="titulo-secao">Performance e Erros</h2>
+      <h2 className="titulo-secao">Performance e erros</h2>
 
       <div className="grade-secao">
         <CartaoGrafico
@@ -410,8 +385,8 @@ export function Dashboard() {
         </CartaoGrafico>
 
         <CartaoGrafico
-          titulo="Bugs Reportados pelas Lojas"
-          subtitulo="Bugs ainda abertos ao fim de cada semana, empilhados da criticidade alta para a baixa"
+          titulo="Bugs abertos por semana"
+          subtitulo="Empilhados da criticidade alta para a baixa"
           acoes={
             <button
               className="aba"
@@ -426,12 +401,12 @@ export function Dashboard() {
         </CartaoGrafico>
       </div>
 
-      <h2 className="titulo-secao">Analítico</h2>
+      <h2 className="titulo-secao">Séries no tempo</h2>
 
       <div className="grade-graficos">
         <CartaoGrafico
-          titulo="Performance / Tempo de Resposta"
-          subtitulo="% das requisições por faixa de tempo (eixo à esquerda) e total de transações da semana (barra, eixo à direita)"
+          titulo="Tempo de resposta por faixa"
+          subtitulo="Percentual das requisições em cada faixa, com o total de transações da semana"
         >
           <GraficoLatenciaSemanal />
         </CartaoGrafico>
@@ -442,7 +417,7 @@ export function Dashboard() {
 
         <CartaoGrafico
           largo
-          titulo="Próximas Melhorias"
+          titulo="Próximas melhorias"
           subtitulo="O que está previsto para subir e o que entrou em produção nos últimos 7 dias"
           acoes={
             <button className="aba" onClick={() => setMelhoriasAbertas(true)}>
@@ -456,7 +431,7 @@ export function Dashboard() {
         <CartaoGrafico
           largo
           titulo="Status dia a dia"
-          subtitulo="Quantidade de lojas em cada status ao longo do tempo — clique na legenda para ocultar"
+          subtitulo="Lojas em cada status ao longo do tempo; clique na legenda para ocultar uma série"
         >
           {statusPorDia.data ? (
             <GraficoStatusPorDia dados={statusPorDia.data} />
@@ -466,15 +441,15 @@ export function Dashboard() {
         </CartaoGrafico>
 
         <CartaoGrafico
-          titulo="Adesão ao CliQQ Centralizado (Rede)"
-          subtitulo="% das operações da semana que rodaram no centralizado, sobre o total da rede (legado + centralizado)"
+          titulo="Adesão da rede, semana a semana"
+          subtitulo="Operações no centralizado sobre o total da rede"
         >
           <GraficoAdesaoCentralizado />
         </CartaoGrafico>
 
         <CartaoGrafico
-          titulo="Adesão ao CliQQ Centralizado (Lojas Piloto)"
-          subtitulo="Centralizado x realizado pelas lojas do piloto; a linha traz o % entre os dois (eixo à direita)"
+          titulo="Adesão do piloto, semana a semana"
+          subtitulo="Centralizado contra o realizado nas lojas do piloto"
         >
           <GraficoMediaSemanal />
         </CartaoGrafico>

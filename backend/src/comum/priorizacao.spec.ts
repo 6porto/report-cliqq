@@ -6,6 +6,7 @@ class RespostaBuilder {
     tipoDeGanho: 10,
     frequencia: 20,
     riscoDeAdiar: 10,
+    contorno: 10,
     esforco: 20,
   };
 
@@ -20,13 +21,13 @@ class RespostaBuilder {
 }
 
 describe('calcularPriorizacao', () => {
-  it('soma as quatro primeiras perguntas no valor e acrescenta o esforço no score', () => {
+  it('soma as cinco perguntas de valor e acrescenta o esforço no score', () => {
     const resultado = calcularPriorizacao(new RespostaBuilder().build());
 
     expect(resultado.completa).toBe(true);
-    expect(resultado.pontuacaoValor).toBe(60);
+    expect(resultado.pontuacaoValor).toBe(70);
     expect(resultado.pontuacaoEsforco).toBe(20);
-    expect(resultado.score).toBe(80);
+    expect(resultado.score).toBe(90);
   });
 
   it.each([

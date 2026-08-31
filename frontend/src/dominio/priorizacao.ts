@@ -38,6 +38,31 @@ export const CRITERIOS_DE_VALOR = [
       { pontos: 20, rotulo: 'Elevado' },
     ],
   },
+  {
+    chave: 'contorno',
+    pergunta:
+      'Existe alguma forma de contornar o problema ou realizar a atividade hoje, sem essa correção/melhoria?',
+    opcoes: [
+      {
+        pontos: 5,
+        rotulo:
+          'Sim, existe contorno simples — o usuário resolve sozinho, sem impacto relevante no dia a dia',
+        apoio: 'O sistema não bloqueia ninguém; a dor é pequena',
+      },
+      {
+        pontos: 10,
+        rotulo:
+          'Sim, mas o contorno é custoso — exige processo manual, retrabalho, intervenção de outra equipe (TI, suporte) ou gera risco de erro',
+        apoio: 'Dá para viver com isso, mas tem custo operacional recorrente',
+      },
+      {
+        pontos: 20,
+        rotulo:
+          'Não existe contorno — a operação fica bloqueada ou a informação/função é simplesmente inacessível até a entrega',
+        apoio: 'Sem alternativa, cada dia sem solução é dia de operação parada ou perda',
+      },
+    ],
+  },
 ] as const;
 
 export const CRITERIO_DE_ESFORCO = {
@@ -59,7 +84,8 @@ export type CampoResposta = keyof RespostaPriorizacao;
 export interface Pergunta {
   chave: CampoResposta;
   pergunta: string;
-  opcoes: readonly { pontos: number; rotulo: string }[];
+  /** `apoio` explica quando escolher a opção; nem toda pergunta tem. */
+  opcoes: readonly { pontos: number; rotulo: string; apoio?: string }[];
 }
 
 export const PERGUNTAS: Pergunta[] = [...CRITERIOS_DE_VALOR, CRITERIO_DE_ESFORCO];

@@ -88,6 +88,7 @@ function montar(demanda: Demanda, registro: RespostaPriorizacao | null) {
         tipoDeGanho: registro.tipoDeGanho,
         frequencia: registro.frequencia,
         riscoDeAdiar: registro.riscoDeAdiar,
+        contorno: registro.contorno,
         esforco: registro.esforco,
       }
     : null;

@@ -19,7 +19,7 @@ interface Props {
  * contrário no domínio — a ordem de lá é o eixo do gráfico de priorização —,
  * então a inversão fica só na exibição.
  */
-function emOrdemCrescente(opcoes: readonly { pontos: number; rotulo: string }[]) {
+function emOrdemCrescente(opcoes: readonly { pontos: number; rotulo: string; apoio?: string }[]) {
   return [...opcoes].sort((uma, outra) => uma.pontos - outra.pontos);
 }
 
@@ -109,7 +109,12 @@ export function ModalPriorizarIssue({ issue, resposta, aoResponder, aoFechar }: 
                       aria-pressed={marcada}
                       onClick={() => aoResponder(pergunta.chave, opcao.pontos)}
                     >
-                      <span>{opcao.rotulo}</span>
+                      <span className="opcao-texto">
+                        {opcao.rotulo}
+                        {opcao.apoio ? (
+                          <span className="opcao-apoio">{opcao.apoio}</span>
+                        ) : null}
+                      </span>
                       <span className="opcao-pontos">{opcao.pontos}</span>
                     </button>
                   );

@@ -19,6 +19,10 @@ export class SalvarRespostaDto {
   riscoDeAdiar?: number;
 
   @IsOptional()
+  @IsIn(PONTOS_DE_VALOR)
+  contorno?: number;
+
+  @IsOptional()
   @IsIn(PONTOS_DE_ESFORCO)
   esforco?: number;
 }

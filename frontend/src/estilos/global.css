@@ -2011,3 +2011,21 @@ button.cartao-escolha:hover {
 .estados-do-backlog .opcao-marcada .opcao-pontos {
   color: #ffffff;
 }
+/* Opção com explicação embaixo do rótulo (pergunta do contorno). */
+
+.opcao-texto {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+}
+
+.opcao-apoio {
+  font-size: 11px;
+  color: var(--tinta-mutada);
+}
+
+.opcao-marcada .opcao-apoio {
+  color: inherit;
+  opacity: 0.85;
+}

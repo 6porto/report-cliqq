@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
 import { atualizarLinhaDoRepositorio } from '../comum/descricao-milestone';
 import { montarDescricaoDoRelease, releaseAnterior } from '../comum/release-gitlab';
 import { GerarVersaoDto } from './dto/gerar-versao.dto';
@@ -72,8 +72,10 @@ export class VersaoService {
   }
 
   /**
-   * Cria a tag na branch homônima da milestone e registra o resultado na
-   * descrição dela. A tag vem primeiro: sem ela não há o que anotar.
+   * Libera um ou mais repositórios na mesma leva: cada um ganha tag e
+   * lançamento, a milestone recebe todas as linhas de uma vez e as issues
+   * avançam de estado no fim. Falha no meio para tudo — tag criada não volta
+   * atrás, então o erro carrega o que já saiu.
    */
   async gerarVersao(dto: GerarVersaoDto) {
     const versao = (await this.listarVersoes()).find(
@@ -85,60 +87,102 @@ export class VersaoService {
     }
 
     const todas = await this.listarIssues(dto.milestone);
-    const issues = dto.issues
-      .map((id) => todas.find((issue) => issue.id === id))
-      .filter((issue): issue is (typeof todas)[number] => issue !== undefined);
-
-    const mensagem = [
-      `Milestone: [${versao.titulo}](${versao.url})`,
-      '',
-      ...issues.map((issue) => `- [#${issue.id}](${issue.url}) ${issue.titulo}`),
-    ].join('\n');
-
-    const tag = await this.gitlab.criarTag(dto.repositorio, dto.tag, dto.milestone, mensagem);
-
-    const anterior = releaseAnterior(
-      await this.gitlab.listarReleases(dto.repositorio),
-      tag.name,
-    );
-
-    await this.gitlab.criarRelease(
-      dto.repositorio,
-      tag.name,
-      montarDescricaoDoRelease(anterior?.description ?? null, issues),
-      new Date().toISOString(),
-    );
-
     const base = this.gitlab.base().replace(/\/+$/, '');
-    const urlTag = `${base}/${dto.repositorio}/-/tags/${encodeURIComponent(tag.name)}`;
+    const geradas: {
+      repositorio: string;
+      nome: string;
+      tag: string;
+      urlTag: string;
+      urlRelease: string;
+      issues: number[];
+    }[] = [];
 
-    const descricao = atualizarLinhaDoRepositorio(
-      versao.descricao,
-      nomeReduzido(dto.repositorio),
-      tag.name,
-      urlTag,
+    let descricao = versao.descricao;
+
+    for (const alvo of dto.repositorios) {
+      const issues = alvo.issues
+        .map((id) => todas.find((issue) => issue.id === id))
+        .filter((issue): issue is (typeof todas)[number] => issue !== undefined);
+
+      const mensagem = [
+        `Milestone: [${versao.titulo}](${versao.url})`,
+        '',
+        ...issues.map((issue) => `- [#${issue.id}](${issue.url}) ${issue.titulo}`),
+      ].join('\n');
+
+      try {
+        const tag = await this.gitlab.criarTag(
+          alvo.repositorio,
+          alvo.tag,
+          dto.milestone,
+          mensagem,
+        );
+
+        const anterior = releaseAnterior(
+          await this.gitlab.listarReleases(alvo.repositorio),
+          tag.name,
+        );
+
+        await this.gitlab.criarRelease(
+          alvo.repositorio,
+          tag.name,
+          montarDescricaoDoRelease(anterior?.description ?? null, issues),
+          new Date().toISOString(),
+        );
+
+        const urlTag = `${base}/${alvo.repositorio}/-/tags/${encodeURIComponent(tag.name)}`;
+
+        descricao = atualizarLinhaDoRepositorio(
+          descricao,
+          nomeReduzido(alvo.repositorio),
+          tag.name,
+          urlTag,
+        );
+
+        geradas.push({
+          repositorio: alvo.repositorio,
+          nome: nomeReduzido(alvo.repositorio),
+          tag: tag.name,
+          urlTag,
+          urlRelease: `${base}/${alvo.repositorio}/-/releases/${encodeURIComponent(tag.name)}`,
+          issues: issues.map((issue) => issue.id),
+        });
+      } catch (erro) {
+        throw new ServiceUnavailableException({
+          message: `Falhou em ${nomeReduzido(alvo.repositorio)}: ${mensagemDaFalha(erro)}`,
+          geradas,
+          faltou: dto.repositorios
+            .slice(dto.repositorios.indexOf(alvo))
+            .map((restante) => nomeReduzido(restante.repositorio)),
+        });
+      }
+    }
+
+    await this.gitlab.atualizarDescricaoDaMilestone(
+      versao.id,
+      versao.grupoId,
+      descricao ?? '',
     );
 
-    await this.gitlab.atualizarDescricaoDaMilestone(versao.id, versao.grupoId, descricao);
+    /* Por último: com tags, lançamentos e milestone no lugar, as issues avançam
+       de estado. Uma issue em dois repositórios só é tocada uma vez. */
+    const issuesDaLeva = [...new Set(dto.repositorios.flatMap((alvo) => alvo.issues))];
 
-    /* Por último: com tag, lançamento e milestone no lugar, as issues avançam de
-       estado. Uma recusa aqui derruba a operação e aparece na tela. */
-    for (const issue of issues) {
+    for (const id of issuesDaLeva) {
       await this.gitlab.trocarLabelDaIssue(
-        issue.id,
+        id,
         `${PREFIXO_ESTADO}${ESTADO_PRONTO_PARA_RELEASE}`,
         `${PREFIXO_ESTADO}${ESTADO_APOS_RELEASE}`,
       );
     }
 
     return {
-      tag: tag.name,
-      urlTag,
-      urlRelease: `${base}/${dto.repositorio}/-/releases/${encodeURIComponent(tag.name)}`,
+      versoes: geradas,
       milestone: versao.titulo,
       urlMilestone: versao.url,
-      descricao,
+      descricao: descricao ?? '',
       estadoDasIssues: ESTADO_APOS_RELEASE,
+      issues: issuesDaLeva,
     };
   }
 
@@ -169,4 +213,21 @@ export class VersaoService {
       this.gitlab.base(),
     );
   }
+}
+
+/** O GitLab responde erro em formatos diferentes; aqui vira uma linha só. */
+function mensagemDaFalha(erro: unknown) {
+  if (erro instanceof ServiceUnavailableException) {
+    const resposta = erro.getResponse();
+
+    if (typeof resposta === 'string') {
+      return resposta;
+    }
+
+    if (typeof resposta === 'object' && resposta !== null && 'message' in resposta) {
+      return String((resposta as { message: unknown }).message);
+    }
+  }
+
+  return erro instanceof Error ? erro.message : String(erro);
 }

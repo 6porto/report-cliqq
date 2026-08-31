@@ -1232,6 +1232,11 @@ textarea {
   margin-bottom: 4px;
 }
 
+/* Nota que explica a etapa; precisa respirar antes dos cartões. */
+.nota-da-etapa {
+  margin-bottom: 14px;
+}
+
 .cartao-escolha {
   display: flex;
   flex-direction: column;
@@ -1662,6 +1667,32 @@ button.cartao-escolha:hover {
   font-size: 11px;
   color: var(--tinta-mutada);
   white-space: nowrap;
+}
+
+/* Repositórios na leva e blocos por repositório na etapa de gerar. */
+
+.cartao-marcado {
+  border-color: var(--acento);
+  box-shadow: inset 0 0 0 1px var(--acento);
+}
+
+.cartao-inerte {
+  opacity: 0.55;
+}
+
+.plano {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--borda);
+  border-radius: 12px;
+  background: var(--plano);
+}
+
+.plano-topo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 /* ── Aba Desenvolvimento ────────────────────────────────────────────────────

@@ -6,6 +6,61 @@ export const ESTADO_PRONTO_PARA_TAG = 'aguardando-release';
 /** Espelha ESTADO_APOS_RELEASE do backend: para onde a issue vai depois da versão. */
 export const ESTADO_APOS_RELEASE = 'aguardando-ambiente';
 
+/** Espelha REPOSITORIOS_SEM_VERSIONAMENTO do backend: versionam por aplicação. */
+export const REPOSITORIOS_SEM_VERSIONAMENTO = [
+  'mercantil/kubernetes/dev-config',
+  'mercantil/kubernetes/qas-config',
+  'mercantil/kubernetes/prd-config',
+];
+
+export function ehRepositorioSemVersionamento(caminho: string) {
+  return REPOSITORIOS_SEM_VERSIONAMENTO.includes(caminho);
+}
+
+export interface RepositorioComIssues {
+  caminho: string;
+  issues: number[];
+}
+
+/**
+ * Repositórios ligados ao escolhido por issues em comum, em cadeia: liberar o
+ * grupo inteiro é o que garante que nenhuma issue saia pela metade. Quem
+ * versiona por aplicação fica fora do grafo, porque nunca gera tag.
+ */
+export function grupoDeRepositorios(
+  repositorios: RepositorioComIssues[],
+  caminho: string,
+): string[] {
+  const candidatos = repositorios.filter(
+    (repositorio) => !ehRepositorioSemVersionamento(repositorio.caminho),
+  );
+  const inicial = candidatos.find((repositorio) => repositorio.caminho === caminho);
+
+  if (!inicial) {
+    return [];
+  }
+
+  const grupo = new Map<string, RepositorioComIssues>([[inicial.caminho, inicial]]);
+  const fila = [inicial];
+
+  while (fila.length > 0) {
+    const atual = fila.pop()!;
+
+    for (const outro of candidatos) {
+      if (grupo.has(outro.caminho)) {
+        continue;
+      }
+
+      if (outro.issues.some((id) => atual.issues.includes(id))) {
+        grupo.set(outro.caminho, outro);
+        fila.push(outro);
+      }
+    }
+  }
+
+  return [...grupo.keys()];
+}
+
 export type TipoDeVersao = 'fix' | 'release';
 
 /** O prefixo da milestone separa correção de entrega — e é o que colore a tela. */

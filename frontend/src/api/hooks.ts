@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, montarQuery } from './cliente';
 import type {
   CoberturaOnda,
@@ -300,9 +300,7 @@ export function useGerarVersao() {
   return useMutation({
     mutationFn: (variaveis: {
       milestone: string;
-      repositorio: string;
-      tag: string;
-      issues: number[];
+      repositorios: { repositorio: string; tag: string; issues: number[] }[];
     }) => api.post<VersaoGerada>('/versao/gerar', variaveis),
     onSuccess: () => {
       clienteQuery.invalidateQueries({ queryKey: ['versoes-prontas'] });
@@ -311,11 +309,19 @@ export function useGerarVersao() {
   });
 }
 
-export function useTagsDoRepositorio(repositorio: string | null) {
-  return useQuery({
-    queryKey: ['tags-do-repositorio', repositorio],
-    queryFn: () => api.get<TagDeVersao[]>(`/versao/tags${montarQuery({ repositorio })}`),
-    enabled: repositorio !== null,
+/** As tags de vários repositórios de uma vez: a versão sai em leva. */
+export function useTagsDeVarios(repositorios: string[]) {
+  return useQueries({
+    queries: repositorios.map((repositorio) => ({
+      queryKey: ['tags-do-repositorio', repositorio],
+      queryFn: () => api.get<TagDeVersao[]>(`/versao/tags${montarQuery({ repositorio })}`),
+    })),
+    combine: (respostas) => ({
+      carregando: respostas.some((resposta) => resposta.isLoading),
+      porRepositorio: Object.fromEntries(
+        repositorios.map((repositorio, indice) => [repositorio, respostas[indice]?.data ?? []]),
+      ) as Record<string, TagDeVersao[]>,
+    }),
   });
 }
 

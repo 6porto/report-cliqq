@@ -9,6 +9,7 @@ import {
 } from '../api/hooks';
 import type { IssueDaVersao, RepositorioDaVersao, VersaoPronta } from '../api/tipos';
 import {
+  ESTADO_APOS_RELEASE,
   ESTADO_PRONTO_PARA_TAG,
   ROTULO_TIPO_DE_VERSAO,
   periodoDaVersao,
@@ -103,7 +104,7 @@ export function AssistenteDeVersao() {
     setEtapa(2);
   };
 
-  const listaDeIssues = (ids: number[]) => (
+  const listaDeIssues = (ids: number[], estadoFinal?: string) => (
     <ul className="issues">
       {ids.map((id) => {
         const issue = porId.get(id);
@@ -114,6 +115,7 @@ export function AssistenteDeVersao() {
               #{id}
             </a>
             <span className="issue-titulo">{issue?.titulo}</span>
+            {estadoFinal ? <span className="issue-estado">{estadoFinal}</span> : null}
           </li>
         );
       })}
@@ -248,6 +250,10 @@ export function AssistenteDeVersao() {
                 <li>
                   A descrição de <code>{versaoEscolhida?.titulo}</code> passa a apontar essa versão
                 </li>
+                <li>
+                  {marcadas.length === 1 ? 'A issue vai' : `As ${marcadas.length} issues vão`} de{' '}
+                  <code>{ESTADO_PRONTO_PARA_TAG}</code> para <code>{ESTADO_APOS_RELEASE}</code>
+                </li>
               </ol>
 
               <p className="assistente-apoio">
@@ -276,8 +282,8 @@ export function AssistenteDeVersao() {
             <div>
               <strong className="conquista-numero">{gerada.tag}</strong>
               <p>
-                está no ar em {escolhido?.repositorio.nome}, e {gerada.milestone} já aponta para
-                ela.
+                está no ar em {escolhido?.repositorio.nome}, {gerada.milestone} já aponta para ela
+                e as issues foram para <code>{gerada.estadoDasIssues}</code>.
               </p>
             </div>
           </div>
@@ -309,7 +315,7 @@ export function AssistenteDeVersao() {
           <h3 className="titulo-secao">
             {marcadas.length === 1 ? 'Issue publicada' : `${marcadas.length} issues publicadas`}
           </h3>
-          {listaDeIssues(marcadas)}
+          {listaDeIssues(marcadas, gerada.estadoDasIssues)}
 
           <h3 className="titulo-secao">Descrição da milestone agora</h3>
           <pre className="bloco-texto">{gerada.descricao}</pre>

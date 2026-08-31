@@ -1625,3 +1625,12 @@ button.cartao-escolha:hover {
     font-size: 28px;
   }
 }
+
+.issue-estado {
+  padding: 1px 8px;
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  font-size: 11px;
+  color: var(--tinta-mutada);
+  white-space: nowrap;
+}

@@ -3,6 +3,9 @@ import type { Versao } from '../api/tipos';
 /** Issues nesse estado entram na geração de uma nova versão. */
 export const ESTADO_PRONTO_PARA_TAG = 'aguardando-release';
 
+/** Espelha ESTADO_APOS_RELEASE do backend: para onde a issue vai depois da versão. */
+export const ESTADO_APOS_RELEASE = 'aguardando-ambiente';
+
 export type TipoDeVersao = 'fix' | 'release';
 
 /** O prefixo da milestone separa correção de entrega — e é o que colore a tela. */

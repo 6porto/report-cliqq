@@ -6,7 +6,7 @@ export { PROJETO_DAS_ISSUES };
 export const PREFIXOS_DE_VERSAO = ['release/', 'fix/'] as const;
 
 const PREFIXO_TIPO = 'type::';
-const PREFIXO_ESTADO = 'state::';
+export const PREFIXO_ESTADO = 'state::';
 const PREFIXO_SISTEMA = 'system::';
 
 export interface MilestoneGitlab {
@@ -36,6 +36,9 @@ export interface Versao {
 
 /** Estado em que a issue está pronta para entrar em uma nova versão. */
 export const ESTADO_PRONTO_PARA_RELEASE = 'aguardando-release';
+
+/** Para onde a issue vai depois que a versão dela é gerada. */
+export const ESTADO_APOS_RELEASE = 'aguardando-ambiente';
 
 export interface VersaoPronta extends Versao {
   issuesNoEstado: number;

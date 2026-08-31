@@ -254,6 +254,8 @@ export interface VersaoGerada {
   milestone: string;
   urlMilestone: string;
   descricao: string;
+  /** Estado para onde as issues da versão foram movidas. */
+  estadoDasIssues: string;
 }
 
 export interface TagDeVersao {

@@ -1,4 +1,10 @@
-import { inicioDoPeriodo, ordenarPorCriacao, temCriticidade } from './backlog-gitlab';
+import {
+  inicioDoPeriodo,
+  labelDaCriticidade,
+  labelsDeCriticidade,
+  ordenarPorCriacao,
+  temCriticidade,
+} from './backlog-gitlab';
 import type { IssueDaVersao } from './versao-gitlab';
 
 function issue(id: number, criadaEm: string): IssueDaVersao {
@@ -74,5 +80,24 @@ describe('ordenarPorCriacao', () => {
     ordenarPorCriacao(issues);
 
     expect(issues.map((i) => i.id)).toEqual([1, 2]);
+  });
+});
+
+describe('labels de criticidade', () => {
+  it('monta o label com o P maiúsculo, como está no GitLab', () => {
+    expect(labelDaCriticidade('P2')).toBe('criticidade::P2');
+  });
+
+  it('lista o escopo inteiro, para limpar a criticidade anterior', () => {
+    expect(labelsDeCriticidade()).toEqual([
+      'criticidade::P1',
+      'criticidade::P2',
+      'criticidade::P3',
+      'criticidade::P4',
+    ]);
+  });
+
+  it('reconhece como classificada a issue que acabou de receber o label', () => {
+    expect(temCriticidade([labelDaCriticidade('P4')])).toBe(true);
   });
 });

@@ -17,8 +17,12 @@ interface Props {
   resposta: RespostaPriorizacao | null;
   /** Escolha manual do usuário; nula enquanto vale a sugestão do sistema. */
   criticidade: Criticidade | null;
+  /** Enquanto grava, os controles ficam travados. */
+  salvando: boolean;
+  erroAoSalvar: string | null;
   aoResponder: (campo: keyof RespostaPriorizacao, pontos: number) => void;
   aoEscolherCriticidade: (criticidade: Criticidade) => void;
+  aoAplicar: (criticidade: Criticidade) => void;
   aoFechar: () => void;
 }
 
@@ -85,8 +89,11 @@ export function ModalPriorizarIssue({
   issue,
   resposta,
   criticidade,
+  salvando,
+  erroAoSalvar,
   aoResponder,
   aoEscolherCriticidade,
+  aoAplicar,
   aoFechar,
 }: Props) {
   useEffect(() => {
@@ -121,6 +128,7 @@ export function ModalPriorizarIssue({
         type="button"
         className="escala-opcao"
         aria-pressed={marcada}
+        disabled={salvando}
         onClick={() => aoResponder(chave, opcao.pontos)}
       >
         <span className="escala-topo">
@@ -256,6 +264,7 @@ export function ModalPriorizarIssue({
                       className="criticidade"
                       data-criticidade={faixa.criticidade}
                       aria-pressed={marcada === faixa.criticidade}
+                      disabled={salvando}
                       onClick={() => aoEscolherCriticidade(faixa.criticidade)}
                     >
                       <span className="criticidade-nome">{faixa.criticidade}</span>
@@ -270,11 +279,27 @@ export function ModalPriorizarIssue({
             </>
           )}
 
+          {erroAoSalvar ? <p className="veredito-erro">{erroAoSalvar}</p> : null}
+
           <div className="veredito-acoes">
-            <p>As respostas ficam só nesta tela: ainda não são gravadas.</p>
-            <button type="button" className="aba primario" onClick={aoFechar}>
-              Fechar
-            </button>
+            <p>
+              {marcada
+                ? `Aplicar grava o label criticidade::${marcada} na issue e a tira do backlog.`
+                : 'As respostas ficam só nesta tela até você aplicar a criticidade.'}
+            </p>
+            <div className="veredito-botoes">
+              <button type="button" className="aba" onClick={aoFechar} disabled={salvando}>
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="aba primario"
+                disabled={!marcada || salvando}
+                onClick={() => marcada && aoAplicar(marcada)}
+              >
+                {salvando ? 'Aplicando…' : marcada ? `Aplicar ${marcada}` : 'Aplicar'}
+              </button>
+            </div>
           </div>
         </footer>
       </div>

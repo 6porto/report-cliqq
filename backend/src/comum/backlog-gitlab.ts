@@ -1,3 +1,4 @@
+import { CRITICIDADES, type Criticidade } from './priorizacao';
 import type { IssueDaVersao } from './versao-gitlab';
 
 const PREFIXO_CRITICIDADE = 'criticidade::';
@@ -7,6 +8,16 @@ export const PERIODOS_EM_DIAS = [7, 15, 30] as const;
 
 export function temCriticidade(labels: string[]) {
   return labels.some((label) => label.startsWith(PREFIXO_CRITICIDADE));
+}
+
+/** Os labels já existem no GitLab com o P maiúsculo — não criar variantes. */
+export function labelDaCriticidade(criticidade: Criticidade) {
+  return `${PREFIXO_CRITICIDADE}${criticidade}`;
+}
+
+/** Escopo inteiro, para tirar a criticidade anterior seja ela qual for. */
+export function labelsDeCriticidade() {
+  return CRITICIDADES.map((criticidade) => labelDaCriticidade(criticidade));
 }
 
 /** Data limite no formato que o GitLab espera em `created_after`. */

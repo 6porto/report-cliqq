@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { mensagemDoErro } from '../api/cliente';
-import { useBacklogSemCriticidade } from '../api/hooks';
+import { useBacklogSemCriticidade, useDefinirCriticidade } from '../api/hooks';
 import type { IssueDaVersao, RespostaPriorizacao } from '../api/tipos';
 import { CartaoGrafico } from '../componentes/CartaoGrafico';
 import { ModalPriorizarIssue, pontuacao } from '../componentes/ModalPriorizarIssue';
@@ -80,6 +80,7 @@ export function Backlog() {
   const [criticidades, setCriticidades] = useState<Record<number, Criticidade>>({});
   const [priorizando, setPriorizando] = useState<number | null>(null);
   const backlog = useBacklogSemCriticidade(dias);
+  const definirCriticidade = useDefinirCriticidade();
 
   const issues = useMemo(() => backlog.data?.issues ?? [], [backlog.data]);
   /** Issue sem `type::` também vira opção, como acontece com os estados. */
@@ -410,9 +411,17 @@ export function Backlog() {
           issue={aberta}
           resposta={respostas[aberta.id] ?? null}
           criticidade={criticidades[aberta.id] ?? null}
+          salvando={definirCriticidade.isPending}
+          erroAoSalvar={definirCriticidade.isError ? mensagemDoErro(definirCriticidade.error) : null}
           aoResponder={(campo, pontos) => responder(aberta.id, campo, pontos)}
           aoEscolherCriticidade={(criticidade) =>
             setCriticidades((atual) => ({ ...atual, [aberta.id]: criticidade }))
+          }
+          aoAplicar={(criticidade) =>
+            definirCriticidade.mutate(
+              { iid: aberta.id, criticidade },
+              { onSuccess: () => setPriorizando(null) },
+            )
           }
           aoFechar={() => setPriorizando(null)}
         />

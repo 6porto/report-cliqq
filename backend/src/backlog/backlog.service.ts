@@ -1,6 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { inicioDoPeriodo, ordenarPorCriacao, temCriticidade } from '../comum/backlog-gitlab';
-import { mapearIssuesDaVersao, type IssueDaVersaoGitlab } from '../comum/versao-gitlab';
+import {
+  inicioDoPeriodo,
+  labelDaCriticidade,
+  labelsDeCriticidade,
+  ordenarPorCriacao,
+  temCriticidade,
+} from '../comum/backlog-gitlab';
+import type { Criticidade } from '../comum/priorizacao';
+import { mapearIssueDaVersao, mapearIssuesDaVersao, type IssueDaVersaoGitlab } from '../comum/versao-gitlab';
 import { GitlabService } from '../gitlab/gitlab.service';
 
 @Injectable()
@@ -23,5 +30,22 @@ export class BacklogService {
       total: issues.length,
       issues: ordenarPorCriacao(mapearIssuesDaVersao(semCriticidade)),
     };
+  }
+
+  /**
+   * Grava a criticidade na issue. Remove o escopo inteiro antes de aplicar o
+   * novo label, então serve tanto para definir quanto para trocar.
+   */
+  async definirCriticidade(iid: number, criticidade: Criticidade) {
+    const escolhido = labelDaCriticidade(criticidade);
+    const anteriores = labelsDeCriticidade().filter((label) => label !== escolhido);
+
+    const issue = await this.gitlab.trocarLabelDaIssue<IssueDaVersaoGitlab>(
+      iid,
+      anteriores.join(','),
+      escolhido,
+    );
+
+    return { criticidade, issue: mapearIssueDaVersao(issue) };
   }
 }

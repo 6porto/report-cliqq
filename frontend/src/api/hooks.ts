@@ -348,6 +348,22 @@ export function useBacklogSemCriticidade(dias: number | null) {
   });
 }
 
+/** Grava a criticidade na issue do GitLab; ela sai do backlog em seguida. */
+export function useDefinirCriticidade() {
+  const clienteQuery = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ iid, criticidade }: { iid: number; criticidade: string }) =>
+      api.put<{ criticidade: string; issue: IssueDaVersao }>(
+        `/backlog/issues/${iid}/criticidade`,
+        { criticidade },
+      ),
+    onSuccess: () => {
+      clienteQuery.invalidateQueries({ queryKey: ['backlog-sem-criticidade'] });
+    },
+  });
+}
+
 export function useFecharMilestone() {
   const clienteQuery = useQueryClient();
 

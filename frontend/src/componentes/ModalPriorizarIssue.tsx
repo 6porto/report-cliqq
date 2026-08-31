@@ -14,6 +14,15 @@ interface Props {
   aoFechar: () => void;
 }
 
+/**
+ * Todas as perguntas sobem da esquerda para a direita. O esforço nasce ao
+ * contrário no domínio — a ordem de lá é o eixo do gráfico de priorização —,
+ * então a inversão fica só na exibição.
+ */
+function emOrdemCrescente(opcoes: readonly { pontos: number; rotulo: string }[]) {
+  return [...opcoes].sort((uma, outra) => uma.pontos - outra.pontos);
+}
+
 /** Soma das quatro perguntas de valor mais o esforço, como na aba Priorização. */
 export function pontuacao(resposta: RespostaPriorizacao | null) {
   if (!resposta) {
@@ -89,7 +98,7 @@ export function ModalPriorizarIssue({ issue, resposta, aoResponder, aoFechar }: 
                 {indice + 1}. {pergunta.pergunta}
               </legend>
               <div className="opcoes">
-                {pergunta.opcoes.map((opcao) => {
+                {emOrdemCrescente(pergunta.opcoes).map((opcao) => {
                   const marcada = resposta?.[pergunta.chave] === opcao.pontos;
 
                   return (

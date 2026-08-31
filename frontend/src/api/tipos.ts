@@ -266,6 +266,13 @@ export interface VersaoGerada {
   issues: number[];
 }
 
+export interface TagsDoRepositorio {
+  /** Uma tag por minor: as opções de base oferecidas na tela. */
+  minors: TagDeVersao[];
+  /** Todas as tags no padrão de versão, para saber se a nova já existe. */
+  nomes: string[];
+}
+
 export interface TagDeVersao {
   nome: string;
   minor: string;

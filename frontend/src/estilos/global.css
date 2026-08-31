@@ -1852,3 +1852,77 @@ button.cartao-escolha:hover {
   color: var(--status-bom);
   white-space: nowrap;
 }
+
+/* Recolher a milestone: só o cabeçalho fica, as issues somem. */
+
+.milestone-alternar {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  background: var(--superficie);
+  color: var(--tinta-secundaria);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.milestone-alternar:hover {
+  border-color: var(--linha-base);
+  color: var(--tinta-primaria);
+}
+.milestone-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+/* Escolha da tag de partida, dentro do bloco do repositório. */
+
+.bases {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+}
+
+.bases legend {
+  padding: 0 6px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--tinta-mutada);
+}
+
+.base {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  cursor: pointer;
+}
+
+.base-nome {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.ligacao {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--serie-1);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.salto-troca {
+  font-size: 12px;
+  color: var(--tinta-secundaria);
+}

@@ -1926,3 +1926,17 @@ button.cartao-escolha:hover {
   font-size: 12px;
   color: var(--tinta-secundaria);
 }
+/* Tabela de issues da aba Desenvolvimento. */
+
+.celula-titulo {
+  white-space: normal;
+  min-width: 280px;
+}
+
+.linha-fechada td {
+  color: var(--tinta-mutada);
+}
+
+.linha-fechada .celula-titulo {
+  text-decoration: line-through;
+}

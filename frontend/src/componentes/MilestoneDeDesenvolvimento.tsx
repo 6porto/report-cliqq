@@ -7,24 +7,38 @@ import { ROTULO_TIPO_DE_VERSAO, periodoDaVersao, tipoDaVersao } from '../dominio
 
 function LinhaDaIssue({ issue, paleta }: { issue: IssueDaVersao; paleta: PaletaDeEstados }) {
   return (
-    <li className="issue">
-      <a className="issue-id" href={issue.url} target="_blank" rel="noreferrer">
-        #{issue.id}
-      </a>
-      <span className="issue-titulo">{issue.titulo}</span>
-      {issue.tipos.map((tipo) => (
-        <span className="issue-marcador" key={tipo}>
-          {tipo}
+    <tr className={issue.situacao === 'fechada' ? 'linha-fechada' : undefined}>
+      <td>
+        <a className="issue-id" href={issue.url} target="_blank" rel="noreferrer">
+          #{issue.id}
+        </a>
+      </td>
+      <td className="celula-titulo">{issue.titulo}</td>
+      <td>
+        {issue.tipos.length > 0
+          ? issue.tipos.map((tipo) => (
+              <span className="issue-marcador" key={tipo}>
+                {tipo}
+              </span>
+            ))
+          : '—'}
+      </td>
+      <td>{issue.sistema ?? '—'}</td>
+      <td>
+        <span className="issue-estado badge">
+          <span className="marca" style={{ background: corDoEstado(paleta, issue.estado) }} />
+          {rotuloDoEstado(issue.estado)}
         </span>
-      ))}
-      {issue.sistema ? <span className="issue-marcador">{issue.sistema}</span> : null}
-      <span className="issue-estado badge">
-        <span className="marca" style={{ background: corDoEstado(paleta, issue.estado) }} />
-        {rotuloDoEstado(issue.estado)}
-      </span>
-      <span className="issue-responsavel">{issue.responsavel ?? '—'}</span>
-      {issue.situacao === 'fechada' ? <span className="issue-fechada">fechada</span> : null}
-    </li>
+      </td>
+      <td>{issue.responsavel ?? '—'}</td>
+      <td>
+        {issue.situacao === 'fechada' ? (
+          <span className="issue-fechada">fechada</span>
+        ) : (
+          <span className="cartao-apoio">aberta</span>
+        )}
+      </td>
+    </tr>
   );
 }
 
@@ -123,11 +137,26 @@ export function MilestoneDeDesenvolvimento({
         {milestone.issues.length === 0 ? (
           <p className="milestone-vazia">Milestone aberta, mas ainda sem issues.</p>
         ) : (
-          <ul className="issues">
-            {milestone.issues.map((issue) => (
-              <LinhaDaIssue key={issue.id} issue={issue} paleta={paleta} />
-            ))}
-          </ul>
+          <div className="tabela-envolucro">
+            <table>
+              <thead>
+                <tr>
+                  <th>Issue</th>
+                  <th>Título</th>
+                  <th>Tipo</th>
+                  <th>Sistema</th>
+                  <th>Estado</th>
+                  <th>Responsável</th>
+                  <th>Situação</th>
+                </tr>
+              </thead>
+              <tbody>
+                {milestone.issues.map((issue) => (
+                  <LinhaDaIssue key={issue.id} issue={issue} paleta={paleta} />
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 

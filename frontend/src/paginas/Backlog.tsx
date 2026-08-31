@@ -25,11 +25,25 @@ const COLUNAS: { chave: ColunaDeIssue; rotulo: string }[] = [
   { chave: 'sistema', rotulo: 'Sistema' },
   { chave: 'estado', rotulo: 'Estado' },
   { chave: 'responsavel', rotulo: 'Responsável' },
-  { chave: 'criadaEm', rotulo: 'Criada em' },
+  { chave: 'criadaEm', rotulo: 'Criada há' },
 ];
+
+/** A triagem começa por aqui: o que já foi priorizado e o que ainda espera priorização. */
+const ESTADOS_PADRAO = ['priorizado', 'pendente-priorizacao'];
 
 /** Quantas linhas aparecem antes do "ver mais" — o backlog inteiro passa de 190. */
 const POR_VEZ = 50;
+
+/** Há quantos dias a issue está aberta, contando dias inteiros. */
+function diasEmAberto(criadaEm: string, agora = new Date()) {
+  const dias = Math.floor((agora.getTime() - new Date(criadaEm).getTime()) / 86_400_000);
+
+  if (dias <= 0) {
+    return 'hoje';
+  }
+
+  return `${dias} ${dias === 1 ? 'dia' : 'dias'}`;
+}
 
 function formatarData(valor: string) {
   return new Date(valor).toLocaleDateString('pt-BR');
@@ -39,14 +53,23 @@ export function Backlog() {
   const [dias, setDias] = useState<number | null>(7);
   const [visiveis, setVisiveis] = useState(POR_VEZ);
   const [tipo, setTipo] = useState('');
-  /** Vazio significa todos os estados; marcar um ou mais restringe a lista. */
-  const [estadosEscolhidos, setEstadosEscolhidos] = useState<string[]>([]);
+  /**
+   * `null` significa que a escolha ainda é a padrão; a partir do primeiro
+   * clique vira a lista do usuário, e uma lista vazia mostra todos os estados.
+   */
+  const [escolhaDeEstados, setEscolhaDeEstados] = useState<string[] | null>(null);
   const [ordenacao, setOrdenacao] = useState<OrdenacaoDeIssues | null>(null);
   const backlog = useBacklogSemCriticidade(dias);
 
   const issues = useMemo(() => backlog.data?.issues ?? [], [backlog.data]);
   const tipos = useMemo(() => tiposDistintos(issues), [issues]);
   const estados = useMemo(() => valoresDistintos(issues, 'estado'), [issues]);
+
+  /** Só entram no padrão os estados que existem na janela carregada. */
+  const estadosEscolhidos = useMemo(
+    () => escolhaDeEstados ?? ESTADOS_PADRAO.filter((estado) => estados.includes(estado)),
+    [escolhaDeEstados, estados],
+  );
 
   const filtradas = useMemo(
     () =>
@@ -76,8 +99,10 @@ export function Backlog() {
   }, [issues, tipo]);
 
   const alternarEstado = (valor: string) =>
-    setEstadosEscolhidos((atual) =>
-      atual.includes(valor) ? atual.filter((item) => item !== valor) : [...atual, valor],
+    setEscolhaDeEstados(
+      estadosEscolhidos.includes(valor)
+        ? estadosEscolhidos.filter((item) => item !== valor)
+        : [...estadosEscolhidos, valor],
     );
 
   const ordenadas = ordenarIssuesPor(filtradas, ordenacao);
@@ -87,7 +112,7 @@ export function Backlog() {
     setDias(novo);
     setVisiveis(POR_VEZ);
     setTipo('');
-    setEstadosEscolhidos([]);
+    setEscolhaDeEstados(null);
   };
 
   const alternarOrdem = (coluna: ColunaDeIssue) =>
@@ -166,7 +191,7 @@ export function Backlog() {
               );
             })}
             {estadosEscolhidos.length > 0 ? (
-              <button type="button" className="ligacao" onClick={() => setEstadosEscolhidos([])}>
+              <button type="button" className="ligacao" onClick={() => setEscolhaDeEstados([])}>
                 mostrar todos
               </button>
             ) : null}
@@ -243,7 +268,9 @@ export function Backlog() {
                     <td>{issue.sistema ?? '—'}</td>
                     <td>{issue.estado ?? '—'}</td>
                     <td>{issue.responsavel ?? '—'}</td>
-                    <td>{formatarData(issue.criadaEm)}</td>
+                    <td title={`aberta em ${formatarData(issue.criadaEm)}`}>
+                      {diasEmAberto(issue.criadaEm)}
+                    </td>
                   </tr>
                 ))}
               </tbody>

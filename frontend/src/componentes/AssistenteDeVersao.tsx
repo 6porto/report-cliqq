@@ -100,6 +100,12 @@ export function AssistenteDeVersao() {
     setEtapa(1);
   };
 
+  /** E escolher o repositório já leva para a etapa de gerar. */
+  const escolherRepositorio = (caminho: string) => {
+    setRepositorioEscolhido(caminho);
+    setEtapa(2);
+  };
+
   return (
     <section className="cartao cartao-largo assistente">
       <header>
@@ -163,7 +169,7 @@ export function AssistenteDeVersao() {
                     type="button"
                     className="escolha-alvo"
                     aria-pressed={selecionado}
-                    onClick={() => setRepositorioEscolhido(repositorio.caminho)}
+                    onClick={() => escolherRepositorio(repositorio.caminho)}
                   >
                     <strong>{repositorio.nome}</strong>
                     <span>

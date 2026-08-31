@@ -104,6 +104,17 @@ export class GitlabService {
     );
   }
 
+  /** Troca só os labels indicados; os demais da issue ficam como estão. */
+  async trocarLabelDaIssue(iid: number, remover: string, adicionar: string) {
+    const projeto = encodeURIComponent(PROJETO_DAS_ISSUES);
+    const busca = new URLSearchParams({ remove_labels: remover, add_labels: adicionar });
+
+    return this.escrever<{ iid: number; labels: string[] }>(
+      `${this.base()}/api/v4/projects/${projeto}/issues/${iid}?${busca}`,
+      'PUT',
+    );
+  }
+
   async criarTag(caminhoDoProjeto: string, tag: string, ref: string, mensagem: string) {
     const projeto = encodeURIComponent(caminhoDoProjeto);
     const busca = new URLSearchParams({ tag_name: tag, ref, message: mensagem });

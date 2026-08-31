@@ -10,7 +10,9 @@ import {
 } from '../comum/repositorios-da-versao';
 import { ehRepositorioSemVersionamento, ultimasMinors } from '../comum/tags-gitlab';
 import {
+  ESTADO_APOS_RELEASE,
   ESTADO_PRONTO_PARA_RELEASE,
+  PREFIXO_ESTADO,
   PROJETO_DAS_ISSUES,
   filtrarVersoes,
   mapearIssuesDaVersao,
@@ -119,6 +121,16 @@ export class VersaoService {
 
     await this.gitlab.atualizarDescricaoDaMilestone(versao.id, versao.grupoId, descricao);
 
+    /* Por último: com tag, lançamento e milestone no lugar, as issues avançam de
+       estado. Uma recusa aqui derruba a operação e aparece na tela. */
+    for (const issue of issues) {
+      await this.gitlab.trocarLabelDaIssue(
+        issue.id,
+        `${PREFIXO_ESTADO}${ESTADO_PRONTO_PARA_RELEASE}`,
+        `${PREFIXO_ESTADO}${ESTADO_APOS_RELEASE}`,
+      );
+    }
+
     return {
       tag: tag.name,
       urlTag,
@@ -126,6 +138,7 @@ export class VersaoService {
       milestone: versao.titulo,
       urlMilestone: versao.url,
       descricao,
+      estadoDasIssues: ESTADO_APOS_RELEASE,
     };
   }
 

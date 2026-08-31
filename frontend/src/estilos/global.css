@@ -1875,3 +1875,9 @@ button.cartao-escolha:hover {
   border-color: var(--linha-base);
   color: var(--tinta-primaria);
 }
+.milestone-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}

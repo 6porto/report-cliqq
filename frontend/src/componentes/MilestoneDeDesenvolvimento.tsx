@@ -1,4 +1,6 @@
 import { useId, useState } from 'react';
+import { mensagemDoErro } from '../api/cliente';
+import { useFecharMilestone } from '../api/hooks';
 import type { IssueDaVersao, MilestoneEmDesenvolvimento } from '../api/tipos';
 import { corDoEstado, rotuloDoEstado, type PaletaDeEstados } from '../dominio/estados';
 import { ROTULO_TIPO_DE_VERSAO, periodoDaVersao, tipoDaVersao } from '../dominio/versao';
@@ -36,7 +38,12 @@ export function MilestoneDeDesenvolvimento({
   const tipo = tipoDaVersao(milestone.titulo);
   const concluido = milestone.total === 0 ? 0 : (milestone.fechadas / milestone.total) * 100;
   const [aberta, setAberta] = useState(true);
+  const [confirmando, setConfirmando] = useState(false);
   const idDoCorpo = useId();
+  const fechar = useFecharMilestone();
+
+  /** Só dá para encerrar a milestone quando nenhuma issue ficou para trás. */
+  const podeFechar = milestone.total > 0 && milestone.abertas === 0;
 
   return (
     <section className={`milestone milestone-${tipo}`}>
@@ -65,17 +72,35 @@ export function MilestoneDeDesenvolvimento({
           </div>
         </div>
 
-        <button
-          type="button"
-          className="milestone-alternar"
-          aria-expanded={aberta}
-          aria-controls={idDoCorpo}
-          onClick={() => setAberta((atual) => !atual)}
-        >
-          <span aria-hidden>{aberta ? '▾' : '▸'}</span>
-          {aberta ? 'Recolher' : `Ver ${milestone.total === 1 ? 'a issue' : 'as issues'}`}
-        </button>
+        <div className="milestone-acoes">
+          <button
+            type="button"
+            className="aba"
+            disabled={!podeFechar || fechar.isPending}
+            title={
+              podeFechar
+                ? undefined
+                : `${milestone.abertas} ${milestone.abertas === 1 ? 'issue ainda aberta' : 'issues ainda abertas'}`
+            }
+            onClick={() => setConfirmando(true)}
+          >
+            {fechar.isPending ? 'Fechando…' : 'Fechar milestone'}
+          </button>
+
+          <button
+            type="button"
+            className="milestone-alternar"
+            aria-expanded={aberta}
+            aria-controls={idDoCorpo}
+            onClick={() => setAberta((atual) => !atual)}
+          >
+            <span aria-hidden>{aberta ? '▾' : '▸'}</span>
+            {aberta ? 'Recolher' : `Ver ${milestone.total === 1 ? 'a issue' : 'as issues'}`}
+          </button>
+        </div>
       </header>
+
+      {fechar.isError ? <p className="erro">{mensagemDoErro(fechar.error)}</p> : null}
 
       <div id={idDoCorpo} hidden={!aberta}>
         {milestone.tags.length > 0 ? (
@@ -105,6 +130,41 @@ export function MilestoneDeDesenvolvimento({
           </ul>
         )}
       </div>
+
+      {confirmando ? (
+        <div className="modal-fundo" onClick={() => setConfirmando(false)}>
+          <div
+            className="modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Fechar a milestone ${milestone.titulo}`}
+            onClick={(evento) => evento.stopPropagation()}
+          >
+            <header className="modal-cabecalho">
+              <h2>Fechar {milestone.titulo}?</h2>
+            </header>
+            <p>
+              As {milestone.total} issues estão concluídas. Fechar encerra a milestone no GitLab e
+              ela sai desta lista.
+            </p>
+            <div className="assistente-acoes">
+              <button type="button" className="aba" onClick={() => setConfirmando(false)}>
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="aba primario"
+                onClick={() => {
+                  setConfirmando(false);
+                  fechar.mutate(milestone.id);
+                }}
+              >
+                Fechar milestone
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

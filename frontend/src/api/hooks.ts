@@ -333,6 +333,22 @@ export function useMilestonesEmDesenvolvimento() {
   });
 }
 
+export function useFecharMilestone() {
+  const clienteQuery = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) =>
+      api.post<{ id: number; titulo: string; estado: string }>(
+        `/desenvolvimento/milestones/${id}/fechar`,
+        {},
+      ),
+    onSuccess: () => {
+      clienteQuery.invalidateQueries({ queryKey: ['milestones-em-desenvolvimento'] });
+      clienteQuery.invalidateQueries({ queryKey: ['versoes-prontas'] });
+    },
+  });
+}
+
 export function useVersoesProntas() {
   return useQuery({
     queryKey: ['versoes-prontas'],

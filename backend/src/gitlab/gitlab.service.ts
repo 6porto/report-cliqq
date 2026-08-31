@@ -142,6 +142,18 @@ export class GitlabService {
     );
   }
 
+  async fecharMilestone(milestoneId: number, grupoId: number | null) {
+    const dono = grupoId
+      ? `groups/${grupoId}`
+      : `projects/${encodeURIComponent(PROJETO_DAS_ISSUES)}`;
+    const busca = new URLSearchParams({ state_event: 'close' });
+
+    return this.escrever<{ id: number; state: string; title: string }>(
+      `${this.base()}/api/v4/${dono}/milestones/${milestoneId}?${busca}`,
+      'PUT',
+    );
+  }
+
   private async escrever<T>(url: string, metodo: 'POST' | 'PUT'): Promise<T> {
     const token = this.token();
     let resposta: Response;

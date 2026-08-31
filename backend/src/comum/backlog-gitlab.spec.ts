@@ -84,15 +84,19 @@ describe('ordenarPorCriacao', () => {
 });
 
 describe('labels de criticidade', () => {
-  it('monta o label com o P maiúsculo, como está no GitLab', () => {
-    expect(labelDaCriticidade('P2')).toBe('criticidade::P2');
+  it('monta o label em minúsculo', () => {
+    expect(labelDaCriticidade('P2')).toBe('criticidade::p2');
   });
 
-  it('lista o escopo inteiro, para limpar a criticidade anterior', () => {
+  it('lista as duas grafias, para limpar a criticidade anterior', () => {
     expect(labelsDeCriticidade()).toEqual([
+      'criticidade::p1',
       'criticidade::P1',
+      'criticidade::p2',
       'criticidade::P2',
+      'criticidade::p3',
       'criticidade::P3',
+      'criticidade::p4',
       'criticidade::P4',
     ]);
   });

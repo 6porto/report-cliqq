@@ -10,14 +10,20 @@ export function temCriticidade(labels: string[]) {
   return labels.some((label) => label.startsWith(PREFIXO_CRITICIDADE));
 }
 
-/** Os labels já existem no GitLab com o P maiúsculo — não criar variantes. */
 export function labelDaCriticidade(criticidade: Criticidade) {
-  return `${PREFIXO_CRITICIDADE}${criticidade}`;
+  return `${PREFIXO_CRITICIDADE}${criticidade.toLowerCase()}`;
 }
 
-/** Escopo inteiro, para tirar a criticidade anterior seja ela qual for. */
+/**
+ * Escopo inteiro, para tirar a criticidade anterior seja ela qual for. Vai nas
+ * duas grafias: as issues antigas foram marcadas com `P` maiúsculo e o label
+ * novo é minúsculo, então remover só uma delas deixaria as duas na issue.
+ */
 export function labelsDeCriticidade() {
-  return CRITICIDADES.map((criticidade) => labelDaCriticidade(criticidade));
+  return CRITICIDADES.flatMap((criticidade) => [
+    labelDaCriticidade(criticidade),
+    `${PREFIXO_CRITICIDADE}${criticidade}`,
+  ]);
 }
 
 /** Data limite no formato que o GitLab espera em `created_after`. */

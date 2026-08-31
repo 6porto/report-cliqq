@@ -42,8 +42,8 @@ export function Backlog() {
             <button
               key={periodo.rotulo}
               type="button"
-              className="aba"
-              aria-current={dias === periodo.dias ? 'true' : undefined}
+              className={dias === periodo.dias ? 'aba primario' : 'aba'}
+              aria-pressed={dias === periodo.dias}
               onClick={() => trocarPeriodo(periodo.dias)}
             >
               {periodo.rotulo}

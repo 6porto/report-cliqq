@@ -50,10 +50,11 @@ export class GitlabService {
   }
 
   /** Issues ainda abertas do projeto; com `criadaApos`, só as criadas depois disso. */
-  async listarIssuesAbertasDesde<T>(criadaApos?: string): Promise<T[]> {
+  async listarIssuesAbertasDesde<T>(criadaApos?: string, labels?: string): Promise<T[]> {
     return this.paginar<T>('issues', {
       state: 'opened',
       scope: 'all',
+      ...(labels ? { labels } : {}),
       ...(criadaApos ? { created_after: criadaApos } : {}),
     });
   }

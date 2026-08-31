@@ -8,6 +8,7 @@ import {
   ordenarPorCriacao,
   temCriticidade,
 } from '../comum/backlog-gitlab';
+import { LABEL_DO_SISTEMA } from '../comum/issues-gitlab';
 import type { Criticidade } from '../comum/priorizacao';
 import { mapearIssueDaVersao, mapearIssuesDaVersao, type IssueDaVersaoGitlab } from '../comum/versao-gitlab';
 import { GitlabService } from '../gitlab/gitlab.service';
@@ -17,12 +18,13 @@ export class BacklogService {
   constructor(private readonly gitlab: GitlabService) {}
 
   /**
-   * Issues ainda abertas e sem `criticidade::` — o que passou pela triagem sem
-   * receber prioridade. Sem `dias`, olha o backlog inteiro.
+   * Issues do CliQQ ainda abertas e sem `criticidade::` — o que passou pela
+   * triagem sem receber prioridade. Sem `dias`, olha o backlog inteiro.
    */
   async listarSemCriticidade(dias: number | null) {
     const issues = await this.gitlab.listarIssuesAbertasDesde<IssueDaVersaoGitlab>(
       dias === null ? undefined : inicioDoPeriodo(dias),
+      LABEL_DO_SISTEMA,
     );
 
     const semCriticidade = issues.filter((issue) => !temCriticidade(issue.labels ?? []));

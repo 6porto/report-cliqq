@@ -219,8 +219,9 @@ export function Backlog() {
 
       {backlog.data ? (
         <p className="assistente-apoio nota-da-etapa">
-          <strong>{issues.length}</strong> de {backlog.data.total} issues abertas{' '}
-          {dias === null ? 'no projeto' : `nos últimos ${dias} dias`} estão sem criticidade.
+          <strong>{issues.length}</strong> de {backlog.data.total} issues abertas do
+          cliqq-centralizado {dias === null ? 'no projeto' : `nos últimos ${dias} dias`} estão sem
+          criticidade.
         </p>
       ) : null}
 

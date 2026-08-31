@@ -327,3 +327,12 @@ export interface IssueDaVersao {
   atualizadaEm: string;
   fechadaEm: string | null;
 }
+
+/** Recorte do backlog: issues abertas sem criticidade definida. */
+export interface BacklogSemCriticidade {
+  /** Janela usada; nulo quando é o backlog inteiro. */
+  dias: number | null;
+  /** Quantas issues abertas existem na janela, com ou sem criticidade. */
+  total: number;
+  issues: IssueDaVersao[];
+}

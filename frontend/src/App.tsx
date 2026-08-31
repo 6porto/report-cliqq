@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Backlog } from './paginas/Backlog';
 import { Dashboard } from './paginas/Dashboard';
 import { Desenvolvimento } from './paginas/Desenvolvimento';
 import { Filiais } from './paginas/Filiais';
@@ -6,7 +7,7 @@ import { Plano } from './paginas/Plano';
 import { Priorizacao } from './paginas/Priorizacao';
 import { Versao } from './paginas/Versao';
 
-type Pagina = 'report' | 'plano' | 'lojas' | 'priorizacao' | 'versao' | 'desenvolvimento';
+type Pagina = 'report' | 'plano' | 'lojas' | 'priorizacao' | 'versao' | 'desenvolvimento' | 'backlog';
 
 const ABAS: { pagina: Pagina; rotulo: string }[] = [
   { pagina: 'plano', rotulo: 'Plano' },
@@ -15,6 +16,7 @@ const ABAS: { pagina: Pagina; rotulo: string }[] = [
   { pagina: 'priorizacao', rotulo: 'Priorização' },
   { pagina: 'versao', rotulo: 'Versão' },
   { pagina: 'desenvolvimento', rotulo: 'Desenvolvimento' },
+  { pagina: 'backlog', rotulo: 'Backlog' },
 ];
 
 export function App() {
@@ -47,6 +49,7 @@ export function App() {
       {pagina === 'priorizacao' ? <Priorizacao /> : null}
       {pagina === 'versao' ? <Versao /> : null}
       {pagina === 'desenvolvimento' ? <Desenvolvimento /> : null}
+      {pagina === 'backlog' ? <Backlog /> : null}
     </main>
   );
 }

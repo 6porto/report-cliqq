@@ -10,6 +10,7 @@ import { LatenciasSemanaisModule } from './latencias-semanais/latencias-semanais
 import { MelhoriasModule } from './melhorias/melhorias.module';
 import { VersaoModule } from './versao/versao.module';
 import { DesenvolvimentoModule } from './desenvolvimento/desenvolvimento.module';
+import { BacklogModule } from './backlog/backlog.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { DesenvolvimentoModule } from './desenvolvimento/desenvolvimento.module'
     MelhoriasModule,
     VersaoModule,
     DesenvolvimentoModule,
+    BacklogModule,
   ],
 })
 export class AppModule {}

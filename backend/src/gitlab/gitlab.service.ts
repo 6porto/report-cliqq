@@ -49,6 +49,15 @@ export class GitlabService {
     return this.paginar<T>('issues', { labels: label, state: 'opened', scope: 'all' });
   }
 
+  /** Issues ainda abertas do projeto; com `criadaApos`, só as criadas depois disso. */
+  async listarIssuesAbertasDesde<T>(criadaApos?: string): Promise<T[]> {
+    return this.paginar<T>('issues', {
+      state: 'opened',
+      scope: 'all',
+      ...(criadaApos ? { created_after: criadaApos } : {}),
+    });
+  }
+
   async listarTags(caminhoDoProjeto: string): Promise<TagGitlab[]> {
     const token = this.token();
     const projeto = encodeURIComponent(caminhoDoProjeto);

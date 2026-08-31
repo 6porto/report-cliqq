@@ -2037,3 +2037,35 @@ button.cartao-escolha:hover {
   color: inherit;
   opacity: 0.85;
 }
+
+/* Fecho da modal: score apurado e a criticidade que ele sugere. */
+.resultado-priorizacao {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--borda);
+}
+
+.resultado-numeros {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.resultado-score strong {
+  font-size: 26px;
+  line-height: 1;
+}
+
+.resultado-parcelas,
+.resultado-sugestao {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--tinta-mutada);
+}
+
+.opcoes-criticidade .opcao {
+  min-width: 0;
+}

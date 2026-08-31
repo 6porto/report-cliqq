@@ -3,14 +3,20 @@ import type { IssueDaVersao, RespostaPriorizacao } from '../api/tipos';
 import {
   CRITERIOS_DE_VALOR,
   CRITERIO_DE_ESFORCO,
+  FAIXAS_DE_CRITICIDADE,
   PERGUNTAS,
   respondidas,
+  sugerirCriticidade,
+  type Criticidade,
 } from '../dominio/priorizacao';
 
 interface Props {
   issue: IssueDaVersao;
   resposta: RespostaPriorizacao | null;
+  /** Escolha manual do usuário; nula enquanto vale a sugestão do sistema. */
+  criticidade: Criticidade | null;
   aoResponder: (campo: keyof RespostaPriorizacao, pontos: number) => void;
+  aoEscolherCriticidade: (criticidade: Criticidade) => void;
   aoFechar: () => void;
 }
 
@@ -41,7 +47,14 @@ export function pontuacao(resposta: RespostaPriorizacao | null) {
   return { valor, esforco, score: valor + esforco };
 }
 
-export function ModalPriorizarIssue({ issue, resposta, aoResponder, aoFechar }: Props) {
+export function ModalPriorizarIssue({
+  issue,
+  resposta,
+  criticidade,
+  aoResponder,
+  aoEscolherCriticidade,
+  aoFechar,
+}: Props) {
   useEffect(() => {
     const aoTeclar = (evento: KeyboardEvent) => {
       if (evento.key === 'Escape') {
@@ -53,8 +66,10 @@ export function ModalPriorizarIssue({ issue, resposta, aoResponder, aoFechar }: 
     return () => window.removeEventListener('keydown', aoTeclar);
   }, [aoFechar]);
 
-  const { score } = pontuacao(resposta);
+  const { valor, esforco, score } = pontuacao(resposta);
   const feitas = respondidas(resposta);
+  const sugerida = sugerirCriticidade(valor);
+  const marcada = criticidade ?? sugerida;
 
   return (
     <div className="modal-fundo" onClick={aoFechar}>
@@ -123,6 +138,56 @@ export function ModalPriorizarIssue({ issue, resposta, aoResponder, aoFechar }: 
             </fieldset>
           ))}
         </div>
+
+        {score === null ? (
+          <p className="assistente-apoio">
+            Faltam {PERGUNTAS.length - feitas} de {PERGUNTAS.length} respostas para fechar o
+            score e sugerir a criticidade.
+          </p>
+        ) : (
+          <section className="resultado-priorizacao">
+            <div className="resultado-numeros">
+              <span className="resultado-score">
+                <strong>{score}</strong> de score
+              </span>
+              <span className="resultado-parcelas">
+                valor {valor} + esforço {esforco}
+              </span>
+            </div>
+
+            <fieldset className="pergunta">
+              <legend>
+                Criticidade{' '}
+                {sugerida ? (
+                  <span className="resultado-sugestao">
+                    — sugerida: {sugerida} (valor {valor})
+                  </span>
+                ) : null}
+              </legend>
+              <div className="opcoes opcoes-criticidade">
+                {FAIXAS_DE_CRITICIDADE.map((faixa) => (
+                  <button
+                    key={faixa.criticidade}
+                    type="button"
+                    className={
+                      marcada === faixa.criticidade ? 'opcao opcao-marcada' : 'opcao'
+                    }
+                    aria-pressed={marcada === faixa.criticidade}
+                    onClick={() => aoEscolherCriticidade(faixa.criticidade)}
+                  >
+                    <span className="opcao-texto">
+                      {faixa.criticidade}
+                      <span className="opcao-apoio">{faixa.resumo}</span>
+                    </span>
+                    {faixa.criticidade === sugerida ? (
+                      <span className="opcao-pontos">sugerida</span>
+                    ) : null}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+          </section>
+        )}
 
         <p className="assistente-apoio">
           As respostas ficam só nesta tela por enquanto: ainda não são gravadas.

@@ -1,4 +1,4 @@
-import { calcularPriorizacao, type RespostaPriorizacao } from './priorizacao';
+import { calcularPriorizacao, sugerirCriticidade, type RespostaPriorizacao } from './priorizacao';
 
 class RespostaBuilder {
   private resposta: RespostaPriorizacao = {
@@ -78,5 +78,24 @@ describe('calcularPriorizacao', () => {
     const resultado = calcularPriorizacao(new RespostaBuilder().com('esforco', 10).build());
 
     expect(resultado.completa).toBe(false);
+  });
+});
+
+describe('sugerirCriticidade', () => {
+  it.each([
+    [100, 'P1'],
+    [85, 'P1'],
+    [80, 'P2'],
+    [65, 'P2'],
+    [60, 'P3'],
+    [45, 'P3'],
+    [40, 'P4'],
+    [25, 'P4'],
+  ])('classifica a pontuação de valor %s como %s', (pontuacao, esperado) => {
+    expect(sugerirCriticidade(pontuacao)).toBe(esperado);
+  });
+
+  it('não sugere nada enquanto a priorização está incompleta', () => {
+    expect(sugerirCriticidade(null)).toBeNull();
   });
 });

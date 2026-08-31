@@ -100,6 +100,28 @@ export const PONTUACAO_VALOR_MINIMA = CRITERIOS_DE_VALOR.length * 5;
 export const PONTUACAO_VALOR_MAXIMA = CRITERIOS_DE_VALOR.length * 20;
 export const CORTE_GANHO_RAPIDO = (PONTUACAO_VALOR_MINIMA + PONTUACAO_VALOR_MAXIMA) / 2;
 
+/**
+ * Criticidade sugerida pela soma das cinco perguntas de valor (25 a 100) — o
+ * esforço fica de fora: ele muda a ordem da fila, não a gravidade da demanda.
+ * Espelha `backend/src/comum/priorizacao.ts`.
+ */
+export const FAIXAS_DE_CRITICIDADE = [
+  { criticidade: 'P1', minimo: 85, resumo: 'Pelo menos quatro respostas de 20' },
+  { criticidade: 'P2', minimo: 65, resumo: 'Predominância de respostas altas' },
+  { criticidade: 'P3', minimo: 45, resumo: 'Mistura com predominância de médias/baixas' },
+  { criticidade: 'P4', minimo: 25, resumo: 'Quase tudo na resposta mínima' },
+] as const;
+
+export type Criticidade = (typeof FAIXAS_DE_CRITICIDADE)[number]['criticidade'];
+
+export function sugerirCriticidade(pontuacaoValor: number | null): Criticidade | null {
+  if (pontuacaoValor === null) {
+    return null;
+  }
+
+  return FAIXAS_DE_CRITICIDADE.find((faixa) => pontuacaoValor >= faixa.minimo)?.criticidade ?? null;
+}
+
 export function ehGanhoRapido(demanda: DemandaPriorizada) {
   return (
     demanda.completa &&

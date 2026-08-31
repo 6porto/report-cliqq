@@ -110,6 +110,30 @@ export interface Priorizacao {
   rotuloEsforco: string | null;
 }
 
+/**
+ * Criticidade sugerida pela soma das cinco perguntas de valor (25 a 100) — o
+ * esforço fica de fora: ele muda a ordem da fila, não a gravidade da demanda.
+ * As faixas são contínuas porque toda resposta vale 5, 10 ou 20.
+ */
+export const FAIXAS_DE_CRITICIDADE = [
+  { criticidade: 'P1', minimo: 85, resumo: 'Pelo menos quatro respostas de 20' },
+  { criticidade: 'P2', minimo: 65, resumo: 'Predominância de respostas altas' },
+  { criticidade: 'P3', minimo: 45, resumo: 'Mistura com predominância de médias/baixas' },
+  { criticidade: 'P4', minimo: 25, resumo: 'Quase tudo na resposta mínima' },
+] as const;
+
+export type Criticidade = (typeof FAIXAS_DE_CRITICIDADE)[number]['criticidade'];
+
+export const CRITICIDADES = FAIXAS_DE_CRITICIDADE.map((faixa) => faixa.criticidade);
+
+export function sugerirCriticidade(pontuacaoValor: number | null): Criticidade | null {
+  if (pontuacaoValor === null) {
+    return null;
+  }
+
+  return FAIXAS_DE_CRITICIDADE.find((faixa) => pontuacaoValor >= faixa.minimo)?.criticidade ?? null;
+}
+
 export function esforcoPorPontos(pontos: number | null) {
   return OPCOES_DE_ESFORCO.find((opcao) => opcao.pontos === pontos) ?? null;
 }

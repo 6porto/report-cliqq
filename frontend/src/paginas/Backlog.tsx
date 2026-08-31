@@ -11,6 +11,7 @@ import {
   type ColunaDeIssue,
   type OrdenacaoDeIssues,
 } from '../dominio/ordenacao-de-issues';
+import type { Criticidade } from '../dominio/priorizacao';
 import { classeDoTipo } from '../dominio/tipos-de-issue';
 
 const PERIODOS: { rotulo: string; dias: number | null }[] = [
@@ -75,6 +76,8 @@ export function Backlog() {
   const [ordenacao, setOrdenacao] = useState<OrdenacaoDeIssues | null>(null);
   /** Respostas por issue; vivem só nesta tela até haver onde gravar. */
   const [respostas, setRespostas] = useState<Record<number, RespostaPriorizacao>>({});
+  /** Só as escolhas manuais: sem entrada aqui, vale a criticidade sugerida. */
+  const [criticidades, setCriticidades] = useState<Record<number, Criticidade>>({});
   const [priorizando, setPriorizando] = useState<number | null>(null);
   const backlog = useBacklogSemCriticidade(dias);
 
@@ -406,7 +409,11 @@ export function Backlog() {
         <ModalPriorizarIssue
           issue={aberta}
           resposta={respostas[aberta.id] ?? null}
+          criticidade={criticidades[aberta.id] ?? null}
           aoResponder={(campo, pontos) => responder(aberta.id, campo, pontos)}
+          aoEscolherCriticidade={(criticidade) =>
+            setCriticidades((atual) => ({ ...atual, [aberta.id]: criticidade }))
+          }
           aoFechar={() => setPriorizando(null)}
         />
       ) : null}

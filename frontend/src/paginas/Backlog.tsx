@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { mensagemDoErro } from '../api/cliente';
 import { useBacklogSemCriticidade } from '../api/hooks';
-import type { RespostaPriorizacao } from '../api/tipos';
+import type { IssueDaVersao, RespostaPriorizacao } from '../api/tipos';
 import { CartaoGrafico } from '../componentes/CartaoGrafico';
 import { ModalPriorizarIssue, pontuacao } from '../componentes/ModalPriorizarIssue';
 import {
@@ -62,7 +62,8 @@ function formatarData(valor: string) {
 export function Backlog() {
   const [dias, setDias] = useState<number | null>(7);
   const [visiveis, setVisiveis] = useState(POR_VEZ);
-  const [tipo, setTipo] = useState('');
+  /** Vazio mostra todos; marcar tipos restringe a lista. */
+  const [tiposEscolhidos, setTiposEscolhidos] = useState<string[]>([]);
   /**
    * `null` significa que a escolha ainda é a padrão; a partir do primeiro
    * clique vira a lista do usuário, e uma lista vazia mostra todos os estados.
@@ -75,7 +76,19 @@ export function Backlog() {
   const backlog = useBacklogSemCriticidade(dias);
 
   const issues = useMemo(() => backlog.data?.issues ?? [], [backlog.data]);
-  const tipos = useMemo(() => tiposDistintos(issues), [issues]);
+  /** Issue sem `type::` também vira opção, como acontece com os estados. */
+  const tipos = useMemo(() => {
+    const comTipo = tiposDistintos(issues);
+    const temSemTipo = issues.some((issue) => issue.tipos.length === 0);
+
+    return temSemTipo ? [...comTipo, ''] : comTipo;
+  }, [issues]);
+
+  const combinaComTipo = (issue: IssueDaVersao) =>
+    tiposEscolhidos.length === 0 ||
+    (issue.tipos.length === 0
+      ? tiposEscolhidos.includes('')
+      : issue.tipos.some((tipo) => tiposEscolhidos.includes(tipo)));
   /** Issue sem `state::` também é uma opção: entra como '' no fim da lista. */
   const estados = useMemo(() => {
     const comEstado = valoresDistintos(issues, 'estado');
@@ -90,32 +103,40 @@ export function Backlog() {
     [escolhaDeEstados, estados],
   );
 
+  const combinaComEstado = (issue: IssueDaVersao) =>
+    estadosEscolhidos.length === 0 || estadosEscolhidos.includes(issue.estado ?? '');
+
   const filtradas = useMemo(
-    () =>
-      issues.filter(
-        (issue) =>
-          (!tipo || issue.tipos.includes(tipo)) &&
-          (estadosEscolhidos.length === 0 ||
-            estadosEscolhidos.includes(issue.estado ?? '')),
-      ),
-    [issues, tipo, estadosEscolhidos],
+    () => issues.filter((issue) => combinaComTipo(issue) && combinaComEstado(issue)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [issues, tiposEscolhidos, estadosEscolhidos],
   );
 
-  /** Contagem por estado dentro do que o filtro de tipo já deixou passar. */
+  /** Cada contagem já considera o outro filtro: o número diz o que sobraria. */
   const contagemPorEstado = useMemo(() => {
     const contagem = new Map<string, number>();
 
-    for (const issue of issues) {
-      if (tipo && !issue.tipos.includes(tipo)) {
-        continue;
-      }
-
+    for (const issue of issues.filter(combinaComTipo)) {
       const chave = issue.estado ?? '';
       contagem.set(chave, (contagem.get(chave) ?? 0) + 1);
     }
 
     return contagem;
-  }, [issues, tipo]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [issues, tiposEscolhidos]);
+
+  const contagemPorTipo = useMemo(() => {
+    const contagem = new Map<string, number>();
+
+    for (const issue of issues.filter(combinaComEstado)) {
+      for (const chave of issue.tipos.length > 0 ? issue.tipos : ['']) {
+        contagem.set(chave, (contagem.get(chave) ?? 0) + 1);
+      }
+    }
+
+    return contagem;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [issues, estadosEscolhidos]);
 
   const alternarEstado = (valor: string) =>
     setEscolhaDeEstados(
@@ -124,13 +145,18 @@ export function Backlog() {
         : [...estadosEscolhidos, valor],
     );
 
+  const alternarTipo = (valor: string) =>
+    setTiposEscolhidos((atual) =>
+      atual.includes(valor) ? atual.filter((item) => item !== valor) : [...atual, valor],
+    );
+
   const ordenadas = ordenarIssuesPor(filtradas, ordenacao);
   const mostradas = ordenadas.slice(0, visiveis);
 
   const trocarPeriodo = (novo: number | null) => {
     setDias(novo);
     setVisiveis(POR_VEZ);
-    setTipo('');
+    setTiposEscolhidos([]);
     setEscolhaDeEstados(null);
   };
 
@@ -181,16 +207,43 @@ export function Backlog() {
       ) : null}
 
       {issues.length > 0 ? (
-        <div className="filtros">
-          <select value={tipo} onChange={(evento) => setTipo(evento.target.value)} aria-label="Filtrar por tipo">
-            <option value="">Todos os tipos</option>
-            {tipos.map((valor) => (
-              <option key={valor} value={valor}>
-                {valor}
-              </option>
-            ))}
-          </select>
+        <fieldset className="filtro-estados estados-do-backlog">
+          <legend>
+            Tipos{' '}
+            {tiposEscolhidos.length === 0 ? '· nenhum marcado mostra todos' : '· clique para tirar'}
+          </legend>
+          <div className="opcoes">
+            {tipos.map((valor) => {
+              const marcado = tiposEscolhidos.includes(valor);
 
+              return (
+                <button
+                  key={valor}
+                  type="button"
+                  className={marcado ? 'opcao opcao-marcada' : 'opcao'}
+                  aria-pressed={marcado}
+                  onClick={() => alternarTipo(valor)}
+                >
+                  <span>{valor || 'sem tipo'}</span>
+                  <span className="opcao-pontos">{contagemPorTipo.get(valor) ?? 0}</span>
+                </button>
+              );
+            })}
+            {tiposEscolhidos.length < tipos.length ? (
+              <button
+                type="button"
+                className="ligacao"
+                onClick={() => setTiposEscolhidos([...tipos])}
+              >
+                marcar todos
+              </button>
+            ) : null}
+          </div>
+        </fieldset>
+      ) : null}
+
+      {issues.length > 0 ? (
+        <div className="filtros">
           <span className="assistente-apoio">
             {filtradas.length} de {issues.length} listadas
           </span>

@@ -46,6 +46,14 @@
   --estado-9: #6b6bd6;
   --estado-10: #8a8f1f;
 
+  /* Cor por type::; ao contrario dos estados, cada tipo tem cor fixa. */
+  --tipo-bug: #c62d2d;
+  --tipo-melhoria: #2a78d6;
+  --tipo-crm: #0f8a6a;
+  --tipo-producao: #7a5c3a;
+  --tipo-performance: #6b3fb5;
+  --tipo-refatoracao: #9a6f00;
+
   --raio: 10px;
   --fonte: system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
@@ -90,6 +98,13 @@
     --estado-8: #b8a48c;
     --estado-9: #a3a3f2;
     --estado-10: #c2c95a;
+
+    --tipo-bug: #ef7b76;
+    --tipo-melhoria: #6aa8f0;
+    --tipo-crm: #45c2a0;
+    --tipo-producao: #c09a6b;
+    --tipo-performance: #a996f2;
+    --tipo-refatoracao: #d9b04a;
   }
 }
 
@@ -131,6 +146,13 @@
   --estado-8: #b8a48c;
   --estado-9: #a3a3f2;
   --estado-10: #c2c95a;
+
+  --tipo-bug: #ef7b76;
+  --tipo-melhoria: #6aa8f0;
+  --tipo-crm: #45c2a0;
+  --tipo-producao: #c09a6b;
+  --tipo-performance: #a996f2;
+  --tipo-refatoracao: #d9b04a;
 }
 
 * {
@@ -1939,4 +1961,41 @@ button.cartao-escolha:hover {
 
 .linha-fechada .celula-titulo {
   text-decoration: line-through;
+}
+
+/* Tipos da issue: cor fixa por type::, com o rótulo legível nos dois temas. */
+
+.issue-marcador.tipo-bug,
+.issue-marcador.tipo-melhoria,
+.issue-marcador.tipo-crm,
+.issue-marcador.tipo-producao,
+.issue-marcador.tipo-performance,
+.issue-marcador.tipo-refatoracao {
+  background: none;
+  border: 1px solid currentColor;
+  font-weight: 600;
+}
+
+.tipo-bug {
+  color: var(--tipo-bug);
+}
+
+.tipo-melhoria {
+  color: var(--tipo-melhoria);
+}
+
+.tipo-crm {
+  color: var(--tipo-crm);
+}
+
+.tipo-producao {
+  color: var(--tipo-producao);
+}
+
+.tipo-performance {
+  color: var(--tipo-performance);
+}
+
+.tipo-refatoracao {
+  color: var(--tipo-refatoracao);
 }

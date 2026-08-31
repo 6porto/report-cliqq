@@ -3,6 +3,7 @@ import { mensagemDoErro } from '../api/cliente';
 import { useFecharMilestone } from '../api/hooks';
 import type { IssueDaVersao, MilestoneEmDesenvolvimento } from '../api/tipos';
 import { corDoEstado, rotuloDoEstado, type PaletaDeEstados } from '../dominio/estados';
+import { classeDoTipo } from '../dominio/tipos-de-issue';
 import { ROTULO_TIPO_DE_VERSAO, periodoDaVersao, tipoDaVersao } from '../dominio/versao';
 
 const COLUNAS = [
@@ -68,7 +69,7 @@ function LinhaDaIssue({ issue, paleta }: { issue: IssueDaVersao; paleta: PaletaD
       <td>
         {issue.tipos.length > 0
           ? issue.tipos.map((tipo) => (
-              <span className="issue-marcador" key={tipo}>
+              <span className={`issue-marcador ${classeDoTipo(tipo)}`.trim()} key={tipo}>
                 {tipo}
               </span>
             ))

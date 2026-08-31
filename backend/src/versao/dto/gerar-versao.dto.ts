@@ -1,11 +1,15 @@
-import { ArrayNotEmpty, IsArray, IsInt, IsNotEmpty, IsString, Matches } from 'class-validator';
+import { Type } from 'class-transformer';
+import {
+  ArrayNotEmpty,
+  IsArray,
+  IsInt,
+  IsNotEmpty,
+  IsString,
+  Matches,
+  ValidateNested,
+} from 'class-validator';
 
-export class GerarVersaoDto {
-  /** Título da milestone; é também o nome da branch de onde a tag sai. */
-  @IsString()
-  @IsNotEmpty()
-  milestone!: string;
-
+export class RepositorioDaGeracaoDto {
   @IsString()
   @IsNotEmpty()
   @Matches(/^\w[\w.-]*(?:\/\w[\w.-]*)+$/, {
@@ -19,9 +23,23 @@ export class GerarVersaoDto {
   })
   tag!: string;
 
-  /** iids das issues que entram na versão; título e URL vêm do GitLab. */
+  /** iids das issues que entram na versão deste repositório. */
   @IsArray()
   @ArrayNotEmpty()
   @IsInt({ each: true })
   issues!: number[];
+}
+
+export class GerarVersaoDto {
+  /** Título da milestone; é também o nome da branch de onde as tags saem. */
+  @IsString()
+  @IsNotEmpty()
+  milestone!: string;
+
+  /** Um ou mais repositórios liberados na mesma leva. */
+  @IsArray()
+  @ArrayNotEmpty()
+  @ValidateNested({ each: true })
+  @Type(() => RepositorioDaGeracaoDto)
+  repositorios!: RepositorioDaGeracaoDto[];
 }

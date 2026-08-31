@@ -4,7 +4,7 @@ import {
   useGerarVersao,
   useIssuesDaVersao,
   useRepositoriosDaVersao,
-  useTagsDoRepositorio,
+  useTagsDeVarios,
   useVersoesProntas,
 } from '../api/hooks';
 import type { IssueDaVersao, RepositorioDaVersao, VersaoPronta } from '../api/tipos';
@@ -12,6 +12,8 @@ import {
   ESTADO_APOS_RELEASE,
   ESTADO_PRONTO_PARA_TAG,
   ROTULO_TIPO_DE_VERSAO,
+  ehRepositorioSemVersionamento,
+  grupoDeRepositorios,
   periodoDaVersao,
   proximaVersao,
   tipoDaVersao,
@@ -49,7 +51,7 @@ export function AssistenteDeVersao() {
   const versoes = useVersoesProntas();
   const [etapa, setEtapa] = useState(0);
   const [versaoEscolhida, setVersaoEscolhida] = useState<VersaoPronta | null>(null);
-  const [repositorioEscolhido, setRepositorioEscolhido] = useState<string | null>(null);
+  const [selecionados, setSelecionados] = useState<string[]>([]);
   const [confirmando, setConfirmando] = useState(false);
   const gerar = useGerarVersao();
 
@@ -62,46 +64,74 @@ export function AssistenteDeVersao() {
     () => repositoriosComIssuesProntas(repositorios.data?.repositorios ?? [], prontas),
     [repositorios.data, prontas],
   );
-  const escolhido = disponiveis.find((item) => item.repositorio.caminho === repositorioEscolhido);
 
-  const tags = useTagsDoRepositorio(etapa === 2 ? (escolhido?.repositorio.caminho ?? null) : null);
+  const escolhidos = disponiveis.filter((item) =>
+    selecionados.includes(item.repositorio.caminho),
+  );
+  const tags = useTagsDeVarios(etapa === 2 ? escolhidos.map((i) => i.repositorio.caminho) : []);
 
-  /** Escolher o repositório já leva todas as issues prontas dele. */
-  const marcadas = escolhido?.issues ?? [];
   const porId = new Map(prontas.map((issue) => [issue.id, issue]));
 
-  const naDescricao = versaoNaDescricao(
-    versaoEscolhida?.descricao ?? null,
-    escolhido?.repositorio.nome ?? '',
-    versaoEscolhida?.titulo ?? '',
-  );
-  /** Nova RC parte da tag citada na descrição; patch e minor, da maior tag do repositório. */
-  const tagBase = naDescricao.acao === 'rc' ? naDescricao.tag : (tags.data?.[0]?.nome ?? null);
-  const nova = naDescricao.acao ? proximaVersao(naDescricao.acao, tagBase) : null;
+  /** Cada repositório escolhido tem sua própria base e sua própria próxima versão. */
+  const planos = escolhidos.map((item) => {
+    const naDescricao = versaoNaDescricao(
+      versaoEscolhida?.descricao ?? null,
+      item.repositorio.nome,
+      versaoEscolhida?.titulo ?? '',
+    );
+    const tagBase =
+      naDescricao.acao === 'rc'
+        ? naDescricao.tag
+        : (tags.porRepositorio[item.repositorio.caminho]?.[0]?.nome ?? null);
 
+    return {
+      item,
+      naDescricao,
+      tagBase,
+      nova: naDescricao.acao ? proximaVersao(naDescricao.acao, tagBase) : null,
+    };
+  });
+
+  const prontoParaGerar = planos.length > 0 && planos.every((plano) => plano.nova !== null);
   const gerada = gerar.data ?? null;
   const carregandoEtapa2 = issues.isLoading || repositorios.isLoading;
   const erro = versoes.error ?? issues.error ?? repositorios.error;
   const tipo = versaoEscolhida ? tipoDaVersao(versaoEscolhida.titulo) : 'release';
 
+  /** Uma issue em dois repositórios da leva aparece uma vez só. */
+  const issuesDaLeva = [...new Set(escolhidos.flatMap((item) => item.issues))].sort(
+    (a, b) => a - b,
+  );
+
   const recomecar = () => {
     gerar.reset();
     setVersaoEscolhida(null);
-    setRepositorioEscolhido(null);
+    setSelecionados([]);
     setEtapa(0);
   };
 
   /** Escolher a versão já leva para a etapa do repositório. */
   const escolherVersao = (versao: VersaoPronta) => {
     setVersaoEscolhida(versao);
-    setRepositorioEscolhido(null);
+    setSelecionados([]);
     setEtapa(1);
   };
 
-  /** E escolher o repositório já leva para a etapa de gerar. */
-  const escolherRepositorio = (caminho: string) => {
-    setRepositorioEscolhido(caminho);
-    setEtapa(2);
+  /**
+   * Repositórios que dividem issue saem juntos, então o clique marca ou
+   * desmarca o grupo inteiro — nunca um pedaço dele.
+   */
+  const alternarGrupo = (caminho: string) => {
+    const grupo = grupoDeRepositorios(
+      disponiveis.map((item) => ({ caminho: item.repositorio.caminho, issues: item.issues })),
+      caminho,
+    );
+
+    setSelecionados((atual) =>
+      atual.includes(caminho)
+        ? atual.filter((escolhido) => !grupo.includes(escolhido))
+        : [...atual, ...grupo.filter((membro) => !atual.includes(membro))],
+    );
   };
 
   const listaDeIssues = (ids: number[], estadoFinal?: string) => (
@@ -145,9 +175,33 @@ export function AssistenteDeVersao() {
         atual={etapa}
         etapas={[
           { rotulo: 'Versão', escolha: versaoEscolhida?.titulo ?? null },
-          { rotulo: 'Repositório', escolha: escolhido?.repositorio.nome ?? null },
-          { rotulo: 'Gerar', escolha: nova },
-          { rotulo: 'Resumo', escolha: gerada?.tag ?? null },
+          {
+            rotulo: 'Repositórios',
+            escolha:
+              escolhidos.length === 0
+                ? null
+                : escolhidos.length === 1
+                  ? escolhidos[0].repositorio.nome
+                  : `${escolhidos.length} repositórios`,
+          },
+          {
+            rotulo: 'Gerar',
+            escolha:
+              planos.length === 1
+                ? planos[0].nova
+                : planos.length > 1
+                  ? `${planos.length} versões`
+                  : null,
+          },
+          {
+            rotulo: 'Resumo',
+            escolha:
+              gerada && gerada.versoes.length === 1
+                ? gerada.versoes[0].tag
+                : gerada
+                  ? `${gerada.versoes.length} versões`
+                  : null,
+          },
         ]}
       />
 
@@ -192,82 +246,115 @@ export function AssistenteDeVersao() {
               Nenhum repositório tem task das issues prontas de {versaoEscolhida?.titulo}.
             </p>
           ) : null}
+          <p className="assistente-apoio">
+            Repositórios que dividem uma issue são liberados juntos: marcar um marca o grupo.
+          </p>
           <div className="cartoes">
-            {disponiveis.map(({ repositorio, issues: doRepositorio }) => (
-              <div
-                key={repositorio.caminho}
-                className={`cartao-escolha cartao-${tipo} cartao-com-lista`}
-              >
-                <button
-                  type="button"
-                  className="cartao-alvo"
-                  onClick={() => escolherRepositorio(repositorio.caminho)}
+            {disponiveis.map(({ repositorio, issues: doRepositorio }) => {
+              const semVersao = ehRepositorioSemVersionamento(repositorio.caminho);
+              const marcado = selecionados.includes(repositorio.caminho);
+
+              return (
+                <div
+                  key={repositorio.caminho}
+                  className={[
+                    'cartao-escolha',
+                    `cartao-${tipo}`,
+                    'cartao-com-lista',
+                    marcado ? 'cartao-marcado' : '',
+                    semVersao ? 'cartao-inerte' : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
                 >
-                  <span className="cartao-eixo">{contarIssues(doRepositorio.length)}</span>
-                  <strong className="cartao-titulo">{repositorio.nome}</strong>
-                  <span className="cartao-apoio">{repositorio.caminho}</span>
-                </button>
-                {listaDeIssues(doRepositorio)}
-              </div>
-            ))}
+                  {semVersao ? (
+                    <div className="cartao-alvo">
+                      <span className="cartao-eixo">versiona por aplicação</span>
+                      <strong className="cartao-titulo">{repositorio.nome}</strong>
+                      <span className="cartao-apoio">{repositorio.caminho}</span>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      className="cartao-alvo"
+                      aria-pressed={marcado}
+                      onClick={() => alternarGrupo(repositorio.caminho)}
+                    >
+                      <span className="cartao-eixo">
+                        {marcado ? '✓ na leva' : contarIssues(doRepositorio.length)}
+                      </span>
+                      <strong className="cartao-titulo">{repositorio.nome}</strong>
+                      <span className="cartao-apoio">{repositorio.caminho}</span>
+                    </button>
+                  )}
+                  {listaDeIssues(doRepositorio)}
+                </div>
+              );
+            })}
           </div>
         </>
       ) : null}
 
       {etapa === 2 ? (
         <div className="painel">
-          {tags.isLoading ? <p className="carregando">Calculando a próxima versão…</p> : null}
+          {tags.carregando ? <p className="carregando">Calculando as próximas versões…</p> : null}
 
-          {!tags.isLoading && nova && naDescricao.acao ? (
-            <SaltoDeVersao base={tagBase} nova={nova} acao={naDescricao.acao} />
-          ) : null}
+          {planos.map(({ item, naDescricao, tagBase, nova }) => (
+            <div key={item.repositorio.caminho} className="plano">
+              <header className="plano-topo">
+                <strong>{item.repositorio.nome}</strong>
+                <span className="cartao-apoio">{item.repositorio.caminho}</span>
+              </header>
 
-          {naDescricao.malformada ? (
-            <p className="aviso">
-              A descrição de {versaoEscolhida?.titulo} cita {escolhido?.repositorio.nome}, mas sem
-              nenhuma versão legível na linha. Corrija a linha no GitLab para seguir.
-            </p>
-          ) : null}
-          {!nova && !tags.isLoading && !naDescricao.malformada ? (
-            <p className="aviso">
-              {escolhido?.repositorio.nome} não tem tag anterior no padrão de versão, então o
-              número não pode ser calculado.
-            </p>
-          ) : null}
+              {nova && naDescricao.acao ? (
+                <SaltoDeVersao base={tagBase} nova={nova} acao={naDescricao.acao} />
+              ) : null}
 
-          {nova ? (
+              {naDescricao.malformada ? (
+                <p className="aviso">
+                  A descrição de {versaoEscolhida?.titulo} cita {item.repositorio.nome}, mas sem
+                  nenhuma versão legível na linha. Corrija a linha no GitLab para seguir.
+                </p>
+              ) : null}
+              {!nova && !tags.carregando && !naDescricao.malformada ? (
+                <p className="aviso">
+                  {item.repositorio.nome} não tem tag anterior no padrão de versão, então o número
+                  não pode ser calculado.
+                </p>
+              ) : null}
+
+              {listaDeIssues(item.issues)}
+            </div>
+          ))}
+
+          {prontoParaGerar ? (
             <>
               <h3 className="titulo-secao">O que vai acontecer</h3>
               <ol className="efeitos">
                 <li>
-                  <strong>{nova}</strong> vira uma tag em {escolhido?.repositorio.nome}, a partir
-                  da branch <code>{versaoEscolhida?.titulo}</code>
+                  {planos.length === 1
+                    ? `${planos[0].nova} vira uma tag em ${planos[0].item.repositorio.nome}`
+                    : `${planos.length} tags são criadas, uma por repositório`}
+                  , a partir da branch <code>{versaoEscolhida?.titulo}</code>
                 </li>
                 <li>
-                  Um lançamento de mesmo nome é publicado, com as{' '}
-                  {marcadas.length === 1 ? 'issue abaixo' : `${marcadas.length} issues abaixo`}
+                  {planos.length === 1
+                    ? 'Um lançamento de mesmo nome é publicado'
+                    : `${planos.length} lançamentos são publicados, cada um com as issues do seu repositório`}
                 </li>
                 <li>
-                  A descrição de <code>{versaoEscolhida?.titulo}</code> passa a apontar essa versão
+                  A descrição de <code>{versaoEscolhida?.titulo}</code> passa a apontar{' '}
+                  {planos.length === 1 ? 'essa versão' : 'todas essas versões'}
                 </li>
                 <li>
-                  {marcadas.length === 1 ? 'A issue vai' : `As ${marcadas.length} issues vão`} de{' '}
-                  <code>{ESTADO_PRONTO_PARA_TAG}</code> para <code>{ESTADO_APOS_RELEASE}</code>
+                  {issuesDaLeva.length === 1
+                    ? 'A issue vai'
+                    : `As ${issuesDaLeva.length} issues vão`}{' '}
+                  de <code>{ESTADO_PRONTO_PARA_TAG}</code> para <code>{ESTADO_APOS_RELEASE}</code>
                 </li>
               </ol>
-
-              <p className="assistente-apoio">
-                {naDescricao.acao === 'rc'
-                  ? `A base saiu da descrição de ${versaoEscolhida?.titulo}, que aponta ${naDescricao.tag} para este repositório.`
-                  : `${escolhido?.repositorio.nome} não aparece na descrição de ${versaoEscolhida?.titulo}, então a base é a maior tag do repositório.`}
-              </p>
             </>
           ) : null}
-
-          <h3 className="titulo-secao">
-            {marcadas.length === 1 ? 'Issue incluída' : `${marcadas.length} issues incluídas`}
-          </h3>
-          {listaDeIssues(marcadas)}
 
           {gerar.isError ? <p className="erro">{mensagemDoErro(gerar.error)}</p> : null}
         </div>
@@ -280,42 +367,44 @@ export function AssistenteDeVersao() {
               ✓
             </span>
             <div>
-              <strong className="conquista-numero">{gerada.tag}</strong>
+              <strong className="conquista-numero">
+                {gerada.versoes.length === 1
+                  ? gerada.versoes[0].tag
+                  : `${gerada.versoes.length} versões`}
+              </strong>
               <p>
-                está no ar em {escolhido?.repositorio.nome}, {gerada.milestone} já aponta para ela
-                e as issues foram para <code>{gerada.estadoDasIssues}</code>.
+                {gerada.versoes.length === 1 ? 'está no ar' : 'estão no ar'}, {gerada.milestone} já
+                aponta {gerada.versoes.length === 1 ? 'para ela' : 'para todas'} e as issues foram
+                para <code>{gerada.estadoDasIssues}</code>.
               </p>
             </div>
           </div>
 
           <div className="destinos">
-            <a className="destino" href={gerada.urlTag} target="_blank" rel="noreferrer">
-              <span className="destino-eixo">Tag</span>
-              <strong>{gerada.tag}</strong>
-            </a>
-            <a className="destino" href={gerada.urlRelease} target="_blank" rel="noreferrer">
-              <span className="destino-eixo">Lançamento</span>
-              <strong>{gerada.tag}</strong>
-            </a>
+            {gerada.versoes.map((versao) => (
+              <a
+                key={versao.repositorio}
+                className="destino"
+                href={versao.urlRelease}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <span className="destino-eixo">{versao.nome}</span>
+                <strong>{versao.tag}</strong>
+              </a>
+            ))}
             <a className="destino" href={gerada.urlMilestone} target="_blank" rel="noreferrer">
               <span className="destino-eixo">Milestone</span>
               <strong>{gerada.milestone}</strong>
             </a>
-            <a
-              className="destino"
-              href={escolhido?.repositorio.url}
-              target="_blank"
-              rel="noreferrer"
-            >
-              <span className="destino-eixo">Repositório</span>
-              <strong>{escolhido?.repositorio.nome}</strong>
-            </a>
           </div>
 
           <h3 className="titulo-secao">
-            {marcadas.length === 1 ? 'Issue publicada' : `${marcadas.length} issues publicadas`}
+            {gerada.issues.length === 1
+              ? 'Issue publicada'
+              : `${gerada.issues.length} issues publicadas`}
           </h3>
-          {listaDeIssues(marcadas, gerada.estadoDasIssues)}
+          {listaDeIssues(gerada.issues, gerada.estadoDasIssues)}
 
           <h3 className="titulo-secao">Descrição da milestone agora</h3>
           <pre className="bloco-texto">{gerada.descricao}</pre>
@@ -337,21 +426,38 @@ export function AssistenteDeVersao() {
             >
               Voltar
             </button>
+            {etapa === 1 ? (
+              <button
+                type="button"
+                className="aba gerar"
+                disabled={escolhidos.length === 0}
+                onClick={() => setEtapa(2)}
+              >
+                Avançar com{' '}
+                {escolhidos.length === 1
+                  ? '1 repositório'
+                  : `${escolhidos.length} repositórios`}
+              </button>
+            ) : null}
             {etapa === 2 ? (
               <button
                 type="button"
                 className="aba gerar"
-                disabled={!nova || gerar.isPending}
+                disabled={!prontoParaGerar || gerar.isPending}
                 onClick={() => setConfirmando(true)}
               >
-                {gerar.isPending ? 'Gerando…' : `Gerar ${nova ?? 'versão'}`}
+                {gerar.isPending
+                  ? 'Gerando…'
+                  : planos.length === 1
+                    ? `Gerar ${planos[0].nova}`
+                    : `Gerar ${planos.length} versões`}
               </button>
             ) : null}
           </>
         )}
       </footer>
 
-      {confirmando && nova && escolhido && versaoEscolhida ? (
+      {confirmando && prontoParaGerar && versaoEscolhida ? (
         <div className="modal-fundo" onClick={() => setConfirmando(false)}>
           <div
             className="modal"
@@ -361,12 +467,25 @@ export function AssistenteDeVersao() {
             onClick={(evento) => evento.stopPropagation()}
           >
             <header className="modal-cabecalho">
-              <h2>Gerar {nova}?</h2>
+              <h2>
+                {planos.length === 1
+                  ? `Gerar ${planos[0].nova}?`
+                  : `Gerar ${planos.length} versões?`}
+              </h2>
             </header>
+            <ul className="issues">
+              {planos.map(({ item, nova }) => (
+                <li key={item.repositorio.caminho} className="issue">
+                  <span className="issue-titulo">{item.repositorio.nome}</span>
+                  <strong>{nova}</strong>
+                </li>
+              ))}
+            </ul>
             <p>
-              Isso cria a tag e o lançamento em <strong>{escolhido.repositorio.nome}</strong>, a
-              partir da branch <code>{versaoEscolhida.titulo}</code>, e atualiza a descrição da
-              milestone. As três ações acontecem no GitLab agora.
+              Cada um ganha tag e lançamento a partir da branch{' '}
+              <code>{versaoEscolhida.titulo}</code>, a descrição da milestone é atualizada e as{' '}
+              {issuesDaLeva.length === 1 ? 'issue vai' : `${issuesDaLeva.length} issues vão`} para{' '}
+              <code>{ESTADO_APOS_RELEASE}</code>. Tudo acontece no GitLab agora.
             </p>
             <div className="assistente-acoes">
               <button type="button" className="aba" onClick={() => setConfirmando(false)}>
@@ -380,15 +499,17 @@ export function AssistenteDeVersao() {
                   gerar.mutate(
                     {
                       milestone: versaoEscolhida.titulo,
-                      repositorio: escolhido.repositorio.caminho,
-                      tag: nova,
-                      issues: marcadas,
+                      repositorios: planos.map(({ item, nova }) => ({
+                        repositorio: item.repositorio.caminho,
+                        tag: nova as string,
+                        issues: item.issues,
+                      })),
                     },
                     { onSuccess: () => setEtapa(ETAPA_RESUMO) },
                   );
                 }}
               >
-                Gerar {nova}
+                Confirmar
               </button>
             </div>
           </div>

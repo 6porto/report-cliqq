@@ -247,15 +247,23 @@ export interface Versao {
   url: string;
 }
 
-export interface VersaoGerada {
+export interface VersaoDeRepositorio {
+  repositorio: string;
+  nome: string;
   tag: string;
   urlTag: string;
   urlRelease: string;
+  issues: number[];
+}
+
+export interface VersaoGerada {
+  versoes: VersaoDeRepositorio[];
   milestone: string;
   urlMilestone: string;
   descricao: string;
-  /** Estado para onde as issues da versão foram movidas. */
+  /** Estado para onde as issues da leva foram movidas. */
   estadoDasIssues: string;
+  issues: number[];
 }
 
 export interface TagDeVersao {

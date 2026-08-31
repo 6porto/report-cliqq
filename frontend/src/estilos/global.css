@@ -1496,3 +1496,132 @@ button.cartao-escolha:hover {
     transform: none;
   }
 }
+
+/* ── Mosaico da rede ────────────────────────────────────────────────────────
+   Uma célula por loja: a resposta de "quanto falta" antes de qualquer gráfico. */
+
+.rede {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+}
+
+.rede-leitura {
+  display: grid;
+  gap: 4px;
+}
+
+.rede-eixo {
+  margin: 0;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--tinta-mutada);
+}
+
+.rede-frase {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: var(--tinta-secundaria);
+}
+
+.rede-frase strong {
+  color: var(--tinta-primaria);
+  font-variant-numeric: tabular-nums;
+}
+
+.rede-medida {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  margin: 2px 0 0;
+}
+
+.rede-percentual {
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  color: var(--serie-1);
+}
+
+.rede-variacao {
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--tinta-secundaria);
+}
+
+.rede-alta {
+  color: var(--status-bom);
+}
+
+.rede-baixa {
+  color: var(--status-critico);
+}
+
+/* Cada quadradinho é uma loja da rede. */
+
+.rede-celulas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+.rede-loja {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+}
+
+/* A rede ainda não começou: as poucas lojas ativas não podem sumir no cinza. */
+.rede-loja-adiante {
+  opacity: 0.3;
+}
+
+.rede-legenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 0;
+  padding: 12px 0 0;
+  border-top: 1px solid var(--grade);
+  list-style: none;
+  font-size: 12px;
+  color: var(--tinta-secundaria);
+}
+
+.rede-legenda li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rede-legenda strong {
+  color: var(--tinta-primaria);
+  font-variant-numeric: tabular-nums;
+}
+
+.rede-marca {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+}
+
+@media (max-width: 640px) {
+  .rede-loja {
+    width: 7px;
+    height: 7px;
+  }
+
+  .rede-percentual {
+    font-size: 28px;
+  }
+}

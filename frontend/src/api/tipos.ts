@@ -172,6 +172,7 @@ export interface RespostaPriorizacao {
   tipoDeGanho: number | null;
   frequencia: number | null;
   riscoDeAdiar: number | null;
+  contorno: number | null;
   esforco: number | null;
 }
 
@@ -320,6 +321,7 @@ export interface IssueDaVersao {
   tipos: string[];
   estado: string | null;
   sistema: string | null;
+  autor: string | null;
   responsavel: string | null;
   situacao: 'aberta' | 'fechada';
   url: string;

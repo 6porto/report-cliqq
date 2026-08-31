@@ -26,6 +26,7 @@ function issue(parcial: Partial<IssueDaVersao>): IssueDaVersao {
     tipos: ['melhoria'],
     estado: 'aguardando-release',
     sistema: 'cliqq-centralizado',
+    autor: 'Gustavo Silva',
     responsavel: null,
     situacao: 'aberta',
     url: 'http://gitlab.queroquero.com.br/mercantil/mercantil/-/issues/1234',

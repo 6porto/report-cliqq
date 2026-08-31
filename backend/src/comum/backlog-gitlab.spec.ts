@@ -8,6 +8,7 @@ function issue(id: number, criadaEm: string): IssueDaVersao {
     tipos: [],
     estado: null,
     sistema: null,
+    autor: null,
     responsavel: null,
     situacao: 'aberta',
     url: `http://gitlab/issues/${id}`,

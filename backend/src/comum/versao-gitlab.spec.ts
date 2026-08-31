@@ -61,6 +61,7 @@ class IssueBuilder {
     state: 'opened',
     labels: ['system::cliqq-centralizado', 'type::crm', 'state::desenvolvimento'],
     web_url: 'http://gitlab.queroquero.com.br/mercantil/mercantil/-/issues/965',
+    author: { name: 'Ana Paula' },
     assignee: { name: 'Gustavo Silva' },
     created_at: '2026-08-01T12:00:00.000Z',
     updated_at: '2026-08-20T09:30:00.000Z',
@@ -84,6 +85,11 @@ class IssueBuilder {
 
   comResponsavel(assignee: { name?: string | null } | null): this {
     this.issue = { ...this.issue, assignee };
+    return this;
+  }
+
+  comAutor(author: { name?: string | null } | null): this {
+    this.issue = { ...this.issue, author };
     return this;
   }
 
@@ -227,7 +233,7 @@ describe('versoesProntas', () => {
 });
 
 describe('mapearIssueDaVersao', () => {
-  it('extrai tipo, estado, sistema e responsável dos labels', () => {
+  it('extrai tipo, estado, sistema, autor e responsável', () => {
     const issue = mapearIssueDaVersao(new IssueBuilder().build());
 
     expect(issue).toEqual({
@@ -236,6 +242,7 @@ describe('mapearIssueDaVersao', () => {
       tipos: ['crm'],
       estado: 'desenvolvimento',
       sistema: 'cliqq-centralizado',
+      autor: 'Ana Paula',
       responsavel: 'Gustavo Silva',
       situacao: 'aberta',
       url: 'http://gitlab.queroquero.com.br/mercantil/mercantil/-/issues/965',
@@ -254,14 +261,15 @@ describe('mapearIssueDaVersao', () => {
     expect(issue.fechadaEm).toBe('2026-08-25T10:00:00.000Z');
   });
 
-  it('aceita issue sem labels e sem responsável', () => {
+  it('aceita issue sem labels, sem autor e sem responsável', () => {
     const issue = mapearIssueDaVersao(
-      new IssueBuilder().comLabels([]).comResponsavel(null).build(),
+      new IssueBuilder().comLabels([]).comAutor(null).comResponsavel(null).build(),
     );
 
     expect(issue.tipos).toEqual([]);
     expect(issue.estado).toBeNull();
     expect(issue.sistema).toBeNull();
+    expect(issue.autor).toBeNull();
     expect(issue.responsavel).toBeNull();
   });
 });

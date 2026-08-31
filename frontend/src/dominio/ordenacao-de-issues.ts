@@ -5,6 +5,7 @@ export type ColunaDeIssue =
   | 'titulo'
   | 'tipos'
   | 'sistema'
+  | 'autor'
   | 'estado'
   | 'responsavel'
   | 'situacao'

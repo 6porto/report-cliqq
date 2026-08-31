@@ -14,6 +14,7 @@ function issue(parcial: Partial<IssueDaVersao> = {}): IssueDaVersao {
     tipos: ['crm'],
     estado: 'aguardando-release',
     sistema: 'cliqq-centralizado',
+    autor: 'Gustavo Silva',
     responsavel: 'Gustavo Silva',
     situacao: 'aberta',
     url: 'http://gitlab.queroquero.com.br/mercantil/mercantil/-/issues/144',

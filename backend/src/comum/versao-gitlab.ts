@@ -82,6 +82,7 @@ export interface IssueDaVersaoGitlab {
   state: string;
   labels: string[];
   web_url: string;
+  author: { name?: string | null } | null;
   assignee: { name?: string | null } | null;
   created_at: string;
   updated_at: string;
@@ -94,6 +95,7 @@ export interface IssueDaVersao {
   tipos: string[];
   estado: string | null;
   sistema: string | null;
+  autor: string | null;
   responsavel: string | null;
   situacao: 'aberta' | 'fechada';
   url: string;
@@ -165,6 +167,7 @@ export function mapearIssueDaVersao(issue: IssueDaVersaoGitlab): IssueDaVersao {
     tipos: valoresDoLabel(labels, PREFIXO_TIPO),
     estado: valorDoLabel(labels, PREFIXO_ESTADO),
     sistema: valorDoLabel(labels, PREFIXO_SISTEMA),
+    autor: issue.author?.name || null,
     responsavel: issue.assignee?.name || null,
     situacao: issue.state === 'closed' ? 'fechada' : 'aberta',
     url: issue.web_url,

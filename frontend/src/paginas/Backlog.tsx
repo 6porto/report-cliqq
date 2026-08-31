@@ -24,8 +24,8 @@ const COLUNAS: { chave: ColunaDeIssue; rotulo: string }[] = [
   { chave: 'id', rotulo: 'Issue' },
   { chave: 'titulo', rotulo: 'Título' },
   { chave: 'tipos', rotulo: 'Tipo' },
-  { chave: 'sistema', rotulo: 'Sistema' },
   { chave: 'estado', rotulo: 'Estado' },
+  { chave: 'autor', rotulo: 'Autor' },
   { chave: 'responsavel', rotulo: 'Responsável' },
   { chave: 'criadaEm', rotulo: 'Criada há' },
 ];
@@ -35,6 +35,7 @@ const RESPOSTA_VAZIA: RespostaPriorizacao = {
   tipoDeGanho: null,
   frequencia: null,
   riscoDeAdiar: null,
+  contorno: null,
   esforco: null,
 };
 
@@ -367,8 +368,8 @@ export function Backlog() {
                           ))
                         : '—'}
                     </td>
-                    <td>{issue.sistema ?? '—'}</td>
                     <td>{issue.estado ?? '—'}</td>
+                    <td>{issue.autor ?? '—'}</td>
                     <td>{issue.responsavel ?? '—'}</td>
                     <td title={`aberta em ${formatarData(issue.criadaEm)}`}>
                       {diasEmAberto(issue.criadaEm)}

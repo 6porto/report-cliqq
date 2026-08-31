@@ -1,5 +1,6 @@
 import {
   CRITICIDADES,
+  ESFORCO_INDEFINIDO,
   OPCOES_DE_ESFORCO,
   esforcoPorPontos,
   type Criticidade,
@@ -37,13 +38,16 @@ export function labelsDeCriticidade() {
 
 /** Prazo em dias corridos, tirado da `etiqueta` da opção de esforço. */
 export function labelDoEsforco(pontos: number) {
-  const opcao = esforcoPorPontos(pontos);
+  const opcao =
+    pontos === ESFORCO_INDEFINIDO.pontos ? ESFORCO_INDEFINIDO : esforcoPorPontos(pontos);
 
   return opcao ? `${PREFIXO_ESFORCO}${opcao.etiqueta}` : null;
 }
 
 export function labelsDeEsforco() {
-  return OPCOES_DE_ESFORCO.map((opcao) => `${PREFIXO_ESFORCO}${opcao.etiqueta}`);
+  return [...OPCOES_DE_ESFORCO, ESFORCO_INDEFINIDO].map(
+    (opcao) => `${PREFIXO_ESFORCO}${opcao.etiqueta}`,
+  );
 }
 
 /** Data limite no formato que o GitLab espera em `created_after`. */

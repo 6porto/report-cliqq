@@ -88,6 +88,18 @@ export const OPCOES_DE_ESFORCO = [
 
 export const PONTOS_DE_ESFORCO = OPCOES_DE_ESFORCO.map((opcao) => opcao.pontos);
 
+/**
+ * Esforço que ainda não dá para estimar. Fica fora de `OPCOES_DE_ESFORCO` de
+ * propósito: não pontua, não entra no score e não vira coluna no eixo do
+ * gráfico de priorização — só marca a issue como pendente de refinamento.
+ */
+export const ESFORCO_INDEFINIDO = {
+  pontos: 0,
+  rotulo: 'Não dá para estimar',
+  apoio: 'Falta informação para dimensionar; precisa de refinamento',
+  etiqueta: '?',
+} as const;
+
 /** Ganho rápido: valor alto e esforço de até 2 dias. */
 export const POSICAO_MAXIMA_DE_GANHO_RAPIDO = 1;
 

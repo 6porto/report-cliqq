@@ -3,6 +3,7 @@ import type { IssueDaVersao, RespostaPriorizacao } from '../api/tipos';
 import {
   CRITERIOS_DE_VALOR,
   CRITERIO_DE_ESFORCO,
+  ESFORCO_INDEFINIDO,
   FAIXAS_DE_CRITICIDADE,
   PERGUNTAS,
   etiquetaDoEsforco,
@@ -37,22 +38,24 @@ function emOrdemCrescente(opcoes: readonly { pontos: number; rotulo: string; apo
   return [...opcoes].sort((uma, outra) => uma.pontos - outra.pontos);
 }
 
-/** Soma das cinco perguntas de valor mais o esforço, como na aba Priorização. */
+/**
+ * Soma das cinco perguntas de valor mais o esforço, como na aba Priorização. O
+ * valor fecha sozinho — é ele que sugere a criticidade —, então sai mesmo sem o
+ * esforço. Esforço "não dá para estimar" não pontua e deixa o score em aberto.
+ */
 export function pontuacao(resposta: RespostaPriorizacao | null) {
   if (!resposta) {
     return { valor: null, esforco: null, score: null };
   }
 
   const valores = CRITERIOS_DE_VALOR.map((criterio) => resposta[criterio.chave]);
-  const esforco = resposta[CRITERIO_DE_ESFORCO.chave];
+  const respondido = resposta[CRITERIO_DE_ESFORCO.chave];
+  const esforco = respondido === ESFORCO_INDEFINIDO.pontos ? null : respondido;
+  const valor = valores.some((ponto) => ponto === null)
+    ? null
+    : valores.reduce((soma: number, ponto) => soma + (ponto ?? 0), 0);
 
-  if (valores.some((ponto) => ponto === null) || esforco === null) {
-    return { valor: null, esforco: null, score: null };
-  }
-
-  const valor = valores.reduce((soma: number, ponto) => soma + (ponto ?? 0), 0);
-
-  return { valor, esforco, score: valor + esforco };
+  return { valor, esforco, score: valor !== null && esforco !== null ? valor + esforco : null };
 }
 
 /** Três traços preenchidos conforme o peso: lê a escala sem decorar os pontos. */
@@ -116,8 +119,11 @@ export function ModalPriorizarIssue({
   const escolhaFoiTrocada = criticidade !== null && sugerida !== null && criticidade !== sugerida;
   const resumoMarcado =
     FAIXAS_DE_CRITICIDADE.find((faixa) => faixa.criticidade === marcada)?.resumo ?? null;
-  /** O esforço do score só existe com tudo respondido; aqui vale a pergunta 6 sozinha. */
+  /** O esforço do score ignora o "?"; aqui vale a pergunta 6 como foi respondida. */
   const esforcoRespondido = resposta?.[CRITERIO_DE_ESFORCO.chave] ?? null;
+  const respondidasDeValor = CRITERIOS_DE_VALOR.filter(
+    (criterio) => resposta?.[criterio.chave] != null,
+  ).length;
   const etiqueta = etiquetaDoEsforco(esforcoRespondido);
 
   const botaoDaOpcao = (
@@ -138,7 +144,9 @@ export function ModalPriorizarIssue({
       >
         <span className="escala-topo">
           {nivel === null ? null : <Peso nivel={nivel} />}
-          <span className="escala-pontos">{opcao.pontos}</span>
+          <span className="escala-pontos">
+            {opcao.pontos === ESFORCO_INDEFINIDO.pontos ? '?' : opcao.pontos}
+          </span>
         </span>
         <span className="escala-rotulo">{opcao.rotulo}</span>
         {opcao.apoio ? <span className="escala-apoio">{opcao.apoio}</span> : null}
@@ -231,8 +239,8 @@ export function ModalPriorizarIssue({
                 <fieldset>
                   <legend>{CRITERIO_DE_ESFORCO.pergunta}</legend>
                   <div className="escala escala-regua">
-                    {emOrdemCrescente(CRITERIO_DE_ESFORCO.opcoes).map((opcao) =>
-                      botaoDaOpcao(CRITERIO_DE_ESFORCO.chave, opcao, null),
+                    {[...emOrdemCrescente(CRITERIO_DE_ESFORCO.opcoes), ESFORCO_INDEFINIDO].map(
+                      (opcao) => botaoDaOpcao(CRITERIO_DE_ESFORCO.chave, opcao, null),
                     )}
                   </div>
                 </fieldset>
@@ -242,17 +250,19 @@ export function ModalPriorizarIssue({
         </div>
 
         <footer className="veredito">
-          {score === null ? (
+          {valor === null ? (
             <p className="veredito-pendente">
               {feitas === 0
                 ? 'Escolha a criticidade direto ou responda as perguntas para o sistema sugerir uma.'
-                : `Faltam ${PERGUNTAS.length - feitas} de ${PERGUNTAS.length} respostas para o sistema sugerir a criticidade.`}
+                : `Faltam ${CRITERIOS_DE_VALOR.length - respondidasDeValor} das ${CRITERIOS_DE_VALOR.length} perguntas de valor para o sistema sugerir a criticidade.`}
             </p>
           ) : (
             <div className="veredito-score">
-              <strong>{score}</strong>
+              <strong>{score ?? valor}</strong>
               <span>
-                valor {valor} + esforço {esforco}
+                {score === null
+                  ? `valor ${valor} · score fecha quando o esforço for estimado`
+                  : `valor ${valor} + esforço ${esforco}`}
               </span>
             </div>
           )}

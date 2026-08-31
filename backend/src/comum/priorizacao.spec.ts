@@ -1,4 +1,10 @@
-import { calcularPriorizacao, sugerirCriticidade, type RespostaPriorizacao } from './priorizacao';
+import {
+  ESFORCO_INDEFINIDO,
+  PONTOS_DE_ESFORCO,
+  calcularPriorizacao,
+  sugerirCriticidade,
+  type RespostaPriorizacao,
+} from './priorizacao';
 
 class RespostaBuilder {
   private resposta: RespostaPriorizacao = {
@@ -78,6 +84,19 @@ describe('calcularPriorizacao', () => {
     const resultado = calcularPriorizacao(new RespostaBuilder().com('esforco', 10).build());
 
     expect(resultado.completa).toBe(false);
+  });
+
+  it('não fecha o score com o esforço marcado como não estimável', () => {
+    const resultado = calcularPriorizacao(
+      new RespostaBuilder().com('esforco', ESFORCO_INDEFINIDO.pontos).build(),
+    );
+
+    expect(resultado.completa).toBe(false);
+    expect(resultado.score).toBeNull();
+  });
+
+  it('mantém o não estimável fora do eixo do gráfico de priorização', () => {
+    expect(PONTOS_DE_ESFORCO).not.toContain(ESFORCO_INDEFINIDO.pontos);
   });
 });
 

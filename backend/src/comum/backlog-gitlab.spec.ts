@@ -127,6 +127,10 @@ describe('labels de esforço', () => {
     expect(esforcoPorPontos(14)?.dias).toBe(5);
   });
 
+  it('marca com ? o esforço que ainda não dá para estimar', () => {
+    expect(labelDoEsforco(0)).toBe('esforco::?');
+  });
+
   it('não devolve label para pontuação fora da escala', () => {
     expect(labelDoEsforco(10)).toBeNull();
   });
@@ -140,6 +144,7 @@ describe('labels de esforço', () => {
       'esforco::30',
       'esforco::60',
       'esforco::60+',
+      'esforco::?',
     ]);
   });
 });

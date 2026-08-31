@@ -80,7 +80,23 @@ export const CRITERIO_DE_ESFORCO = {
   ],
 } as const;
 
+/**
+ * Esforço que ainda não dá para estimar. Fica fora de `CRITERIO_DE_ESFORCO` de
+ * propósito: não pontua, não entra no score e não vira coluna no eixo do
+ * gráfico de priorização. Espelha `backend/src/comum/priorizacao.ts`.
+ */
+export const ESFORCO_INDEFINIDO = {
+  pontos: 0,
+  rotulo: 'Não dá para estimar',
+  apoio: 'Falta informação para dimensionar; precisa de refinamento',
+  etiqueta: '?',
+} as const;
+
 export function etiquetaDoEsforco(pontos: number | null) {
+  if (pontos === ESFORCO_INDEFINIDO.pontos) {
+    return ESFORCO_INDEFINIDO.etiqueta;
+  }
+
   return CRITERIO_DE_ESFORCO.opcoes.find((opcao) => opcao.pontos === pontos)?.etiqueta ?? null;
 }
 

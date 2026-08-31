@@ -7,8 +7,10 @@ import {
   PERGUNTAS,
   respondidas,
   sugerirCriticidade,
+  type CampoResposta,
   type Criticidade,
 } from '../dominio/priorizacao';
+import { classeDoTipo } from '../dominio/tipos-de-issue';
 
 interface Props {
   issue: IssueDaVersao;
@@ -29,7 +31,7 @@ function emOrdemCrescente(opcoes: readonly { pontos: number; rotulo: string; apo
   return [...opcoes].sort((uma, outra) => uma.pontos - outra.pontos);
 }
 
-/** Soma das quatro perguntas de valor mais o esforço, como na aba Priorização. */
+/** Soma das cinco perguntas de valor mais o esforço, como na aba Priorização. */
 export function pontuacao(resposta: RespostaPriorizacao | null) {
   if (!resposta) {
     return { valor: null, esforco: null, score: null };
@@ -45,6 +47,38 @@ export function pontuacao(resposta: RespostaPriorizacao | null) {
   const valor = valores.reduce((soma: number, ponto) => soma + (ponto ?? 0), 0);
 
   return { valor, esforco, score: valor + esforco };
+}
+
+/** Três traços preenchidos conforme o peso: lê a escala sem decorar os pontos. */
+function Peso({ nivel }: { nivel: number }) {
+  return (
+    <span className="peso" data-nivel={nivel} aria-hidden="true">
+      <i />
+      <i />
+      <i />
+    </span>
+  );
+}
+
+function Marca({ numero, respondida }: { numero: number; respondida: boolean }) {
+  return (
+    <span className="passo-marca" data-respondida={respondida}>
+      {respondida ? (
+        <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
+          <path
+            d="M3.5 8.5l3 3 6-7"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      ) : (
+        numero
+      )}
+    </span>
+  );
 }
 
 export function ModalPriorizarIssue({
@@ -70,134 +104,179 @@ export function ModalPriorizarIssue({
   const feitas = respondidas(resposta);
   const sugerida = sugerirCriticidade(valor);
   const marcada = criticidade ?? sugerida;
+  const escolhaFoiTrocada = criticidade !== null && sugerida !== null && criticidade !== sugerida;
+  const resumoMarcado =
+    FAIXAS_DE_CRITICIDADE.find((faixa) => faixa.criticidade === marcada)?.resumo ?? null;
+
+  const botaoDaOpcao = (
+    chave: CampoResposta,
+    opcao: { pontos: number; rotulo: string; apoio?: string },
+    nivel: number | null,
+  ) => {
+    const marcada = resposta?.[chave] === opcao.pontos;
+
+    return (
+      <button
+        key={opcao.pontos}
+        type="button"
+        className="escala-opcao"
+        aria-pressed={marcada}
+        onClick={() => aoResponder(chave, opcao.pontos)}
+      >
+        <span className="escala-topo">
+          {nivel === null ? null : <Peso nivel={nivel} />}
+          <span className="escala-pontos">{opcao.pontos}</span>
+        </span>
+        <span className="escala-rotulo">{opcao.rotulo}</span>
+        {opcao.apoio ? <span className="escala-apoio">{opcao.apoio}</span> : null}
+      </button>
+    );
+  };
 
   return (
     <div className="modal-fundo" onClick={aoFechar}>
       <div
-        className="modal modal-largo"
+        className="modal modal-triagem"
         role="dialog"
         aria-modal="true"
         aria-label={`Priorizar a issue ${issue.id}`}
         onClick={(evento) => evento.stopPropagation()}
       >
-        <header className="modal-cabecalho">
-          <div className="demanda-cabecalho">
-            <a className="demanda-id" href={issue.url} target="_blank" rel="noreferrer">
-              #{issue.id}
-            </a>
-            {issue.tipos.map((tipo) => (
-              <span className="selo selo-tipo" key={tipo}>
-                {tipo}
-              </span>
-            ))}
-            {issue.estado ? <span className="selo">{issue.estado}</span> : null}
-            {score === null ? (
-              <span className="selo selo-pendente">
-                Pendente · {feitas}/{PERGUNTAS.length}
-              </span>
-            ) : (
-              <span className="selo selo-pronto">Score {score}</span>
-            )}
+        <header className="triagem-topo">
+          <div className="triagem-identidade">
+            <p className="triagem-eyebrow">Triagem</p>
+            <h2 className="triagem-titulo">{issue.titulo}</h2>
+            <p className="triagem-meta">
+              <a href={issue.url} target="_blank" rel="noreferrer">
+                #{issue.id}
+              </a>
+              {issue.tipos.map((tipo) => (
+                <span className={`triagem-tipo ${classeDoTipo(tipo)}`.trim()} key={tipo}>
+                  {tipo}
+                </span>
+              ))}
+              {issue.estado ? <span>{issue.estado}</span> : null}
+              {issue.autor ? <span>aberta por {issue.autor}</span> : null}
+            </p>
           </div>
-          <button className="aba" onClick={aoFechar} aria-label="Fechar">
+          <button className="triagem-fechar" onClick={aoFechar} aria-label="Fechar">
             ✕
           </button>
         </header>
 
-        <p className="demanda-descricao">{issue.titulo}</p>
-
-        <div className="perguntas">
-          {PERGUNTAS.map((pergunta, indice) => (
-            <fieldset className="pergunta" key={pergunta.chave}>
-              <legend>
-                {indice + 1}. {pergunta.pergunta}
-              </legend>
-              <div className="opcoes">
-                {emOrdemCrescente(pergunta.opcoes).map((opcao) => {
-                  const marcada = resposta?.[pergunta.chave] === opcao.pontos;
-
-                  return (
-                    <button
-                      key={opcao.pontos}
-                      type="button"
-                      className={marcada ? 'opcao opcao-marcada' : 'opcao'}
-                      aria-pressed={marcada}
-                      onClick={() => aoResponder(pergunta.chave, opcao.pontos)}
-                    >
-                      <span className="opcao-texto">
-                        {opcao.rotulo}
-                        {opcao.apoio ? (
-                          <span className="opcao-apoio">{opcao.apoio}</span>
-                        ) : null}
-                      </span>
-                      <span className="opcao-pontos">{opcao.pontos}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </fieldset>
-          ))}
+        <div className="triagem-progresso">
+          <div
+            className="triagem-barra"
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={PERGUNTAS.length}
+            aria-valuenow={feitas}
+          >
+            <span style={{ width: `${(feitas / PERGUNTAS.length) * 100}%` }} />
+          </div>
+          <p>
+            {feitas} de {PERGUNTAS.length} respondidas
+          </p>
         </div>
 
-        {score === null ? (
-          <p className="assistente-apoio">
-            Faltam {PERGUNTAS.length - feitas} de {PERGUNTAS.length} respostas para fechar o
-            score e sugerir a criticidade.
-          </p>
-        ) : (
-          <section className="resultado-priorizacao">
-            <div className="resultado-numeros">
-              <span className="resultado-score">
-                <strong>{score}</strong> de score
-              </span>
-              <span className="resultado-parcelas">
-                valor {valor} + esforço {esforco}
-              </span>
+        <div className="triagem-corpo">
+          <section className="bloco">
+            <div className="bloco-cabecalho">
+              <h3>Valor</h3>
+              <p>Estas cinco respostas somam de 25 a 100 e definem a criticidade.</p>
             </div>
 
-            <fieldset className="pergunta">
-              <legend>
-                Criticidade{' '}
-                {sugerida ? (
-                  <span className="resultado-sugestao">
-                    — sugerida: {sugerida} (valor {valor})
-                  </span>
-                ) : null}
-              </legend>
-              <div className="opcoes opcoes-criticidade">
-                {FAIXAS_DE_CRITICIDADE.map((faixa) => (
-                  <button
-                    key={faixa.criticidade}
-                    type="button"
-                    className={
-                      marcada === faixa.criticidade ? 'opcao opcao-marcada' : 'opcao'
-                    }
-                    aria-pressed={marcada === faixa.criticidade}
-                    onClick={() => aoEscolherCriticidade(faixa.criticidade)}
-                  >
-                    <span className="opcao-texto">
-                      {faixa.criticidade}
-                      <span className="opcao-apoio">{faixa.resumo}</span>
-                    </span>
-                    {faixa.criticidade === sugerida ? (
-                      <span className="opcao-pontos">sugerida</span>
-                    ) : null}
-                  </button>
-                ))}
-              </div>
-            </fieldset>
+            <ol className="trilho">
+              {CRITERIOS_DE_VALOR.map((pergunta, indice) => (
+                <li className="passo" key={pergunta.chave}>
+                  <Marca numero={indice + 1} respondida={resposta?.[pergunta.chave] != null} />
+                  <fieldset>
+                    <legend>{pergunta.pergunta}</legend>
+                    <div className="escala escala-tripla">
+                      {emOrdemCrescente(pergunta.opcoes).map((opcao, posicao) =>
+                        botaoDaOpcao(pergunta.chave, opcao, posicao + 1),
+                      )}
+                    </div>
+                  </fieldset>
+                </li>
+              ))}
+            </ol>
           </section>
-        )}
 
-        <p className="assistente-apoio">
-          As respostas ficam só nesta tela por enquanto: ainda não são gravadas.
-        </p>
+          <section className="bloco">
+            <div className="bloco-cabecalho">
+              <h3>Custo</h3>
+              <p>O esforço entra no score, mas não muda a criticidade.</p>
+            </div>
 
-        <div className="acoes-form">
-          <button type="button" className="aba primario" onClick={aoFechar}>
-            Fechar
-          </button>
+            <ol className="trilho" start={CRITERIOS_DE_VALOR.length + 1}>
+              <li className="passo">
+                <Marca
+                  numero={PERGUNTAS.length}
+                  respondida={resposta?.[CRITERIO_DE_ESFORCO.chave] != null}
+                />
+                <fieldset>
+                  <legend>{CRITERIO_DE_ESFORCO.pergunta}</legend>
+                  <div className="escala escala-regua">
+                    {emOrdemCrescente(CRITERIO_DE_ESFORCO.opcoes).map((opcao) =>
+                      botaoDaOpcao(CRITERIO_DE_ESFORCO.chave, opcao, null),
+                    )}
+                  </div>
+                </fieldset>
+              </li>
+            </ol>
+          </section>
         </div>
+
+        <footer className="veredito">
+          {score === null ? (
+            <p className="veredito-pendente">
+              Faltam {PERGUNTAS.length - feitas} de {PERGUNTAS.length} respostas para fechar o
+              score e sugerir a criticidade.
+            </p>
+          ) : (
+            <>
+              <div className="veredito-score">
+                <strong>{score}</strong>
+                <span>
+                  valor {valor} + esforço {esforco}
+                </span>
+              </div>
+
+              <fieldset className="veredito-criticidades">
+                <legend>
+                  Criticidade
+                  {escolhaFoiTrocada ? <em> — sugerida era {sugerida}</em> : null}
+                </legend>
+                <div className="criticidades">
+                  {FAIXAS_DE_CRITICIDADE.map((faixa) => (
+                    <button
+                      key={faixa.criticidade}
+                      type="button"
+                      className="criticidade"
+                      data-criticidade={faixa.criticidade}
+                      aria-pressed={marcada === faixa.criticidade}
+                      onClick={() => aoEscolherCriticidade(faixa.criticidade)}
+                    >
+                      <span className="criticidade-nome">{faixa.criticidade}</span>
+                      <span className="criticidade-faixa">
+                        {faixa.minimo}–{faixa.maximo}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+                {resumoMarcado ? <p className="criticidade-resumo">{resumoMarcado}</p> : null}
+              </fieldset>
+            </>
+          )}
+
+          <div className="veredito-acoes">
+            <p>As respostas ficam só nesta tela: ainda não são gravadas.</p>
+            <button type="button" className="aba primario" onClick={aoFechar}>
+              Fechar
+            </button>
+          </div>
+        </footer>
       </div>
     </div>
   );

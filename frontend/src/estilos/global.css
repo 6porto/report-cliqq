@@ -2021,51 +2021,477 @@ button.cartao-escolha:hover {
 }
 /* Opção com explicação embaixo do rótulo (pergunta do contorno). */
 
-.opcao-texto {
+/* ---------------------------------------------------------------------------
+   Modal de triagem: ficha graduada. O trilho numerado mostra o que falta, a
+   escala de três colunas ensina a ordem baixo→alto pela posição, e o veredito
+   fica preso no rodapé reagindo a cada resposta.
+   ------------------------------------------------------------------------ */
+
+.modal-triagem {
+  width: min(880px, 100%);
+  max-height: calc(100vh - 64px);
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  text-align: left;
+  padding: 0;
+  overflow: hidden;
 }
 
-.opcao-apoio {
+.triagem-topo {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 24px 14px;
+}
+
+.triagem-identidade {
+  min-width: 0;
+}
+
+.triagem-eyebrow {
+  margin: 0 0 6px;
   font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   color: var(--tinta-mutada);
 }
 
-.opcao-marcada .opcao-apoio {
-  color: inherit;
-  opacity: 0.85;
+.triagem-titulo {
+  margin: 0;
+  font-size: 19px;
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
-/* Fecho da modal: score apurado e a criticidade que ele sugere. */
-.resultado-priorizacao {
+.triagem-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--tinta-mutada);
+}
+
+.triagem-meta a {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--serie-1);
+  text-decoration: none;
+}
+
+.triagem-meta a:hover {
+  text-decoration: underline;
+}
+
+.triagem-tipo {
+  font-weight: 600;
+  color: var(--tinta-secundaria);
+}
+
+.triagem-fechar {
+  flex: none;
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  width: 28px;
+  height: 28px;
   display: grid;
-  gap: 12px;
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid var(--borda);
+  place-items: center;
+  background: var(--superficie);
+  color: var(--tinta-mutada);
+  cursor: pointer;
+  font: inherit;
+  line-height: 1;
 }
 
-.resultado-numeros {
+.triagem-fechar:hover {
+  border-color: var(--linha-base);
+  color: var(--tinta-primaria);
+}
+
+.triagem-progresso {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 24px 14px;
+  border-bottom: 1px solid var(--grade);
+}
+
+.triagem-barra {
+  flex: 1;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--grade);
+  overflow: hidden;
+}
+
+.triagem-barra span {
+  display: block;
+  height: 100%;
+  background: var(--serie-1);
+  transition: width 180ms ease;
+}
+
+.triagem-progresso p {
+  margin: 0;
+  flex: none;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--tinta-mutada);
+}
+
+.triagem-corpo {
+  overflow-y: auto;
+  padding: 4px 24px 20px;
+}
+
+.bloco + .bloco {
+  margin-top: 8px;
+}
+
+.bloco-cabecalho {
   display: flex;
   align-items: baseline;
   gap: 10px;
   flex-wrap: wrap;
+  padding: 20px 0 4px;
 }
 
-.resultado-score strong {
-  font-size: 26px;
-  line-height: 1;
-}
-
-.resultado-parcelas,
-.resultado-sugestao {
+.bloco-cabecalho h3 {
+  margin: 0;
   font-size: 12px;
-  font-weight: 400;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.bloco-cabecalho p {
+  margin: 0;
+  font-size: 12px;
   color: var(--tinta-mutada);
 }
 
-.opcoes-criticidade .opcao {
+.trilho {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* A linha liga os marcadores e para no último passo. */
+.passo {
+  position: relative;
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 14px;
+  padding: 16px 0;
+}
+
+.passo::before {
+  content: '';
+  position: absolute;
+  left: 11px;
+  top: 40px;
+  bottom: -12px;
+  width: 1px;
+  background: var(--grade);
+}
+
+.passo:last-child::before {
+  display: none;
+}
+
+.passo-marca {
+  position: relative;
+  z-index: 1;
+  width: 23px;
+  height: 23px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  border: 1px solid var(--linha-base);
+  background: var(--superficie);
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--tinta-mutada);
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease;
+}
+
+.passo-marca[data-respondida='true'] {
+  background: var(--serie-1);
+  border-color: var(--serie-1);
+  color: #ffffff;
+}
+
+.passo fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
   min-width: 0;
+}
+
+.passo legend {
+  padding: 0;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--tinta-primaria);
+}
+
+.escala {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.escala-tripla {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.escala-regua {
+  grid-template-columns: repeat(auto-fit, minmax(94px, 1fr));
+}
+
+.escala-opcao {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  background: var(--superficie);
+  color: var(--tinta-secundaria);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  transition:
+    border-color 140ms ease,
+    background 140ms ease,
+    color 140ms ease;
+}
+
+.escala-opcao:hover {
+  border-color: var(--linha-base);
+  color: var(--tinta-primaria);
+}
+
+.escala-opcao[aria-pressed='true'] {
+  border-color: var(--serie-1);
+  background: color-mix(in srgb, var(--serie-1) 8%, var(--superficie));
+  color: var(--tinta-primaria);
+}
+
+.escala-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.escala-pontos {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--tinta-mutada);
+}
+
+.escala-opcao[aria-pressed='true'] .escala-pontos {
+  color: var(--serie-1);
+  font-weight: 600;
+}
+
+.escala-rotulo {
+  font-size: 13px;
+  line-height: 1.35;
+  font-weight: 500;
+}
+
+.escala-apoio {
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--tinta-mutada);
+}
+
+/* Peso da resposta: três traços, preenchidos até o nível da opção. */
+.peso {
+  display: inline-flex;
+  gap: 3px;
+  color: var(--serie-1);
+}
+
+.peso i {
+  width: 12px;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--grade);
+}
+
+.peso[data-nivel='1'] i:nth-child(-n + 1),
+.peso[data-nivel='2'] i:nth-child(-n + 2),
+.peso[data-nivel='3'] i:nth-child(-n + 3) {
+  background: currentColor;
+}
+
+.veredito {
+  display: grid;
+  gap: 14px;
+  padding: 16px 24px 18px;
+  border-top: 1px solid var(--grade);
+  background: var(--plano);
+  box-shadow: 0 -8px 20px rgba(0, 0, 0, 0.05);
+}
+
+.veredito-pendente {
+  margin: 0;
+  font-size: 13px;
+  color: var(--tinta-secundaria);
+}
+
+.veredito-score {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.veredito-score strong {
+  font-size: 32px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.veredito-score span {
+  font-size: 12px;
+  color: var(--tinta-mutada);
+  font-variant-numeric: tabular-nums;
+}
+
+.veredito-criticidades {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.veredito-criticidades legend {
+  padding: 0 0 8px;
+  font-size: 12px;
+  color: var(--tinta-secundaria);
+}
+
+.veredito-criticidades em {
+  color: var(--tinta-mutada);
+  font-style: normal;
+}
+
+.criticidades {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.criticidade {
+  --cor: var(--tinta-mutada);
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 10px;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  background: var(--superficie);
+  color: var(--tinta-secundaria);
+  cursor: pointer;
+  font: inherit;
+  transition:
+    border-color 140ms ease,
+    background 140ms ease,
+    color 140ms ease;
+}
+
+.criticidade[data-criticidade='P1'] {
+  --cor: var(--status-critico);
+}
+
+.criticidade[data-criticidade='P2'] {
+  --cor: var(--status-serio);
+}
+
+.criticidade[data-criticidade='P3'] {
+  --cor: var(--status-atencao);
+}
+
+.criticidade[data-criticidade='P4'] {
+  --cor: var(--status-bom);
+}
+
+.criticidade:hover {
+  border-color: var(--cor);
+  color: var(--tinta-primaria);
+}
+
+.criticidade[aria-pressed='true'] {
+  border-color: var(--cor);
+  background: color-mix(in srgb, var(--cor) 12%, var(--superficie));
+  color: var(--tinta-primaria);
+}
+
+.criticidade-nome {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--cor);
+}
+
+.criticidade-faixa {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--tinta-mutada);
+}
+
+.criticidade-resumo {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--tinta-secundaria);
+}
+
+.escala-opcao:focus-visible,
+.criticidade:focus-visible,
+.triagem-fechar:focus-visible {
+  outline: 2px solid var(--serie-1);
+  outline-offset: 2px;
+}
+
+.veredito-acoes {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.veredito-acoes p {
+  margin: 0;
+  font-size: 11px;
+  color: var(--tinta-mutada);
+}
+
+@media (max-width: 720px) {
+  .escala-tripla {
+    grid-template-columns: 1fr;
+  }
+
+  .criticidades {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .triagem-barra span,
+  .passo-marca,
+  .escala-opcao,
+  .criticidade {
+    transition: none;
+  }
 }

@@ -106,10 +106,15 @@ export const CORTE_GANHO_RAPIDO = (PONTUACAO_VALOR_MINIMA + PONTUACAO_VALOR_MAXI
  * Espelha `backend/src/comum/priorizacao.ts`.
  */
 export const FAIXAS_DE_CRITICIDADE = [
-  { criticidade: 'P1', minimo: 85, resumo: 'Pelo menos quatro respostas de 20' },
-  { criticidade: 'P2', minimo: 65, resumo: 'Predominância de respostas altas' },
-  { criticidade: 'P3', minimo: 45, resumo: 'Mistura com predominância de médias/baixas' },
-  { criticidade: 'P4', minimo: 25, resumo: 'Quase tudo na resposta mínima' },
+  { criticidade: 'P1', minimo: 85, maximo: 100, resumo: 'Pelo menos quatro respostas de 20' },
+  { criticidade: 'P2', minimo: 65, maximo: 80, resumo: 'Predominância de respostas altas' },
+  {
+    criticidade: 'P3',
+    minimo: 45,
+    maximo: 60,
+    resumo: 'Mistura com predominância de médias/baixas',
+  },
+  { criticidade: 'P4', minimo: 25, maximo: 40, resumo: 'Quase tudo na resposta mínima' },
 ] as const;
 
 export type Criticidade = (typeof FAIXAS_DE_CRITICIDADE)[number]['criticidade'];

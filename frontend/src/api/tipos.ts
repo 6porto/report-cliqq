@@ -234,3 +234,64 @@ export interface Filtros {
   ufs: string[];
   ondas: string[];
 }
+
+export interface Versao {
+  id: number;
+  iid: number;
+  grupoId: number | null;
+  titulo: string;
+  descricao: string | null;
+  estado: string;
+  dataInicio: string | null;
+  dataFim: string | null;
+  url: string;
+}
+
+export interface VersaoGerada {
+  tag: string;
+  urlTag: string;
+  urlRelease: string;
+  milestone: string;
+  urlMilestone: string;
+  descricao: string;
+}
+
+export interface TagDeVersao {
+  nome: string;
+  minor: string;
+  criadaEm: string | null;
+}
+
+export interface VersaoPronta extends Versao {
+  issuesNoEstado: number;
+}
+
+export interface RepositorioDaVersao {
+  caminho: string;
+  nome: string;
+  url: string;
+  urlTags: string;
+  tasks: number;
+  abertas: number;
+  fechadas: number;
+  issues: number[];
+}
+
+export interface RepositoriosDaVersao {
+  repositorios: RepositorioDaVersao[];
+  issuesSemTask: number[];
+}
+
+export interface IssueDaVersao {
+  id: number;
+  titulo: string;
+  tipos: string[];
+  estado: string | null;
+  sistema: string | null;
+  responsavel: string | null;
+  situacao: 'aberta' | 'fechada';
+  url: string;
+  criadaEm: string;
+  atualizadaEm: string;
+  fechadaEm: string | null;
+}

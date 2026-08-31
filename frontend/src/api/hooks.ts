@@ -8,6 +8,7 @@ import type {
   Filial,
   FiltroFiliais,
   Filtros,
+  IssueDaVersao,
   GrupoRollout,
   LatenciaSemanal,
   MediaSemanal,
@@ -15,11 +16,15 @@ import type {
   OperacoesEsperadas,
   PaginaFiliais,
   Projecao,
+  RepositoriosDaVersao,
   RespostaPriorizacao,
   Resumo,
   ResumoSincronizacao,
   StatusPorDia,
   StatusRollout,
+  TagDeVersao,
+  VersaoGerada,
+  VersaoPronta,
 } from './tipos';
 
 export function useResumo() {
@@ -285,6 +290,55 @@ export function useRemoverLatenciaSemanal() {
     onSuccess: () => {
       clienteQuery.invalidateQueries({ queryKey: ['latencias-semanais'] });
     },
+  });
+}
+
+export function useGerarVersao() {
+  const clienteQuery = useQueryClient();
+
+  return useMutation({
+    mutationFn: (variaveis: {
+      milestone: string;
+      repositorio: string;
+      tag: string;
+      issues: number[];
+    }) => api.post<VersaoGerada>('/versao/gerar', variaveis),
+    onSuccess: () => {
+      clienteQuery.invalidateQueries({ queryKey: ['versoes-prontas'] });
+      clienteQuery.invalidateQueries({ queryKey: ['tags-do-repositorio'] });
+    },
+  });
+}
+
+export function useTagsDoRepositorio(repositorio: string | null) {
+  return useQuery({
+    queryKey: ['tags-do-repositorio', repositorio],
+    queryFn: () => api.get<TagDeVersao[]>(`/versao/tags${montarQuery({ repositorio })}`),
+    enabled: repositorio !== null,
+  });
+}
+
+export function useVersoesProntas() {
+  return useQuery({
+    queryKey: ['versoes-prontas'],
+    queryFn: () => api.get<VersaoPronta[]>('/versao/prontas'),
+  });
+}
+
+export function useIssuesDaVersao(milestone: string | null) {
+  return useQuery({
+    queryKey: ['issues-da-versao', milestone],
+    queryFn: () => api.get<IssueDaVersao[]>(`/versao/issues${montarQuery({ milestone })}`),
+    enabled: milestone !== null,
+  });
+}
+
+export function useRepositoriosDaVersao(milestone: string | null) {
+  return useQuery({
+    queryKey: ['repositorios-da-versao', milestone],
+    queryFn: () =>
+      api.get<RepositoriosDaVersao>(`/versao/repositorios${montarQuery({ milestone })}`),
+    enabled: milestone !== null,
   });
 }
 

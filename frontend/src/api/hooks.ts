@@ -13,6 +13,7 @@ import type {
   LatenciaSemanal,
   MediaSemanal,
   Melhoria,
+  MilestoneEmDesenvolvimento,
   OperacoesEsperadas,
   PaginaFiliais,
   Projecao,
@@ -315,6 +316,14 @@ export function useTagsDoRepositorio(repositorio: string | null) {
     queryKey: ['tags-do-repositorio', repositorio],
     queryFn: () => api.get<TagDeVersao[]>(`/versao/tags${montarQuery({ repositorio })}`),
     enabled: repositorio !== null,
+  });
+}
+
+/** Aba Desenvolvimento: milestones abertas fix/ e release/ já com as issues dentro. */
+export function useMilestonesEmDesenvolvimento() {
+  return useQuery({
+    queryKey: ['milestones-em-desenvolvimento'],
+    queryFn: () => api.get<MilestoneEmDesenvolvimento[]>('/desenvolvimento/milestones'),
   });
 }
 

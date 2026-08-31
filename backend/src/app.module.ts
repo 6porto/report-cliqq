@@ -9,6 +9,7 @@ import { MediasSemanaisModule } from './medias-semanais/medias-semanais.module';
 import { LatenciasSemanaisModule } from './latencias-semanais/latencias-semanais.module';
 import { MelhoriasModule } from './melhorias/melhorias.module';
 import { VersaoModule } from './versao/versao.module';
+import { DesenvolvimentoModule } from './desenvolvimento/desenvolvimento.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { VersaoModule } from './versao/versao.module';
     LatenciasSemanaisModule,
     MelhoriasModule,
     VersaoModule,
+    DesenvolvimentoModule,
   ],
 })
 export class AppModule {}
